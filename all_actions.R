@@ -3,7 +3,7 @@
 # /*=================================================*/
 #--- packages and functions ---#
 source(
-  "https://github.com/tmieno2/DIFM/blob/master/Codes_dev/prepare.R?raw=TRUE",
+  "https://github.com/tmieno2/DIFM/blob/master/prepare.R?raw=TRUE",
   local = TRUE
 )
 
