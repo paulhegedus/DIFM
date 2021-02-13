@@ -1,0 +1,95 @@
+# EC data
+
+## Preparation for EC data processing 
+
+```{r additional-packages-ec}
+library(raster)
+library(stars)
+library(fasterize)
+library(tmap)
+```
+
+## Read in the EC data
+
+```{r }
+#--- read the boundary file ---#
+boundary_sf <- st_read("Raw/boundary.shp") %>%
+  st_transform_utm()
+
+boundary_sp <- as(boundary_sf, "Spatial")
+
+### check if variables names are Ecs and Ecd
+
+ec_sf <- st_read("Raw/ec.shp") %>%
+  st_zm() %>%
+  st_transform_utm() %>% 
+  setnames(names(.), tolower(names(.)))
+```
+
+### Change the EC variable names
+
+Here is the set of variable names:
+
+```{r }
+names(ec_sf)
+```
+
+```{r }
+dict_ec <- dictionary[type == "ec", ]
+
+ec_sf <- make_var_name_consistent(
+  ec_sf, 
+  dict_ec 
+)
+
+ec_sf <- dplyr::select(ec_sf, matches(dict_ec[, column]))
+```
+
+
+```{r }
+ggplot(ec_sf) +
+  geom_sf(aes(color = ecs)) +
+  scale_color_viridis_c()
+
+ggplot(ec_sf) +
+  geom_sf(aes(color = ecd)) +
+  scale_color_viridis_c()
+```
+
+## Rasterize the EC data
+
+```{r }
+### Set raster layer for the interpolation
+orig <- floor(st_bbox(boundary_sf)[1:2])
+frst <- fasterize::raster(boundary_sp, orig, res = 3)
+
+### Interpolation by the inverse distance weight
+frst$ecs <- st_interpolate(ec_sf, "ecs", frst, "idw")
+frst$ecd <- st_interpolate(ec_sf, "ecd", frst, "idw")
+
+### Stack Raster and convert them into polygon data ####
+ec <- stack(frst$ecs, frst$ecd) %>%
+  st_as_stars() %>%
+  split(3)
+```  
+
+## Visualization
+
+```{r }
+lapply(names(ec), 
+  function(x) 
+  tm_shape(ec[x, ]) + 
+  tm_raster() +
+  tm_layout(
+    legend.title.size = 3
+  )
+)
+```
+
+## Save the data
+
+```{r }  
+#--- save the data ---#
+saveRDS(ec, "Intermediate/ec.rds")
+```
+

@@ -1,0 +1,355 @@
+# Preparation
+
+## Read boundary and ab-line
+
+```{r }
+# ffy <- "Wendte_LaueLib80_2020"
+# ffy <- "Boeckner_134n_2017"
+# ffy <- "Bohnhoff_Adams_2018"
+
+#--- field boundary ---#
+field <- ffy %>% 
+  file.path(here("Data", "Growers"), ., "Raw/boundary.shp") %>% 
+  st_read() 
+
+if (is.na(st_crs(field))){
+  field <- st_set_crs(field, 4326) 
+} 
+
+field <- field %>% 
+  st_make_valid() %>%
+  st_transform_utm()
+
+#--- ab-line ---#
+ab_line <- ffy %>% 
+  file.path(here("Data", "Growers"), ., "Raw/ab-line.shp") %>% 
+  st_read() 
+
+if (is.na(st_crs(ab_line))){
+  ab_line <- st_set_crs(ab_line, 4326) 
+} 
+
+ab_line <- ab_line %>% 
+  st_make_valid() %>%
+  st_transform_utm()
+
+```
+
+```{r }
+tm_shape(field) +
+  tm_borders() +
+  tm_shape(ab_line) +
+  tm_lines(col = "red")
+```
+
+## Field Parameters
+
+```{r results = "hide"}
+#--- read and define field parameters ---#
+source(
+  here("Codes/Functions/unpack_field_parameters.R"),
+  local = TRUE
+)
+
+```   
+
+## Option parameters
+
+```{r }
+rates_ls <- rates-here
+headland_length <- head-dist-here
+plot_width <- plot-width-here
+```
+
+# Create Trial Design
+
+## Set parameters
+
+```{r }
+#/*----------------------------------*/
+#' ## Machine width
+#/*----------------------------------*/
+#--- planter width ---#
+if (process_s) {
+  planter_width <- input_data[form == "seed", machine_width] %>%
+    conv_unit(., "ft", "m")
+} else {
+  planter_width <- 1
+}
+
+#--- applicator_width ---#
+if (process_n) {
+  applicator_width <- input_data[form == n_var, machine_width] %>%
+    conv_unit(., "ft", "m")
+} else {
+  applicator_width <- 1
+}
+
+#--- harvester width ---#
+harvester_width <- w_field_data[, h_width] %>%
+  as.numeric() %>% 
+  conv_unit(., "ft", "m")
+
+#/*----------------------------------*/
+#' ## Headland length
+#/*----------------------------------*/
+#--- headland length ---#
+if (is.na(head_dist)) {
+  headland_length <- max(planter_width, harvester_width, applicator_width) * 4
+}
+
+#--- get the least common multiple (needs to be changed) ---#
+
+if (is.na(plot_width) & is.numeric(plot_width)) {
+  plot_width <- Lcm(planter_width, harvester_width) %>%
+    Lcm(., applicator_width)
+
+  #--- this is temporary ---#
+  plot_width <- max(planter_width, harvester_width)
+}
+
+#--- cell height ---#
+cell_height <- conv_unit(10, "ft", "m")
+
+```
+
+## Make experiment grids
+
+```{r }
+#/*----------------------------------*/
+#' ## Create experimental plots
+#/*----------------------------------*/
+experiment_plots <- make_trial_grids(
+  field = field, 
+  #--- by default uses the first one ---#
+  ab_line = ab_line[1, ], 
+  plot_width = plot_width, 
+  cell_height = cell_height,
+  headland_length = headland_length
+)
+
+#/*----------------------------------*/
+#' ## Create headland
+#/*----------------------------------*/
+experiment_plots_dissolved <- experiment_plots %>% 
+  st_snap_to_grid(size = 0.0001) %>%
+  st_make_valid() %>% 
+  summarize(plot_id = min(plot_id))
+
+headland <- st_difference(field, experiment_plots_dissolved) %>%
+  dplyr::select(geometry) %>% 
+  #--- assign grower-chosen rate to the headland ---#
+  mutate(rate = grower_chosen_rate)
+
+```
+
+
+```{r }
+tm_shape(field) +
+  tm_borders(col = "black") + 
+tm_shape(headland) +
+  tm_fill(
+    col = "red", 
+    alpha = 0.3, 
+    title = "Headland"
+  ) +
+tm_shape(experiment_plots) +
+  tm_fill(
+    col = "strip_id", 
+    palette = "Spectral", 
+    style = "order"
+  )  +
+tm_layout_to_add
+
+```
+
+## Assigning rates
+
+
+```{r }
+
+if (!is.na(rates_ls)) {
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### If rates are provided by the user
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+  experiment_design <- assign_rates(
+    data_sf = experiment_plots, 
+    rates_ls = rate_ls,
+    # pattern = "block_randomized"
+    pattern = "fixed-latin-square"
+    # pattern = "sequential"
+  )  %>% 
+  #--- keep cell_id here for orthogonality check later ---#
+  dplyr::select(rate)
+
+  trial_desisn <- rbind(
+    experiment_design,
+    headland
+  )
+
+} else {
+
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### If rate are NOT provided by the use
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+  trial_designs <- tibble(
+    rates = list(
+      c(0.5, 0.65, 0.8, 1, 1.15),
+      c(0.5, 0.65, 0.8, 1, 1.15, 1.3),
+      c(0.6, 0.75, 0.9, 1, 1.2),
+      c(0.6, 0.75, 0.9, 1, 1.15, 1.3),
+      seq(0.7, 1.2, by = 0.1),
+      seq(0.7, 1.3, by = 0.15)   
+    )
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    rates = list(
+      rates * grower_chosen_rate
+    )
+  ) %>% 
+  mutate(
+    trial_design = list(
+       assign_rates(
+        data_sf = experiment_plots, 
+        rates_ls = rates
+      )  %>% 
+      dplyr::select(rate) %>% 
+      rbind(., headland)
+    ) 
+  ) %>% 
+  mutate(
+    td_map = list(
+      tm_shape(trial_design) +
+        tm_fill(
+          col = "rate", 
+          palette = "YlGn", 
+          style = "cat"
+        ) + 
+      tm_shape(headland) +
+        tm_borders(
+          lwd = 4
+        ) +
+      tm_shape(ab_line) +
+        tm_lines(
+          col = "red",
+          lwd = 4
+        ) +
+      tm_layout_to_add
+    )
+  )
+
+  #--- show the designs ---#
+  pluck(trial_designs, "td_map")
+
+}
+
+``` 
+
+# Save the trial design
+
+```{r eval = !is.na(rates_ls), echo = !is.na(rates_ls)}
+
+trial_design_ll <- st_transform(trial_design, 4326)
+
+time_user <- paste0(
+  Sys.time(), 
+  "-",
+  Sys.getenv("USER")
+) %>% 
+gsub(" ", "-", .) %>% 
+gsub("_", "-", .)  
+
+dsn_name <- here("Data", "Growers", ffy, "TrialDesign")
+
+st_write(
+  trial_design_ll, 
+  dsn = dsn_name,
+  layer = paste0("trial-design-", time_user),
+  driver = "ESRI Shapefile"
+)
+
+writeLines(
+  paste0(
+    "The trial design was named, trial-design-",
+    time_user,
+    ".shp"
+  )
+)
+```
+
+# Orthogonality check
+
+Checking if the assigned rates are orthogonal to the soil and field characteristics. 
+
+```{r results = "hide", eval = F}
+
+topo <- file.path(here("Data", "Growers", ffy), "Intermediate/topography.rds") %>% 
+  readRDS()
+
+ssurgo <- file.path(here("Data", "Growers", ffy), "Intermediate/ssurgo.rds") %>% 
+  readRDS()
+
+topo_values <- topo %>%
+  stars_to_stack() %>%
+  exact_extract(., st_transform(experiment_design, st_crs(.))) %>%
+  rbindlist(idcol = "rowid") %>%
+  .[,
+    lapply(.SD, weighted.mean, w = coverage_fraction),
+    by = rowid,
+    .SDcols = paste0("layer.", 1:length(topo))
+  ] %>%
+  .[, rowid := NULL] %>%
+  setnames(names(.), names(topo))
+
+experiment_design <- cbind(experiment_design, topo_values)
+
+ssurgo_values <- dplyr::select(experiment_design, cell_id) %>%
+  st_intersection(., ssurgo) %>%
+  mutate(area = as.numeric(st_area(.))) %>%
+  data.table() %>%
+  .[, area_pct := area / sum(area), by = cell_id] %>%
+  .[,
+    lapply(.SD, weighted.mean, w = area_pct),
+    by = cell_id,
+    .SDcols = c("clay", "sand", "silt", "water_storage")
+  ]
+
+experiment_design <- left_join(experiment_design, ssurgo_values, by = "cell_id")
+  
+```
+
+```{r eval = F}
+#--- plot level ---#
+experiment_design %>% 
+  dplyr::select(where(is.numeric)) %>% 
+  st_drop_geometry() %>% 
+  data.table() %>% 
+  .[, lapply(.SD, mean), by = .(plot_id, strip_id)] %>% 
+  .[,`:=`(
+    plot_id = NULL,
+    strip_id = NULL
+  )] %>% 
+  cor() %>% 
+  .[, "rate"] 
+
+#--- cell-level ---#
+experiment_design %>% 
+  dplyr::select(where(is.numeric)) %>% 
+  st_drop_geometry() %>% 
+  data.table() %>% 
+  .[, cell_id := NULL] %>% 
+  cor() %>% 
+  .[, "rate"] 
+
+```
+
+
+# Things to do 
+
++ allow the design to be dependent on spatial variables
+
+## Setting parameters
+
++ optimal plot width
++ change the plot width in the middle 

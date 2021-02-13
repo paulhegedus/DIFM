@@ -1,0 +1,116 @@
+# Topography data
+
+## Preparation
+
+```{r additional-packages}
+library(sf)
+library(sp)
+library(raster)
+library(stars)
+library(elevatr)
+library(spatialEco)
+library(dynatopmodel)
+library(terra)
+library(tmap)
+```
+
+## Download elevation data for the area of interest
+
+```{r }
+#--- read the boundary file ---#
+boundary <- st_read("Raw/boundary.shp") %>% 
+  st_bbox() %>% 
+  st_as_sfc() %>% 
+  st_as_sf() 
+  # %>% 
+  # st_transform(4326) %>% 
+  # as("Spatial")
+
+# ground_resolution = (cos(latitude * pi/180) * 2 * pi * 6378137 meters) / (256 * 2^zoom_level pixels)
+# dem <- get_elev_raster(boundary)
+
+#--- download elevation data ---#
+# 1m by 1m resolution 
+dem <- get_dem_usgs(boundary) %>% 	
+	#--- aggregate to 5m by 5m resolution ---#
+	raster::aggregate(., fact = 5)
+```
+
+```{r }
+tm_shape(dem) +
+	tm_raster()
+```
+
+## Calculate topographic variables
+
+### Slope and Aspect
+Use the `terrain()` function from raster to get slope and aspect:
+
+```{r }
+dem_sa <- terrain(dem, opt = c("slope", "aspect"))
+names(dem_sa) <- c("Slope", "Aspect")
+```
+
+### Curvature
+
+Use the `curvature()` function from spatialEco to get curvature:
+
+```{r }
+curv <- curvature(dem, s = 5)
+names(curv) <- "Curv"
+```
+
+### TPI
+
+Use the `tpi()` function from the `spatialEco` to get terrain position index:
+
+```{r }
+tpi <- tpi(dem, s = 5)
+names(tpi) <- "TPI"
+```
+
+### TWI
+
+Use the `upslope.area()` function from the `dynatopmodel` to get terrain wetness index:
+
+```{r }
+contrib_area <- upslope.area(dem, atb = TRUE)
+twi <- contrib_area$atb
+names(twi) <- c("TWI")
+```
+
+## Organize the datasets and save
+
+```{r }
+#--- Stack all the rasters together ---#
+topo <- stack(dem, dem_sa, curv, twi, tpi) %>% 
+  st_as_stars() %>% 
+  split(3)
+
+#--- save the data ---#
+saveRDS(topo, "Intermediate/topography.rds")
+```
+
+
+## Remove the original DEM files
+
+```{r }
+list.files("Raw", full.names = TRUE)	%>% 
+	.[str_detect(., "USGS")] %>% 
+	unlink()
+```
+
+## Visualization of the data
+
+```{r }
+lapply(names(topo), 
+  function(x) 
+  tm_shape(topo[x, ]) + 
+  tm_raster() +
+  tm_layout(
+    legend.title.size = 3
+  )
+)
+```
+
+

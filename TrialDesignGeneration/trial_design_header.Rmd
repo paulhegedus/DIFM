@@ -1,0 +1,102 @@
+---
+title: "title-here for field-year-here"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: true
+    number_sections: true
+---
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 20px;
+  }
+td {  /* Table  */
+  font-size: 16px;
+}
+h1.title {
+  font-size: 56px;
+}
+h1 { /* Header 1 */
+  font-size: 48px;
+}
+h2 { /* Header 2 */
+    font-size: 36px;
+}
+h3 { /* Header 3 */
+  font-size: 24px;
+}
+code.r{ /* Code block */
+    font-size: 16px;
+}
+</style>
+
+```{r setup, cache = F, echo = F}
+library(knitr)
+knitr::opts_chunk$set(
+  cache = TRUE,
+  echo = TRUE,
+  error = TRUE,
+  warning = FALSE,
+  cache.lazy = FALSE,
+  message = FALSE,
+  fig.width = 12, 
+  fig.height = 12
+)
+```
+
+```{r packages, cache = FALSE}
+# === packages ===#
+library(pracma)
+library(furrr)
+library(exactextractr)
+library(sp)
+library(sf)
+library(here)
+library(agricolae)
+library(lwgeom)
+library(measurements)
+library(stringr)
+library(tmap)
+library(raster)
+library(tidyverse)
+library(data.table)
+library(purrr)
+```
+
+```{r preparations, cache = F}
+#--- local functions ---#
+source(file.path(here("Codes", "Functions"), "functions_for_trial_design.R"))
+
+#--- github ---#
+source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
+
+#--- define field-year ---#
+ffy <- "field-year-here"  
+
+#--- read the variable name dictionary ---#
+dictionary <- fromJSON(
+  file.path(
+    here("Data", "CommonData"),
+    "variable_name_dictionary.json"
+  ),
+  flatten = TRUE
+) %>% 
+data.table()
+
+```
+
+```{r map-layout, cache = TRUE}
+tm_layout_to_add <- tm_layout(
+  legend.outside = "TRUE",
+  frame = FALSE,
+  legend.title.size = 2,
+  legend.text.size = 1.5
+)
+```
+
+
+

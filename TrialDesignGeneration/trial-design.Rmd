@@ -1,0 +1,209 @@
+# What needs to happen
+
++ starting point has to be in the middle of the first plot
++ change plot length by row 
++ various designs of assigning seed and n (ensure orthogonality)
++ allow the design to be dependent on spatial variables
+
+
+## Setting parameters
+
++ we assign seed rate by section of planter
+
++ least common multiple of the section width and harvester width is harvester width, there is no problem
+
++ could change the plot width 
+
+
+# Prep
+
+```{r }
+library(sp)
+library(sf)
+library(here)
+library(agricolae)
+library(lwgeom)
+library(measurements)
+library(stringr)
+library(tmap)
+library(raster)
+library(tidyverse)
+library(data.table)
+```
+
+```{r }
+#--- local ---#
+source("Codes/TrialDesignGeneration/functions_for_trial_design.R")
+
+#--- github ---#
+source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
+
+```
+
+```{r map-layout}
+tm_layout_to_add <- tm_layout(
+  legend.outside = "TRUE",
+  frame = FALSE,
+  legend.title.size = 2,
+  legend.text.size = 1.5
+)
+```
+
+## Preparation
+
+```{r }
+ffy <- "Wendte_LaueLib80_2020"
+ffy <- "Boeckner_134n_2017"
+
+#--- field boundary ---#
+field <- ffy %>% 
+  file.path(here("Data", "Growers"), ., "Raw/boundary.shp") %>% 
+  st_read() %>%
+  st_make_valid() %>%
+  st_transform_utm()
+
+#--- ab-line ---#
+ab_line <- ffy %>% 
+  file.path(here("Data", "Growers"), ., "Raw/ab-line.shp") %>% 
+  st_read() %>%
+  st_make_valid() %>%
+  st_transform_utm()
+
+#--- field parameters ---#
+field_data <- jsonlite::fromJSON(
+  file.path(
+    here("Data", "CommonData"),
+    "fp_new_DSB.json"
+  ),
+  flatten = TRUE
+) %>%
+data.table() %>%
+.[, field_year := paste(farm, field, year, sep = "_")] %>% 
+.[field_year == ffy, ]
+
+```   
+
+```{r }
+tm_shape(field) +
+  tm_borders() +
+  tm_shape(ab_line) +
+  tm_lines(col = "red")
+```
+
+## Set parameters
+
+```{r }
+#--- temporary ---#
+planter_width <- 60 %>%
+  conv_unit(., "ft", "m")
+planter_section_num <- 2
+harvester_width <- 30 %>%
+  conv_unit("ft", "m")
+# applicator_width <- w_field_data[, a_width] %>%
+#   conv_unit("ft", "m")
+# applicator_section_num <- w_field_data[, a_section_no] %>%
+#   conv_unit("ft", "m")
+
+applicator_width <- 0
+
+#--- headland length ---#
+headland_length <- max(planter_width, harvester_width, applicator_width) * 2
+
+```
+
+# Create Trial Design
+
+## Set parameters
+
+```{r }
+cell_height <- conv_unit(10, "ft", "m")
+
+#--- this should be defined above  ---#
+plot_width <- conv_unit(30, "ft", "m")
+```
+
+## Make experiment grids
+
+```{r }
+whole_field <- make_trial_grids(
+  field = field, 
+  ab_line = ab_line, 
+  plot_width = plot_width, 
+  cell_height = cell_height,
+  headland_length = headland_length
+)
+
+experiment_plots <- whole_field$experiment
+
+headland <- whole_field$headland
+
+```
+
+```{r }
+tm_shape(field) +
+  tm_borders(col = "black") + 
+tm_shape(headland) +
+  tm_fill(col = "red", alpha = 0.3) +
+tm_shape(experiment_plots) +
+  tm_fill(
+    col = "strip_id", 
+    palette = "Spectral", 
+    style = "order"
+  )  +
+tm_layout_to_add
+
+```
+
+## Assigning rates
+
+```{r }
+rate_ls <- seq(90, 240, by = 30)
+
+experiment_design <- assign_rates(
+  data_sf = experiment_plots, 
+  rates_ls = rate_ls
+)  %>% 
+select(rate)
+
+grower_chosen_rate <- 180
+
+headland <- mutate(
+  headland, 
+  rate = grower_chosen_rate
+)
+
+trial_design <- rbind(
+  experiment_design,
+  headland
+)
+
+```
+
+```{r }
+tm_td <- tm_shape(trial_design) +
+  tm_fill(
+    col = "rate", 
+    palette = "YlGn", 
+    style = "cat"
+  ) + 
+tm_shape(field) +
+  tm_borders() +
+tm_layout_to_add
+
+tmap_save(tm_td, file = paste0(here("Data", "Disposable/TD_"), ffy, ".pdf"))
+
+```
+
+# Orthogonality check
+
+```{r }
+topography <- file.path(here("Data", "Growers", ffy), "Intermediate/topography.rds") %>% 
+  readRDS()
+
+ssurgo <- file.path(here("Data", "Growers", ffy), "Intermediate/ssurgo.rds") %>% 
+  readRDS()
+
+trial_design
+  
+```
+

@@ -1,0 +1,79 @@
+# Process the trial design in place of as-planted data
+
+## Reduce as-planted data before 
+
+**Caution!**:
+
+You are using the trial-design as the input data. Make sure you are okay with this!!!
+
+**Note:** at the moment, this is written specifically for Bohnhoff-Tims 2020.
+
+
+```{r }
+library(sf)
+library(tidyverse)
+library(data.table)
+library(tmap)
+library(measurements)
+library(here)
+```
+
+## Read in datasets
+
+```{r }
+#--- as-planted ---#
+td_file_name <- list.files(recursive = TRUE) %>%
+  .[str_detect(., "shp")] %>%
+  .[!str_detect(., "xml")] %>%
+  .[str_detect(., "trial-design")] 
+
+td <- st_read(td_file_name) %>%
+  st_transform_utm() %>%
+  setnames(names(.), tolower(names(.)))
+
+td_names <- names(td)
+```
+
+## Miscellaneous operations and various checks
+
+### Change variable names
+
+time variable needs to be dealt with separately
+
+```{r }
+td <- setnames(td, "hlfsdrt", "seed_rate")
+
+# if("time" %in% names(asp) & "isotime" %in% names(asp)) {
+#   asp <- dplyr::select(asp, - time) 
+#   time_available <- TRUE
+# }
+
+# dict_asp <- dictionary[type == "seed_rate", ]
+# col_list <- dict_asp[, column]
+
+# asp <- make_var_name_consistent(
+#   asp,
+#   dict_asp
+# )
+
+# asp <- dplyr::select(asp, matches(col_list))
+```
+
+### Seed rate conversion
+
+```{r }
+td <- mutate(td, seed_rate := seed_rate * 2)  
+
+#--- seed rate conversion ---#
+if (any(td$seed_rate > 10000)){
+  #--- convert to K ---#
+  td <- mutate(td, seed_rate = seed_rate / 1000)
+}
+```
+
+## Save the data
+
+```{r }
+saveRDS(td, "Intermediate/as_planted_sf.rds")
+```
+

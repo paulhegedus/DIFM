@@ -1,0 +1,415 @@
+# Combine yield and input datasets
+
+## Preparation
+
+### Read datasets
+
+```{r }
+#--- yield ---#
+yield_polygons <- here("Data/Growers", ffy, "Intermediate/yield_polygons.rds") %>% 
+  readRDS() %>%
+  mutate(yield_area = as.numeric(st_area(.))) %>% 
+  dplyr::select(yield_id, yield_area, yield_vol, flag_bad) %>% 
+  filter(flag_bad == 0)
+
+tm_shape(yield_polygons) +
+  tm_fill(col = "yield_vol")
+
+```
+
+```{r eval = trial_type %in% c("SN", "S"), echo = trial_type %in% c("SN", "S")}
+#--- as-planted ---#
+seed_polygons <- here("Data/Growers", ffy, "Intermediate/as_applied_s.rds") %>% 
+  readRDS()
+
+tm_shape(seed_polygons) +
+  tm_fill(col = "seed_rate")
+
+```
+
+```{r eval = trial_type %in% c("SN", "N"), echo = trial_type %in% c("SN", "N")}
+#--- as-applied ---#
+n_polygons <- here("Data/Growers", ffy, "Intermediate/as_applied_n.rds") %>% 
+  readRDS()
+
+tm_shape(seed_polygons) +
+  tm_fill(col = "n_rate") 
+
+```
+
+## Filter out unreliable polygons
+
+### Intersect yield and seed polygons
+
+```{r eval = trial_type %in% c("SN", "S"), echo = trial_type %in% c("SN", "S")}
+
+
+# temp <- st_intersection(yield_polygons[2, ], seed_polygons) %>% 
+#   mutate(sub_pct = as.numeric(st_area(.)) / yield_area) %>%
+#   data.table() %>%
+#   #--- total sub_pct by yield polygon ---#
+#   .[, tot_sub_pct_s := sum(sub_pct)]
+
+#   seed_polygons[asp_id %in%  ]
+
+all_pct_s <- st_intersection(
+	  dplyr::select(yield_polygons, yield_id, yield_area),
+	  dplyr::select(seed_polygons, seed_rate)
+	) %>%
+	#--- percentage overlapped ---#
+  mutate(sub_pct = as.numeric(st_area(.)) / yield_area) %>%
+  data.table() %>%
+  #--- total sub_pct by yield polygon ---#
+  .[, tot_sub_pct_s := sum(sub_pct), by = yield_id] %>% 
+  #--- calculate sub_pct-weighted MEAN of applied rate ---#
+  .[, wm_seed_rate := sum(sub_pct * seed_rate) / tot_sub_pct_s, by = yield_id] %>%
+  #--- weighted deviation from the mean ---#
+  .[, dev_seed_rate := sum(abs(sub_pct * (seed_rate - wm_seed_rate) / tot_sub_pct_s)), by = yield_id] %>% 
+  #--- order by yield_id ---#
+  .[order(yield_id), ] %>% 
+  .[, .(
+    yield_id, 
+    tot_sub_pct_s, 
+    wm_seed_rate,
+    dev_seed_rate
+  )] %>% 
+  setnames("wm_seed_rate", "seed_rate") %>% 
+  unique(by = "yield_id")
+
+ggplot(all_pct_s) +
+  geom_histogram(aes(x = tot_sub_pct_s)) +
+  ggtitle("Histogram of the percentage of yield polygons \n overlapping with seed polygons")
+
+ggplot(all_pct_s) +
+  geom_histogram(aes(x = dev_seed_rate)) +
+  ggtitle("Histogram of the deviation of seed_rate \n to its mean by yield_id")
+
+```
+
+
+### Intersect yield and nitrogen polygons
+
+```{r eval = trial_type %in% c("SN", "N"), echo = trial_type %in% c("SN", "N")}
+
+all_pct_n <- st_intersection(
+    dplyr::select(yield_polygons, yield_id, yield_area),
+    dplyr::select(n_polygons, n_rate)
+  ) %>%
+  #--- percentage overlapped ---#
+  mutate(sub_pct = as.numeric(st_area(.)) / yield_area) %>%
+  data.table() %>%
+  #--- total sub_pct by yield polygon ---#
+  .[, tot_sub_pct_n := sum(sub_pct), by = yield_id] %>% 
+  #--- calculate sub_pct-weighted mean of applied rate ---#
+  .[, wm_n_rate := sum(sub_pct * n_rate) / sum(sub_pct), by = yield_id] %>%
+  #--- weighted deviation from the mean ---#
+  .[, dev_n_rate := sum(abs(sub_pct * (n_rate - wm_n_rate) / sum(sub_pct))), by = yield_id] %>% 
+  #--- order by yield_id ---#
+  .[order(yield_id), ] %>% 
+  .[, .(
+    yield_id, 
+    tot_sub_pct_n, 
+    wm_n_rate,
+    dev_n_rate
+  )] %>% 
+  setnames("wm_n_rate", "n_rate") %>% 
+  unique(by = "yield_id")
+  
+
+ggplot(all_pct_n) +
+  geom_histogram(aes(x = tot_sub_pct_n)) +
+  ggtitle("Histogram of the percentage of yield polygons \n overlapping with nitrogen polygons")
+
+ggplot(all_pct_n) +
+  geom_histogram(aes(x = dev_n_rate)) +
+  ggtitle("Histogram of the deviation of n_rate \n to its mean by yield_id")
+
+```
+
+### Filter out unreliable observations
+
+```{r }
+#--- determine the threshold ---#
+if (crop == "corn") {
+  max_dev_allowed_s <- 2
+  max_dev_allowed_n <- 20 
+} else {
+  max_dev_allowed_s <- 15
+}
+
+#---  ---#
+if (trial_type == "SN") {
+
+  data_to_merge <- all_pct_s[all_pct_n, on = "yield_id"] %>% 
+    .[tot_sub_pct_s > 0.9 & tot_sub_pct_n > 0.9, ] %>% 
+    .[dev_seed_rate < max_dev_allowed_s & dev_n_rate < max_dev_allowed_n, ] %>% 
+    .[, .(yield_id, seed_rate, n_rate)]
+
+} else if (trial_type == "S") {
+
+  data_to_merge <- all_pct_s %>%  
+    .[tot_sub_pct_s > 0.9, ] %>% 
+    .[tot_sub_pct_s < 1.1, ] %>% 
+    .[dev_seed_rate < max_dev_allowed_s, ] %>% 
+    .[, .(yield_id, seed_rate)]
+
+} else {
+
+  data_to_merge <- all_pct_n %>%  
+    .[tot_sub_pct_n > 0.9, ] %>% 
+    .[dev_n_rate < max_dev_allowed_n, ] %>% 
+    .[, .(yield_id, n_rate)]
+}
+
+```
+
++ Before: `r nrow(yield_polygons)` observations
++ After: `r nrow(data_to_merge)` observations
+
+### Combine yield polygons with filtered data 
+
+```{r }
+yield_combined <- left_join(yield_polygons, data_to_merge, by = "yield_id") 
+
+if (trial_type == "SN") {
+
+  yield_combined <- yield_combined %>% 
+    #--- drop observations with no match ---#
+    filter(!is.na(seed_rate)) %>% 
+    filter(!is.na(n_rate))  
+
+} else if (trial_type == "S") {
+
+  yield_combined <- yield_combined %>% 
+    #--- drop observations with no match ---#
+    filter(!is.na(seed_rate))  
+
+} else {
+
+  yield_combined <- yield_combined %>% 
+    #--- drop observations with no match ---#
+    filter(!is.na(n_rate))  
+}
+
+```
+
+Red-filled polygons were dropped:
+
+```{r dependson = "map-layout"}
+tm_shape(st_as_sf(yield_polygons)) +
+  tm_fill(col = "red") +
+tm_shape(st_as_sf(yield_combined)) +
+  tm_fill(col = "green") +
+tm_layout_to_add
+
+```
+
+## Yield grouping
+
+### Assign group id
+
+```{r }
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### Approximate minimum length of subplots
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+med_distance <- get_med_dist(yield_polygons)  
+
+# actual plot length will be longer than this
+min_obs <- round(12 / med_distance) # 12 meter
+max_obs <- round(20 / med_distance) # 24 meter
+
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### Determine the threshold
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+if (crop == "corn") {
+  max_dev_allowed_s <- 3
+  max_dev_allowed_n <- 20 
+} else {
+  max_dev_allowed_s <- 10
+}
+
+distance_gap_allowed <- 6 # 5 meter
+
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### Grouping
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+yield_dt_temp <- yield_combined %>% 
+  cbind(., st_coordinates(st_centroid(.))) %>% 
+    data.table() %>% 
+  #--- push down X ---#
+  .[, X_lag := data.table::shift(X, type = "lag")] %>% 
+  #--- push down Y ---#
+  .[, Y_lag := data.table::shift(Y, type = "lag")] %>% 
+  #--- calculate the distance between consecutive points ---#
+  .[, distance := sqrt((X_lag - X)^2 + (Y_lag - Y)^2)] %>% 
+  #--- take care of the first ob ---#
+  .[1, distance := 0] %>% 
+  #--- 2 yield point gaps (2+1 multiplier) ---#
+  .[, distance_gap := distance > distance_gap_allowed] 
+
+if (trial_type == "SN"){
+
+  yield_dt_temp_case <- yield_dt_temp %>% 
+    .[, dif_asp := c(0, diff(seed_rate))] %>% 
+    .[, change_asp := abs(dif_asp) >= max_dev_allowed_s] %>% 
+    .[, dif_aan := c(0, diff(n_rate))] %>% 
+    .[, change_aan := abs(dif_aan) >= max_dev_allowed_n] %>% 
+    #--- assign group id  ---#
+    .[, group_id := 1 + cumsum(change_asp | change_aan| distance_gap)]
+
+} else if (trial_type == "S") {
+
+  yield_dt_temp_case <- yield_dt_temp %>% 
+    .[, dif_asp := c(0, diff(seed_rate))] %>% 
+    .[, change_asp := abs(dif_asp) >= max_dev_allowed_s] %>% 
+    #--- assign group id  ---#
+    .[, group_id := 1 + cumsum(change_asp | distance_gap)]
+ 
+} else {
+
+  yield_dt_temp_case <- yield_dt_temp %>% 
+    .[, dif_aan := c(0, diff(n_rate))] %>% 
+    .[, change_aan := abs(dif_aan) >= max_dev_allowed_n] %>% 
+    #--- assign group id  ---#
+    .[, group_id := 1 + cumsum(change_aan| distance_gap)]
+}
+
+ 
+yield_dt <- yield_dt_temp_case %>% 
+  #--- get the number of observations per group ---#
+  .[, num_obs_group := .N, by = group_id] %>% 
+  #--- get the cumulative number of observations ---#
+  .[, dummy := 1] %>% 
+  .[, cum_num := cumsum(dummy), by = group_id] %>% 
+  #--- remove observations that belong to a group with less than mim_obs ---#
+  .[num_obs_group >= min_obs, ]
+
+```
+
+### Assign subgroup id
+
+```{r }
+all_data_ls <- list()
+
+for (i in min_obs:max_obs) {
+
+  if (i == min_obs){
+
+    temp_sub_id <- data.table::copy(yield_dt) %>% 
+      .[, sub_group_id := (cum_num - 1) %/% i  + 1] 
+
+    group_ls <- temp_sub_id %>% 
+      .[, num_obs_sub := .N, by = .(group_id, sub_group_id)] %>% 
+      .[, too_small := num_obs_sub < min_obs] %>% 
+      .[, drop := any(too_small), by = group_id] %>% 
+      .[drop == FALSE, group_id] %>% unique()
+
+    all_data_ls[[paste(i)]] <- temp_sub_id[group_id %in% group_ls, ] 
+
+    bad_guys <- temp_sub_id[!(group_id %in% group_ls), ]
+
+  } else {
+
+    temp_sub_id <- data.table::copy(bad_guys) %>% 
+      .[, sub_group_id := (cum_num - 1) %/% i  + 1] 
+
+    group_ls <- temp_sub_id %>% 
+      .[, num_obs_sub := .N, by = .(group_id, sub_group_id)] %>% 
+      .[, too_small := num_obs_sub < min_obs] %>% 
+      .[, drop := any(too_small), by = group_id] %>% 
+      .[drop == FALSE, group_id] %>% unique()
+
+    all_data_ls[[paste(i)]] <- temp_sub_id[group_id %in% group_ls, ] 
+
+    bad_guys <- temp_sub_id[!(group_id %in% group_ls), ]
+
+  }
+
+  if(nrow(bad_guys) == 0){
+    break
+  }
+     
+}
+
+yield_sf <- all_data_ls %>% 
+  rbindlist() %>% 
+  .[, obs_id := .GRP, by = .(group_id, sub_group_id)] %>% 
+  st_as_sf() %>% 
+  dplyr::select(yield_id, yield_vol, seed_rate, obs_id)
+
+```
+
+There are `r yield_sf$obs_id %>% unique() %>% length()` observations.
+
+Please note that each of the polygons are not observations units here.
+
+```{r dependson = "map-layout"}
+#--- yield map ---#
+tm_shape(yield_sf) +
+  tm_fill(col = "yield_vol") +
+tm_layout_to_add
+```
+
+```{r dependson = "map-layout", eval = trial_type %in% c("SN", "S"), echo = trial_type %in% c("SN", "S")}
+#--- seed rate map ---#
+tm_shape(yield_sf) +
+  tm_fill(col = "seed_rate") +
+tm_layout_to_add
+```
+
+```{r , eval = trial_type %in% c("SN", "N"), echo = trial_type %in% c("SN", "N")}
+#--- nitrogen map ---#
+tm_shape(yield_sf) +
+  tm_fill(col = "n_rate") +
+tm_layout_to_add
+```
+
+```{r dependson = "map-layout"}
+#--- yield map ---#
+tm_shape(yield_sf) +
+  tm_fill(col = "obs_id", style = "cont") +
+tm_layout_to_add
+```
+
+## Clip out the points in the headland
+
+```{r dependson = "map-layout", eval = F}
+td_file <- here("Data/Growers", ffy) %>% 
+  list.files(recursive = TRUE, full.names = TRUE) %>%
+  .[str_detect(., "shp")] %>%
+  .[str_detect(., "trial-design")]
+
+if (file.exists(td_file)) {
+  trial_design <- st_read(td_file) %>%
+    st_transform_utm() %>%
+    setnames(names(.), tolower(names(.))) 
+
+  if("type" %in% names(trial_design)) {
+    # some trial designs are missing headland
+    trial_design <- filter(trial_design, type != "Headland") 
+  } 
+
+  if (st_crs(yield) == st_crs(trial_design)) {
+    yield <- yield[trial_design, ]
+  } else {
+    cat("The CRS of yield and trial design do not match.")
+  }
+
+}
+```
+
+```{r eval = F}
+tm_shape(trial_design) +
+  tm_borders(col = "blue") +
+tm_shape(yield) +
+  tm_dots() +
+tm_layout_to_add
+```
+
+## Save
+
+```{r }
+saveRDS(yield_sf, file = here("Data", "Growers", ffy, "Intermediate/yield_group_by_obs.rds"))
+```
+
+
