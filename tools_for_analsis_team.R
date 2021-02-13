@@ -3,7 +3,7 @@
 # /*=================================================*/
 #--- packages and functions ---#
 source(
-  "https://github.com/tmieno2/DIFM/blob/master/prepare.R?raw=TRUE",
+  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
   local = TRUE
 )
 
@@ -55,10 +55,10 @@ ffy <- field_year_ls[30]
 # lapply(field_year_ls, f_process_make_report)
 
 #--- individually ---#
-f_process_make_report(
-  field_year_ls[30], 
-  rerun = TRUE
-)
+# f_process_make_report(
+#   field_year_ls[30], 
+#   rerun = TRUE
+# )
 
 #/*=================================================*/
 #' # Run analysis and make report
@@ -86,3 +86,7 @@ f_process_make_report(
 make_grower_report(field_year_ls[30], rerun = TRUE)
 
 # render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")
+
+
+
+
