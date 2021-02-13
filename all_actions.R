@@ -15,8 +15,8 @@ field_data <- jsonlite::fromJSON(
   ),
   flatten = TRUE
 ) %>%
-  data.table() %>%
-  .[, field_year := paste(farm, field, year, sep = "_")]
+data.table() %>%
+.[, field_year := paste(farm, field, year, sep = "_")]
 
 #--- get the field-year combinations ---#
 field_year_ls <- field_data$field_year
@@ -83,6 +83,6 @@ f_process_make_report(
 # lapply(field_year_ls, make_report, rerun = TRUE)
 
 #--- individually ---#
-make_grower_report(field_year_ls[33], rerun = TRUE)
+make_grower_report(field_year_ls[30], rerun = TRUE)
 
-render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")
+# render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")

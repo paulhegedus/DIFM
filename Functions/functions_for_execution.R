@@ -713,10 +713,13 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, head_dist = NA, 
 #' ## Read rmd file from github repository
 #/*----------------------------------*/
 
+# file_name <- "DataProcessing/data_processing_template.Rmd"
+# rmd_file[1:10]
+
 read_rmd <- function(file_name, local = FALSE) {
 
   if (local == FALSE) {
-    file_name_on_github <- paste0("https://github.com/tmieno2/DIFM/blob/master/", file_name)  
+    file_name_on_github <- paste0("https://github.com/tmieno2/DIFM/blob/master/", file_name, "?raw=TRUE")  
     rmd_file <- suppressMessages(readLines(file_name_on_github))
   } else {
     rmd_file <- readLines(here("Codes", file_name))
