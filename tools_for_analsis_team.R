@@ -25,7 +25,7 @@ field_year_ls <- field_data$field_year
 #' # Data Processing
 # /*=================================================*/
 
-ffy <- field_year_ls[30]
+# ffy <- field_year_ls[30]
 
 # /*----------------------------------*/
 #' ## Non-experiment Data
@@ -83,7 +83,11 @@ ffy <- field_year_ls[30]
 # lapply(field_year_ls, make_report, rerun = TRUE)
 
 #--- individually ---#
-make_grower_report(field_year_ls[30], rerun = TRUE)
+# make_grower_report(
+#   field_year_ls[30], 
+#   rerun = TRUE,
+#   local = TRUE
+# )
 
 # render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")
 

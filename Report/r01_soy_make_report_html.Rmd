@@ -562,16 +562,16 @@ g_int <- ggplot(plot_data) +
     parse = TRUE, 
     label = ('f(seed, c^{high})'),
     color = "#000000",
-    size = 4,
+    size = 6,
     fontface = 3
   ) +
   annotate('text',
     x = 36,
-    y = 170,
+    y = 166,
     parse = TRUE,
     label = 'f(seed, c^{low})',
     color = "#C87700",
-    size = 4,
+    size = 6,
     fontface = 3
   ) +
   theme_minimal() +
@@ -579,7 +579,8 @@ g_int <- ggplot(plot_data) +
     legend.position = "none",
     panel.grid = element_blank(),
     axis.text = element_blank(),
-    axis.ticks = element_blank()
+    axis.ticks = element_blank(),
+    axis.title = element_text(size = 20)
   )
 
 g_int
