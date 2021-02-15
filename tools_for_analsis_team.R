@@ -15,8 +15,8 @@ field_data <- jsonlite::fromJSON(
   ),
   flatten = TRUE
 ) %>%
-data.table() %>%
-.[, field_year := paste(farm, field, year, sep = "_")]
+  data.table() %>%
+  .[, field_year := paste(farm, field, year, sep = "_")]
 
 #--- get the field-year combinations ---#
 field_year_ls <- field_data$field_year
@@ -25,7 +25,7 @@ field_year_ls <- field_data$field_year
 #' # Data Processing
 # /*=================================================*/
 
-# ffy <- field_year_ls[30]
+# ffy <- field_year_ls[31]
 
 # /*----------------------------------*/
 #' ## Non-experiment Data
@@ -44,7 +44,7 @@ field_year_ls <- field_data$field_year
 
 #--- individually ---#
 # exp_process_make_report(
-#   field_year_ls[30], 
+#   field_year_ls[30],
 #   rerun = TRUE
 # )
 
@@ -56,41 +56,40 @@ field_year_ls <- field_data$field_year
 
 #--- individually ---#
 # f_process_make_report(
-#   field_year_ls[30], 
+#   field_year_ls[30],
 #   rerun = TRUE
 # )
 
-#/*=================================================*/
+# /*=================================================*/
 #' # Run analysis and make report
-#/*=================================================*/
+# /*=================================================*/
 
-#/*----------------------------------*/
+# /*----------------------------------*/
 #' ## Run analysis
-#/*----------------------------------*/
+# /*----------------------------------*/
 #--- all fields ---#
 # lapply(field_year_ls, run_analysis, rerun = TRUE)
 
 #--- individually ---#
 # run_analysis(
-#   field_year_ls[30], 
-#   rerun = TRUE
-# )
-
-#/*----------------------------------*/
-#' ## Make report
-#/*----------------------------------*/
-#--- all fields ---#
-# lapply(field_year_ls, make_report, rerun = TRUE)
-
-#--- individually ---#
-# make_grower_report(
-#   field_year_ls[30], 
+#   field_year_ls[31],
 #   rerun = TRUE,
 #   local = TRUE
 # )
 
+# /*----------------------------------*/
+#' ## Make report
+# /*----------------------------------*/
+#--- all fields ---#
+# lapply(field_year_ls, make_report, rerun = TRUE)
+
+#--- individually ---#
+make_grower_report(
+  field_year_ls[31],
+  rerun = TRUE,
+  local = TRUE
+)
+
 # render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")
-
-
 
 

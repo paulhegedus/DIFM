@@ -9,30 +9,36 @@ For Zone 2, the net revenue is predicted to be \$`r get_pi("gc", 2)` per acre at
 
 For Zone 3, the net revenue is predicted to be \$`r get_pi("gc", 3)` per acre at the grower-chosen grower_chosen_rate_hereK seeds per acre, and \$`r get_pi("opt_v", 3)` at the zone-specific optimal seed rate of `r get_seed("opt_v", 3)`K per acre. _t-test-statement-for-zone-3_ 
 
-```{r status-quo-optimal-v, fig.cap = "Confidence intervals of net revenues under grower-chosen (grower_chosen_rate_hereK) vs. optimal site-specific seeding strategies"}
+```{r status-quo-optimal-v, fig.cap = "Confidence intervals of net revenues under grower-chosen (grower_chosen_rate_hereK) vs. optimal site-specific seeding strategies", fig.height = 4}
 
-g_pi <- ggplot(data = opt_gc_data) +
+fig_data <- copy(opt_gc_data) %>% 
+  .[, type_txt := case_when(
+    type == "opt_v" ~ "optimal\nsite-specific\nrates",
+    type == "gc" ~ "grower-\nchosen\n rate"
+  )]
+
+g_pi <- ggplot(data = fig_data) +
   geom_point(
     aes(
       y = profit_hat, 
-      x = type
+      x = type_txt
     ), 
     size = 3, 
     color = "red"
   ) +
   geom_text(
     aes(
-      y = max(opt_gc_data$pi_upper) + 20, 
-      x = type,
+      y = max(fig_data$pi_upper) + 20, 
+      x = type_txt,
       label = paste0("seed rate \n = ", round(seed_rate)) 
     ), 
-    size = 3, 
+    size = 4, 
     color = "blue"
   ) +
   # geom_text(
   #   data = pi_dif_test_zone,
   #   aes(
-  #     y = max(opt_gc_data$pi_upper) + 25, 
+  #     y = max(fig_data$pi_upper) + 25, 
   #     x = "Optimal",
   #     label = paste0("(t = ", round(t, digits = 2), ")") 
   #   ), 
@@ -43,25 +49,23 @@ g_pi <- ggplot(data = opt_gc_data) +
     aes(
     ymin = pi_lower, 
     ymax = pi_upper, 
-    x = type
+    x = type_txt
     ),
-    size = 1.5
+    size = 1
   ) +
   facet_grid(. ~ zone_txt) +
   theme_bw() +
-  ylim(NA, max(opt_gc_data$pi_upper) + 30) +
+  ylim(NA, max(fig_data$pi_upper) + 30) +
   ylab("Net Revenue ($/acre)") +
   xlab("") +
   theme(
-    axis.text.x = element_text(angle = 90)
-  ) +
-  theme(
     axis.title.x = element_text(size = 12, vjust = -1),
     axis.title.y = element_text(size = 12),
-    axis.text.x = element_text(size = 9, angle = 90),
-    axis.text.y = element_text(size = 9),
-    strip.text = element_text(size = 9)
-  )
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    strip.text = element_text(size = 12)
+  ) +
+  fig_theme_nonsp
 
 g_pi
 

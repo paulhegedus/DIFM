@@ -563,4 +563,44 @@ make_ys_by_chars <- function(data_sf){
   return(list(g_all, g_all_map))
 
 }
+
+expand_grid_df <- function(data_1, data_2) {
+
+  expanded_data <- expand.grid(
+    index_1 = seq_len(nrow(data_1)),
+    index_2 = seq_len(nrow(data_2))
+  ) %>% 
+  tibble() %>% 
+  rowwise() %>% 
+  mutate(
+    data = list(
+      cbind(
+        slice(data.table(data_1), index_1),
+        slice(data.table(data_2), index_2)
+      )
+    )
+  ) %>% 
+  select(data) %>% 
+  ungroup() %>% 
+  .$data %>% 
+  rbindlist() %>% 
+  tibble()
+
+  return(expanded_data)
+
+}
+
+get_seed <- function(c_type, w_zone){
+  opt_gc_data[type == c_type & zone_txt == paste0("Zone ", w_zone), seed_rate] %>% round(digits = 0)
+}
+
+get_pi <- function(c_type, w_zone){
+  opt_gc_data[type == c_type & zone_txt == paste0("Zone ", w_zone), profit_hat] %>% round(digits = 2)
+}
+
+get_t_value <- function(w_zone){
+  pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), t] %>% 
+    round(digits = 2)
+}  
+
  

@@ -147,7 +147,7 @@ if (gc_type_s == "uniform") {
     ) %>% 
     .[, type := "gc"] %>% 
     .[, .(
-      seed_rate, zone, type, yield_hat, yield_hat_se,
+      seed_rate, zone_txt, type, yield_hat, yield_hat_se,
       profit_hat, profit_hat_se
     )]
 
@@ -255,8 +255,10 @@ pi_data_indiv_sf <- rbind(pi_data_opt, pi_data_gc) %>%
 
 if (gc_type_s == "uniform") {
 
+  data_for_test <- data.table(data_sf) %>% unique(by = "zone_txt")
+
   pi_dif_test_zone <- get_dif_stat_zone(
-    data = opt_s_data, 
+    data = data_for_test, 
     test_var = "seed_rate", 
     opt_var = "opt_s",
     gc_var = "gc_rate",
