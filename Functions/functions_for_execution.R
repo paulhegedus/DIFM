@@ -527,6 +527,8 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     # Statements about the difference between 
     # optimal vs grower-chosen rates
 
+    num_zones <- nrow(pi_dif_test_zone)
+
     for (i in 2:num_zones) {
     # note: zone 1 has a longer version already in res_disc_rmd 
       if (i == 2) {
@@ -582,7 +584,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     # optimal vs grower-chosen rates
 
     gc_opt_comp_txt_ls <- c()
-    num_zones <- nrow(pi_dif_test_zone)
+    
     for (i in 1:num_zones) {
       temp_dif <- get_seed("gc", i) - get_seed("opt_v", i)
       gc_opt_comp_txt_ls <- c(gc_opt_comp_txt_ls,
