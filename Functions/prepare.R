@@ -23,3 +23,87 @@ source("https://github.com/tmieno2/DIFM/blob/master/Functions/functions_for_orga
 source("https://github.com/tmieno2/DIFM/blob/master/Functions/functions_for_processing.R?raw=TRUE")
 source("https://github.com/tmieno2/DIFM/blob/master/Functions/functions_for_trial_design.R?raw=TRUE")
 
+#/*=================================================*/
+#' # Figure theme
+#/*=================================================*/
+fig_theme_nonsp <- theme(
+  axis.title.x = element_text(
+    size = 12,
+    family = "Times"
+  ),
+  axis.title.y  =  element_text(
+    size = 12,
+    family = "Times"
+  ),
+  axis.text  =  element_text(
+    size = 10,
+    family = "Times"
+  ),
+  axis.ticks  =  element_line(
+    size = 0.3, 
+    linetype = "solid"
+  ),
+  axis.ticks.length  =  unit(.15, 'cm'),
+  #--- legend ---#
+  legend.text  =  element_text(
+    size = 12,
+    family = "Times"
+  ),
+  legend.title  =  element_text(
+    size = 12,
+    family = "Times"
+  ),
+  legend.key.size  =  unit(0.6, "cm"),
+  #--- strip (for faceting) ---#
+  strip.text  =  element_text(
+    size  =  12, 
+    family = "Times"
+  ),
+  #--- panel ---#
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.background = element_blank(),
+  panel.border = element_rect(fill=NA)
+)
+ 
+fig_theme_sp <- theme(
+  axis.text.y = element_blank(),
+  axis.text.x = element_blank(),
+  axis.ticks.x = element_blank(),
+  axis.ticks.y = element_blank(),
+  axis.line.x = element_blank(),
+  axis.line.y = element_blank(),
+  #--- panel ---# 
+  panel.border = element_blank(),
+  panel.grid.major = element_line(color = "transparent"),
+  panel.grid.minor = element_line(color = "transparent"),
+  panel.background = element_blank(),
+  # panel.background = element_rect(fill = "transparent"),
+  #--- plot ---#
+  plot.title = element_text(
+    family = "Times", 
+    face = "bold", 
+    size = 12
+  ),
+  plot.margin = margin(0, 0, 0, 0, "cm"),
+  plot.background = element_rect(
+    fill = "transparent", 
+    color = "transparent"
+  ),
+  #--- legend ---#
+  legend.text = element_text(
+    size = 12,
+    family = "Times"
+  ),
+  legend.title = element_text(
+    size = 12,
+    family = "Times"
+  ),
+  legend.key.size = unit(0.6, "cm"),
+  #--- strip (for faceting) ---#
+  strip.text = element_text(
+    size = 12,
+    family = "Times"
+  )
+)
+ 

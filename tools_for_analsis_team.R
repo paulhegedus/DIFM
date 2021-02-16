@@ -85,8 +85,8 @@ field_year_ls <- field_data$field_year
 
 #--- individually ---#
 make_grower_report(
-  field_year_ls[31],
-  rerun = TRUE,
+  ffy = field_year_ls[31],
+  # rerun = TRUE,
   local = TRUE
 )
 

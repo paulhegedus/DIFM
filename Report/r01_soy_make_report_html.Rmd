@@ -1,11 +1,10 @@
 ---
 title: "Report on DIFM Field Trial \n field-year-here"
 output:
-  # bookdown::word_document2:
-  officedown::rdocx_document:
+  bookdown::word_document2:
     toc: false
     number_sections: false
-    reference_docx: "./../word_template.docx"
+    reference_docx: "/Users/tmieno2/Box/DIFM_Central/Reports/Growers/word_template.docx"
   bookdown::html_document2:
     toc: true
     toc_depth: 2
@@ -101,96 +100,13 @@ plot_width <- 60
 
 ```{r map-layout, cache = TRUE}
 tm_layout_to_add <- tm_layout(
-  legend.outside = "TRUE",
   frame = FALSE,
-  legend.title.size = 1.2,
-  legend.text.size = 1
+  legend.outside = TRUE, 
+  legend.title.size = 1,
+  legend.text.size = 0.8,
+  fontfamily = "Times"
 )
 
-```
-
-```{r }
-fig_theme_nonsp <- theme(
-  axis.title.x = element_text(
-    size = 12,
-    family = "Times"
-  ),
-  axis.title.y  =  element_text(
-    size = 12,
-    family = "Times"
-  ),
-  axis.text  =  element_text(
-    size = 10,
-    family = "Times"
-  ),
-  axis.ticks  =  element_line(
-    size = 0.3, 
-    linetype = "solid"
-  ),
-  axis.ticks.length  =  unit(.15, 'cm'),
-  #--- legend ---#
-  legend.text  =  element_text(
-    size = 12,
-    family = "Times"
-  ),
-  legend.title  =  element_text(
-    size = 12,
-    family = "Times"
-  ),
-  legend.key.size  =  unit(0.6, "cm"),
-  #--- strip (for faceting) ---#
-  strip.text  =  element_text(
-    size  =  12, 
-    family = "Times"
-  ),
-  #--- panel ---#
-  panel.grid.major = element_blank(),
-  panel.grid.minor = element_blank(),
-  panel.background = element_blank(),
-  panel.border = element_rect(fill=NA)
-)
- 
-fig_theme_sp <- theme(
-  axis.text.y = element_blank(),
-  axis.text.x = element_blank(),
-  axis.ticks.x = element_blank(),
-  axis.ticks.y = element_blank(),
-  axis.line.x = element_blank(),
-  axis.line.y = element_blank(),
-  #--- panel ---# 
-  panel.border = element_blank(),
-  panel.grid.major = element_line(color = "transparent"),
-  panel.grid.minor = element_line(color = "transparent"),
-  panel.background = element_blank(),
-  # panel.background = element_rect(fill = "transparent"),
-  #--- plot ---#
-  plot.title = element_text(
-    family = "Times", 
-    face = "bold", 
-    size = 12
-  ),
-  plot.margin = margin(0, 0, 0, 0, "cm"),
-  plot.background = element_rect(
-    fill = "transparent", 
-    color = "transparent"
-  ),
-  #--- legend ---#
-  legend.text = element_text(
-    size = 12,
-    family = "Times"
-  ),
-  legend.title = element_text(
-    size = 12,
-    family = "Times"
-  ),
-  legend.key.size = unit(0.6, "cm"),
-  #--- strip (for faceting) ---#
-  strip.text = element_text(
-    size = 12,
-    family = "Times"
-  )
-)
- 
 ```
 
 ```{r }
@@ -230,12 +146,24 @@ analysis_data <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %
   readRDS()
 
 trial_design <- here("Data/Growers", ffy, "TrialDesign/trial-design.shp") %>% 
-  st_read()
+  st_read() %>% 
+  setnames(names(.), tolower(names(.))) %>% 
+  st_transform_utm()
 
 as_applied_s <- readRDS(here("Data/Growers", ffy, "Intermediate/as_applied_s.rds"))
 
 yield_polygons <- readRDS(here("Data/Growers", ffy, "Intermediate/yield_polygons.rds"))
 
+
+#/*----------------------------------*/
+#' ## Get the aspect ratio of the field
+#/*----------------------------------*/
+field_bbox <- st_bbox(analysis_data)
+
+sn_length <- field_bbox["ymax"] - field_bbox["ymin"]
+ew_length <- field_bbox["xmax"] - field_bbox["xmin"]
+
+sn_ew_ratio <- sn_length / ew_length
 ```
 
 # Field Management Information
@@ -390,31 +318,63 @@ Figure \@ref(fig:tgts-yield-ap) displays the trial design and the resultant as-p
 #/*----------------------------------*/
 #' ## Trial-design
 #/*----------------------------------*/
-
-g_tgts <- ggplot() +
-  geom_sf(
-    data = trial_design, 
-    aes(fill = factor(tgt_seed)),
-    size = 0.1
-  ) +
-  scale_fill_brewer(
-    palette = "Greens",
-    direction = 1,
-    name = "Targeted Seed Rate (1000 seeds)",
-    guide = guide_legend(
-      ncol = 3
+if (sn_ew_ratio > 1.1) {
+  tm_tgts <- tm_shape(trial_design) +
+    tm_fill(
+      col = "tgt_seed", 
+      palette = "Greens",
+      title = "Targeted\nSeed Rate\n(1000 seeds)",
+      # legend.is.portrait = FALSE,
+      style = "cat"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      # legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
     )
-  ) +
-  theme_void() +
-  theme(
-    legend.position = "bottom",
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.key.width =  unit(0.5, "cm"),
-    legend.key.height =  unit(0.2, "cm"),
-    plot.margin = unit(c(0, 2, 0, 0), "cm") 
-  ) +
-  fig_theme_sp
+
+} else {
+
+  tm_tgts <- tm_shape(trial_design) +
+    tm_fill(
+      col = "tgt_seed", 
+      palette = "Greens",
+      title = "Targeted Seed Rate (1000 seeds)",
+      legend.is.portrait = FALSE,
+      style = "cat"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+
+}
+
+# g_tgts <- ggplot() +
+#   geom_sf(
+#     data = trial_design, 
+#     aes(fill = factor(tgt_seed)),
+#     size = 0.1
+#   ) +
+#   scale_fill_brewer(
+#     palette = "Greens",
+#     direction = 1,
+#     name = "Targeted Seed Rate (1000 seeds)",
+#     guide = guide_legend(
+#       ncol = 4,
+#       title.position = "top"
+#     )
+#   ) +
+#   theme_void() +
+#   theme(
+#     legend.position = "bottom",
+#     legend.text = element_text(size = 12),
+#     legend.title = element_text(size = 12),
+#     legend.key.width =  unit(0.5, "cm"),
+#     legend.key.height =  unit(0.2, "cm")
+#   ) +
+#   fig_theme_sp
 
 ```
 
@@ -422,27 +382,66 @@ g_tgts <- ggplot() +
 #/*----------------------------------*/
 #' ## As-planted Seed Rate
 #/*----------------------------------*/
-g_ap <- ggplot() +
-  geom_sf(
-    data = as_applied_s, 
-    aes(fill = seed_rate),
-    size = 0
-  ) +
-  scale_fill_distiller(
+
+asp_plot_data <- trial_design %>% 
+  filter(type != "Headland") %>% 
+  as_applied_s[., ]
+
+if (sn_ew_ratio > 1.1) {
+  tm_asp <- tm_shape(asp_plot_data) +
+    tm_fill(
+      col = "seed_rate", 
+      palette = "Greens",
+      title = "As-planted\nSeed Rate\n(1000 seeds)",
+      # legend.is.portrait = FALSE,
+      style = "cont"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      # legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+
+} else {
+ tm_asp <- tm_shape(asp_plot_data) +
+  tm_fill(
+    col = "seed_rate", 
     palette = "Greens",
-    direction = 1,
-    name = "As-planted Seed Rate (1000 seeds)"
+    title = "As-planted Seed Rate (1000 seeds)",
+    legend.is.portrait = FALSE,
+    style = "cont"
   ) +
-  # guides(color = guide_legend(title.position = "left")) +
-  theme_void() +
-  theme(
-    legend.position = "bottom",
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.key.width =  unit(0.6, "cm"),
-    plot.margin = unit(c(0, 0, 0, 0), "cm")
-  ) +
-  fig_theme_sp
+  tm_layout_to_add + 
+  tm_layout(
+    legend.outside.position = "bottom",
+    legend.position = c(0.25, 0.25)
+  )
+ 
+}
+ 
+# g_ap <- ggplot() +
+#   geom_sf(
+#     data = asp_plot_data, 
+#     aes(fill = seed_rate),
+#     size = 0
+#   ) +
+#   scale_fill_distiller(
+#     palette = "Greens",
+#     direction = 1,
+#     name = "As-planted Seed Rate (1000 seeds)",
+#     guide = guide_colorbar(
+#       title.position = "top"
+#     )
+#   ) +
+#   # guides(color = guide_legend(title.position = "left")) +
+#   theme_void() +
+#   theme(
+#     legend.position = "bottom",
+#     legend.text = element_text(size = 12),
+#     legend.title = element_text(size = 12),
+#     legend.key.width =  unit(0.6, "cm")
+#   ) +
+#   fig_theme_sp
 
 ```
 
@@ -450,31 +449,107 @@ g_ap <- ggplot() +
 #/*----------------------------------*/
 #' ## Raw yield
 #/*----------------------------------*/
-g_ry <- ggplot() +
-  geom_sf(
-    data = filter(yield_polygons, flag_bad == 0),
-    aes(fill = yield_vol),
-    size = 0.2
-  ) +
-  scale_fill_distiller(
-    palette = "YlOrBr",
-    direction = 1,
-    name = "Yield (bu/acre)"
-  ) +
-  theme_void() +
-  theme(
-    legend.position = "bottom",
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.key.width =  unit(0.6, "cm"),
-    plot.margin = unit(c(0, 2, 0, 0), "cm")
-  ) +
-  fig_theme_sp
+ry_plot_data <- trial_design %>% 
+  filter(type != "Headland") %>% 
+  yield_polygons[., ]
+
+if (sn_ew_ratio > 1.1) {
+  tm_ry <- tm_shape(filter(ry_plot_data, flag_bad == 0)) +
+    tm_fill(
+      col = "yield_vol", 
+      palette = "YlOrBr",
+      title = "Yield\n(bu/acre)",
+      # legend.is.portrait = FALSE,
+      style = "cont"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      # legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+} else {
+  tm_ry <- tm_shape(filter(ry_plot_data, flag_bad == 0)) +
+    tm_fill(
+      col = "yield_vol", 
+      palette = "YlOrBr",
+      title = "Yield \n (bu/acre)",
+      legend.is.portrait = FALSE,
+      style = "cont"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+}
+ 
+
+# g_ry <- ggplot() +
+#   geom_sf(
+#     data = filter(ry_plot_data, flag_bad == 0),
+#     aes(fill = yield_vol),
+#     size = 0
+#   ) +
+#   scale_fill_distiller(
+#     palette = "YlOrBr",
+#     direction = 1,
+#     name = "Yield (bu/acre)",
+#     guide = guide_colorbar(
+#       title.position = "top"
+#     )
+#   ) +
+#   theme_void() +
+#   theme(
+#     legend.position = "bottom",
+#     legend.text = element_text(size = 12),
+#     legend.title = element_text(size = 12),
+#     legend.key.width =  unit(0.6, "cm")
+#   ) +
+#   fig_theme_sp
 
 ```
 
-```{r tgts-yield-ap, fig.cap = "Trial design, as-planted seed rates, and soybean yields, 2020)", fig.height = 15}
-g_tgts / g_ap / g_ry 
+```{r tgts-yield-ap-gg, fig.cap = "Trial design, as-planted seed rates, and soybean yields, 2020)", fig.height = 8.5, eval = F}
+
+gr_tgts <- ggplotGrob(g_tgts)
+gr_ap <- ggplotGrob(g_ap)
+gr_ry <- ggplotGrob(g_ry)
+
+g_inset <- ggplot() +
+  coord_equal(
+    xlim = c(0, 1),
+    ylim = c(0, 1),
+    expand = FALSE
+  ) + 
+  fig_theme_sp +
+  annotation_custom(
+    gr_tgts, 
+    xmin = 0, 
+    xmax = 0.5, 
+    ymin = 0.5,
+    ymax = 1
+  ) +
+  annotation_custom(
+    gr_ap, 
+    xmin = 0.5, 
+    xmax = 1, 
+    ymin = 0.5,
+    ymax = 1
+  ) 
+  +
+  annotation_custom(
+    gr_ry, 
+    xmin = 0, 
+    xmax = 0.5, 
+    ymin = 0,
+    ymax = 0.5
+  )  
+
+g_inset
+```
+
+```{r tgts-yield-ap, fig.cap = "Trial design, as-planted seed rates, and soybean yields, 2020)", fig.height = 10}
+tmap_arrange(tm_tgts, tm_asp, tm_ry, ncol = 2)  
 ```
 
 # Overview of Data Processing
@@ -488,52 +563,87 @@ include_graphics(machinery_alignment.png)))
 ```
 
 ```{r gen-yield-seed-map}
+#/*----------------------------------*/
+#' ## Yield
+#/*----------------------------------*/
 
-g_p_yield <- ggplot(data = analysis_data) +
-  geom_sf(
-    aes(fill = yield_vol),
-    size = 0.2
-  ) +
-  scale_fill_distiller(
-    palette = "YlOrBr",
-    direction = 1,
-    name = "Yield (bu/acre)"
-  ) +
-  theme_void() +
-  theme(
-    legend.position = "bottom",
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.key.width =  unit(0.6, "cm"),
-    plot.margin = unit(c(0, 2, 0, 0), "cm")
-  ) +
-  fig_theme_sp
+analysis_data_td <- trial_design %>% 
+  filter(type != "Headland") %>% 
+  analysis_data[., ]
 
-g_p_seed <- ggplot(data = analysis_data) +
-  geom_sf(
-    aes(fill = seed_rate),
-    size = 0.2
-  ) +
-  scale_fill_distiller(
-    palette = "YlGn",
-    direction = 1,
-    name = "Yield (bu/acre)"
-  ) +
-  theme_void() +
-  theme(
-    legend.position = "bottom",
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.key.width =  unit(0.6, "cm"),
-    plot.margin = unit(c(0, 2, 0, 0), "cm")
-  ) +
-  fig_theme_sp
+if (sn_ew_ratio > 1.1) {
+  tm_p_yield <- tm_shape(analysis_data_td) +
+    tm_fill(
+      col = "yield_vol", 
+      palette = "YlOrBr",
+      title = "Yield\n(bu/acre)",
+      # legend.is.portrait = FALSE,
+      style = "cont"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      # legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+} else {
+  tm_p_yield <- tm_shape(analysis_data_td) +
+    tm_fill(
+      col = "yield_vol", 
+      palette = "YlOrBr",
+      title = "Yield (bu/acre)",
+      legend.is.portrait = FALSE,
+      style = "cont"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+}
+
+#/*----------------------------------*/
+#' ## Seed rate
+#/*----------------------------------*/
+if (sn_ew_ratio > 1.1) {
+  tm_p_seed <- tm_shape(analysis_data_td) +
+    tm_fill(
+      col = "seed_rate", 
+      palette = "YlGn",
+      title = "Seed Rate\n(1000 seeds)",
+      # legend.is.portrait = FALSE,
+      style = "cont"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      # legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+} else {
+  tm_p_seed <- tm_shape(analysis_data_td) +
+    tm_fill(
+      col = "seed_rate", 
+      palette = "YlGn",
+      title = "Seed Rate (1000 seeds)",
+      legend.is.portrait = FALSE,
+      style = "cont"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+}
 
 ```
 
-```{r  processed-yield-as-planted, echo = F, fig.cap = "Yield and as-planted seed rates", dependson = "save-figures-yield-seed-processed", fig.height = 10}
+```{r  processed-yield-as-planted, echo = F, fig.cap = "Yield and as-planted seed rates", dependson = "save-figures-yield-seed-processed", fig.height = ifelse(sn_ew_ratio > 1.1, 5, 8)}
 
-g_p_yield / g_p_seed
+if (sn_ew_ratio > 1.1) {
+  tmap_arrange(tm_p_seed, tm_p_yield, ncol = 2)
+} else {
+  tmap_arrange(tm_p_seed, tm_p_yield, ncol = 1)
+}
+
 ```
 
 # Defining Management Zones Using a Statistical Parameter
@@ -546,41 +656,80 @@ $$
 
 The $\beta$ parameter is an estimate of the percentage change in yield give a 1% change in seed rate.  A higher $\beta_i$ estimate predicts a higher yield response to seed rate at site $i$, which implies a higher economically optimal seed rate at that site.  Using a statistical technique called geographically weighted regression (GWR), a value of the beta parameter was estimated at each observation point in the field's processed data.  Figure \@ref(fig:map-response) displays the map of the values of $\beta$ on the field.
 
-```{r gen-map-response, fig.cap = "Map of the estimated values of the yield response parameter, $\\beta$"}
-g_map_r <- ggplot(data = data_sf) +
-  geom_sf(aes(fill = b_slope), size = 0.1) +
-  scale_fill_distiller(
-    palette = "YlGnBu",
-    direction = 1,
-    name = expression(beta)
-  ) +
-  theme_void() +
-  theme(
-    legend.position = "bottom",
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.key.width =  unit(0.6, "cm")
-  ) +
-  fig_theme_sp
+```{r gen-map-response}
 
-g_mz <- ggplot(data_sf) + 
-  geom_sf(aes(fill = zone_txt), size = 0.1) +
-  scale_fill_discrete(
-    name = "",
-    guide = guide_legend(nrow = 2)
-  ) +
-  theme_void() +
-  theme(
-    legend.position = "bottom",
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12)
-  ) +
-  fig_theme_sp
+data_sf_td <- trial_design %>% 
+  filter(type != "Headland") %>% 
+  data_sf[., ]
+
+if (sn_ew_ratio > 1.1) {
+  tm_beta <- tm_shape(data_sf_td) +
+    tm_fill(
+      col = "b_slope", 
+      palette = "PuRd",
+      title = "Yield\n(bu/acre)",
+      # legend.is.portrait = FALSE,
+      style = "cont"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      # legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+} else {
+  tm_beta <- tm_shape(data_sf_td) +
+    tm_fill(
+      col = "b_slope", 
+      palette = "PuRd",
+      title = "Yield (bu/acre)",
+      legend.is.portrait = FALSE,
+      style = "cont"
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+}
+
+if (sn_ew_ratio > 1.1) {
+  tm_zone <- tm_shape(data_sf_td) +
+    tm_fill(
+      col = "zone_txt", 
+      palette = "YlGnBu",
+      title = "Yield\n(bu/acre)",
+      # legend.is.portrait = FALSE
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      # legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+} else {
+  tm_zone <- tm_shape(data_sf_td) +
+    tm_fill(
+      col = "zone_txt", 
+      palette = "YlGnBu",
+      title = "Yield (bu/acre)",
+      legend.is.portrait = FALSE
+    ) +
+    tm_layout_to_add + 
+    tm_layout(
+      legend.outside.position = "bottom",
+      legend.position = c(0.25, 0.25)
+    )
+}
 
 ```
 
-```{r map-response, echo = F, fig.cap = "Map of the estimated values of the yield response parameter, $\\beta$ the derived management zone" , dependson = "gen-map-response", fig.height = 10}
-g_map_r / g_mz
+```{r map-response, echo = F, fig.cap = "Map of the estimated values of the yield response parameter, $\\beta$ the derived management zone" , dependson = "gen-map-response", fig.height = ifelse(sn_ew_ratio > 1.1, 5, 8)}
+
+if (sn_ew_ratio > 1.1) {
+  tmap_arrange(tm_beta, tm_zone, ncol = 2)
+} else {
+  tmap_arrange(tm_beta, tm_zone, ncol = 1)
+}
+
 ```
 
 ```{r ys-by-mz, fig.cap = "(Seed rate, yield) data points for each management zones, and the estimated yield response curves derived from them", fig.height = 4}

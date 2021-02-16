@@ -33,6 +33,7 @@ g_pi <- ggplot(data = fig_data) +
       label = paste0("seed rate \n = ", round(seed_rate)) 
     ), 
     size = 4, 
+    family = "Times",
     color = "blue"
   ) +
   # geom_text(

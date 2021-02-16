@@ -543,6 +543,12 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
   )
 
   if (gc_type_s != "Rx") {
+    #/*----------------------------------*/
+    #' ## Difference between optimal vs grower-chosen rates
+    #/*----------------------------------*/
+    # Statements about the difference between 
+    # optimal vs grower-chosen rates
+
     gc_opt_comp_txt_ls <- c()
     num_zones <- nrow(pi_dif_test_zone)
     for (i in 1:num_zones) {
@@ -566,6 +572,20 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       gc_opt_comp_txt,
       temp_rmd
     )
+
+    #/*----------------------------------*/
+    #' ## Profit differential statement
+    #/*----------------------------------*/
+    # Statements about the difference between 
+    # optimal vs grower-chosen rates
+
+    for (i in 1:num_zones) {
+
+      temp_pi_dif_statement <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local)
+
+      temp_rmd <- c(temp_rmd, temp_pi_dif_statement)
+
+    }
   } 
   
   #/*----------------------------------*/
