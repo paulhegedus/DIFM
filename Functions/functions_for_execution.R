@@ -502,8 +502,8 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
 
     t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
 
-    # results_discussions_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_Rx.Rmd")) %>% 
-    results_discussions_rmd <- read_rmd("Report/ri01_results_by_zone_Rx.Rmd", local = local) %>% 
+    # res_disc_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_Rx.Rmd")) %>% 
+    res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_Rx.Rmd", local = local) %>% 
       gsub(
         "_stat_confidence_here_", 
         case_when(
@@ -518,9 +518,43 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       in figure \\\\@ref(fig:rx-s-map)"
 
   } else {
-    # results_discussions_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_non_Rx.Rmd"))
-    results_discussions_rmd <- read_rmd("Report/ri01_results_by_zone_non_Rx.Rmd", local = local)
+    # res_disc_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_non_Rx.Rmd"))
+    res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_non_Rx.Rmd", local = local)
+    
+    #/*----------------------------------*/
+    #' ## Profit differential narrative
+    #/*----------------------------------*/
+    # Statements about the difference between 
+    # optimal vs grower-chosen rates
 
+    for (i in 2:num_zones) {
+    # note: zone 1 has a longer version already in res_disc_rmd 
+      if (i == 2) {
+
+        pi_dif_rmd <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local) %>% 
+          gsub("_insert-zone-here_", i, .) %>% 
+          gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
+
+      } else {
+
+        temp_pi_dif_rmd <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local) %>% 
+          gsub("_insert-zone-here_", i, .) %>% 
+          gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
+
+        pi_dif_rmd <- c(pi_dif_rmd, temp_pi_dif_rmd) 
+
+      }
+    }
+
+    res_disc_rmd <- insert_rmd(
+      target_rmd = res_disc_rmd, 
+      inserting_rmd = pi_dif_rmd,
+      target_text = "_rest-of-the-zones-here_"
+    )
+
+    #/*~~~~~~~~~~~~~~~~~~~~~~*/
+    #' ### grower plan narrative
+    #/*~~~~~~~~~~~~~~~~~~~~~~*/
     growe_plan_text <- "apply grower_chosen_rate_hereK seeds per acre 
       uniformly across the field. numb_seed_rates_here 
       experimental seed rates were assigned randomly and in 
@@ -534,13 +568,11 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     temp_rmd
   )
   
-  results_discussions_index <- which(str_detect(temp_rmd, "_results-and-discussions-here_"))
-
-  temp_rmd <- c(
-    temp_rmd[1:(results_discussions_index-1)],
-    results_discussions_rmd,
-    temp_rmd[(results_discussions_index+1):length(temp_rmd)]
-  )
+  temp_rmd <- insert_rmd(
+      target_rmd = temp_rmd, 
+      inserting_rmd = res_disc_rmd,
+      target_text = "_results-and-discussions-here_"
+    )
 
   if (gc_type_s != "Rx") {
     #/*----------------------------------*/
@@ -573,19 +605,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       temp_rmd
     )
 
-    #/*----------------------------------*/
-    #' ## Profit differential statement
-    #/*----------------------------------*/
-    # Statements about the difference between 
-    # optimal vs grower-chosen rates
 
-    for (i in 1:num_zones) {
-
-      temp_pi_dif_statement <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local)
-
-      temp_rmd <- c(temp_rmd, temp_pi_dif_statement)
-
-    }
   } 
   
   #/*----------------------------------*/
@@ -755,5 +775,34 @@ get_r_file_name_git <- function(file_name) {
 
 }
 
+insert_rmd <- function(target_rmd, inserting_rmd, target_text) {
 
+  inserting_index <- which(str_detect(target_rmd, target_text))
+
+  return_md <- c(
+    target_rmd[1:(inserting_index-1)],
+    inserting_rmd,
+    target_rmd[(inserting_index+1):length(target_rmd)]
+  )
+
+  return(return_md)
+
+}    
+
+get_ttest_text <- function(test_results, zone){
+
+  t <- test_results[zone_txt == paste0("Zone ", zone), t]
+
+  if (t < 1.30){
+    temp_text <- "The data and model provide negligible evidence that the estimated optimal rate of `r get_seed(\"Optimal\", zone)`K does not provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(zone)`)"
+  } else if (1.30 <= t & t < 1.64){
+    temp_text <- "The data and model provide only limited evidence that the estimated optimal rate of `r get_seed(\"Optimal\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(zone)`)"
+  } else if (1.64 <= t & t < 1.96){
+    temp_text <- "The data and model provide moderate evidence that the estimated optimal rate of `r get_seed(\"Optimal\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(zone)`)"
+  } else {
+    temp_text <- "The data and model provide strong evidence that the estimated optimal rate of `r get_seed(\"Optimal\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(zone)`)" 
+  }
+
+  return(gsub("zone", zone, temp_text))
+}
 
