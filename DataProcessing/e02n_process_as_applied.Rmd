@@ -216,7 +216,7 @@ aan_grouped <- flag_bad_points(
 )  
 ```
 
-Yield distribution after cleaning (sd = `r sd_factor`)
+Yield distribution after cleaning:
 
 ```{r }
 aan_grouped %>% filter(flag_bad == 0) %>% 
@@ -326,9 +326,12 @@ tm_layout_to_add
 
 ## Add base N rate
 
-Adding base N rate of `r n_base_rate`.
 
 ```{r add-base-n}
+cat(
+  paste0("Adding base N rate of ", n_base_rate, ".")
+)
+
 aan_sf <- mutate(aan_sf, n_rate = n_rate + n_base_rate) 
   
 ```

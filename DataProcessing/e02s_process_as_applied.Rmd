@@ -220,7 +220,7 @@ asp_grouped <- flag_bad_points(
 )  
 ```
 
-Yield distribution after cleaning (sd = `r sd_factor`)
+Yield distribution after cleaning:
 
 ```{r }
 asp_grouped %>% filter(flag_bad == 0) %>% 
