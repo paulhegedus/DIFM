@@ -2,7 +2,7 @@
 #' # Extract input information from field data
 #/*=================================================*/
 #--- field data ---#
-w_field_data <- jsonlite::fromJSON(
+field_data <- jsonlite::fromJSON(
   file.path(
     here("Data", "CommonData"),
     "field_parameter.json"
@@ -14,7 +14,7 @@ data.table() %>%
 .[field_year == ffy, ]
 
 #--- get field parameters for the field-year ---#
-w_field_data <- w_field_data[field_year == ffy, ]
+w_field_data <- field_data[field_year == ffy, ]
 
 #--- get input data ---#
 input_data <- dplyr::select(w_field_data, starts_with(

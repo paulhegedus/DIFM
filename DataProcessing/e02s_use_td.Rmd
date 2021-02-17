@@ -41,22 +41,14 @@ td_names <- names(td)
 time variable needs to be dealt with separately
 
 ```{r }
-td <- setnames(td, "hlfsdrt", "seed_rate")
+dict_td <- dictionary[type == "trial_design", ]
+td <- make_var_name_consistent(
+    td, 
+    dict_td 
+  )
+  
+td <- setnames(td, "tgt_seed", "seed_rate")
 
-# if("time" %in% names(asp) & "isotime" %in% names(asp)) {
-#   asp <- dplyr::select(asp, - time) 
-#   time_available <- TRUE
-# }
-
-# dict_asp <- dictionary[type == "seed_rate", ]
-# col_list <- dict_asp[, column]
-
-# asp <- make_var_name_consistent(
-#   asp,
-#   dict_asp
-# )
-
-# asp <- dplyr::select(asp, matches(col_list))
 ```
 
 ### Seed rate conversion
@@ -74,6 +66,7 @@ if (any(td$seed_rate > 10000)){
 ## Save the data
 
 ```{r }
-saveRDS(td, "Intermediate/as_planted_sf.rds")
+here("Data/Growers", ffy, "Intermediate/as_applied_s.rds") %>% 
+saveRDS(td, .)
 ```
 

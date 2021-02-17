@@ -69,7 +69,34 @@ This happened because `initiate_fp_entry()` (available in `tools_for_trial_desig
 ## Raw data inconsistency
 
 ```{r }
+
+check_file_consistency <- function(ffy) {
+  #--- get input data ---#
+  input_data <- field_data[field_year == ffy, ] %>% 
+    dplyr::select(starts_with("input")) %>% 
+    map(1) %>% 
+    rbindlist(fill = TRUE) %>% 
+    rowwise() %>% 
+    mutate(
+      status = function(){
+
+        if (data == "received") {
+
+        } else if (data == "not received") {
+
+          return("ask for the data")
+
+        } else {
+
+
+        }
+
+      }
+    )
   
+}
+
+
 ```
 
 
