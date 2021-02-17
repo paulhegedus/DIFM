@@ -201,6 +201,27 @@ trial_type <- case_when(
   !process_n & process_s ~ "S"
 )
 
+#/*----------------------------------*/
+#' ## Base nitrogen
+#/*----------------------------------*/
+is_base_N <- "base" %in% input_data[, strategy]
+
+if (is_base_N) {
+
+  n_base_rate <- input_data[strategy == "base", ] %>% 
+    rowwise() %>% 
+    mutate(
+      n_equiv_rate = convert_N_unit(form, unit, rate, reporting_unit) 
+    ) %>% 
+    data.table() %>% 
+    .[, sum(n_equiv_rate)]
+
+} else {
+
+  base_N <- 0  
+
+}
+
 #/*=================================================*/
 #' # Dictionary
 #/*=================================================*/

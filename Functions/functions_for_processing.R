@@ -1010,19 +1010,31 @@ make_var_name_consistent <- function(data, dictionary) {
 #/*=================================================*/
 #' # Convert nitrogen units to N-equivalent
 #/*=================================================*/
-convert_nitrogen <- function(form, unit, reporting_unit){
+# form <- "uan32"
+# unit <- "gallons"
+convert_N_unit <- function(form, unit, rate, reporting_unit){
+
   conv_table <- fromJSON(file.path(here("Data", "CommonData"),"nitrogen_conversion.json"), flatten = TRUE) %>% 
     data.table() %>%
     .[, conv_factor := as.numeric(conv_factor)] %>%
     .[, form_unit := paste(type, unit, sep = "_")] %>%
     as.data.frame()
   
-  conv_factor_n <- conv_table[which(conv_table[, "form_unit"] %in% paste(form, unit, sep="_")), "conv_factor"]
+  if (form == "N_equiv") {
+    conv_factor_n <- 1
+  } else {
+    conv_factor_n <- which(conv_table[, "form_unit"] %in% paste(form, unit, sep="_")) %>% 
+      conv_table[., "conv_factor"]
+  }
   
   if (reporting_unit == "metric"){
     conv_factor_n <- conv_factor_n*conv_unit(1, "lbs", "kg")*conv_unit(1, "hectare", "acre")
   }
-  return(conv_factor_n)
+
+  converted_rate <- conv_factor_n * rate
+
+  return(converted_rate)
+
 }
 
 #/*=================================================*/
