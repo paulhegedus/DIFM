@@ -25,7 +25,7 @@ field_year_ls <- field_data$field_year
 #' # Data Processing
 # /*=================================================*/
 
-# ffy <- field_year_ls[15]
+# ffy <- field_year_ls[30]
 
 # /*----------------------------------*/
 #' ## Non-experiment Data
@@ -43,10 +43,10 @@ field_year_ls <- field_data$field_year
 # lapply(field_year_ls, exp_process_make_report, rerun = TRUE)
 
 #--- individually ---#
-# exp_process_make_report(
-#   field_year_ls[30],
-#   rerun = TRUE
-# )
+exp_process_make_report(
+  field_year_ls[30],
+  rerun = TRUE
+)
 
 # /*----------------------------------*/
 #' ## Final Data Processing (Putting all altogether)

@@ -278,7 +278,7 @@ group_points_sc <- function(data_sf, by_var = NA, angle_threshold) {
 # /*=================================================*/
 get_med_dist <- function(data_sf) {
 
-  geom_type <- st_geometry(yield_polygons)[[1]] %>% class()
+  geom_type <- st_geometry(data_sf)[[1]] %>% class()
 
   if("POLYGON" %in% geom_type){
     med_distance <- data_sf %>%
