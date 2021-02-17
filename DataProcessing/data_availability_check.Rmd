@@ -24,61 +24,60 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Data 
+# Field Parameter Data Anomalies 
 
 ```{r }
+field_data <- jsonlite::fromJSON(
+  here("Data", "CommonData", "fp_new_DSB.json"),
+  flatten = TRUE
+) %>%
+data.table() %>%
+.[, field_year := paste(farm, field, year, sep = "_")]
 
+``` 
+
+## Duplicates
+
+```{r }
+duplicate_entries <- field_data[, .(num_entries = .N), by = field_year] %>% 
+  .[num_entries > 1, ]
 ```
 
-## Add "invalid_" to the directory names.
-
-No datasets in the folders that start with **invalid_** are not going to be processed.
+Here is the list of `farm_field_year` that has duplicate entries:
 
 ```{r }
- 
+flextable(duplicate_entries) 
+```
+
+## Folders without an entry in the field parameter data
+
+
+```{r eval = F}
 all_dirs <- list.files(here("Data", "Growers"))  
 
 is_dir_valid <- all_dirs %in% field_year_ls   
-
-dir <- all_dirs[!is_dir_valid][1]
-
-for (dir in all_dirs[!is_dir_valid]) {
-
-  file.rename(
-    paste0(here("Data", "Growers"), "/", dir), 
-    paste0(here("Data", "Growers"), "/invalid_", dir) %>% gsub("invalid_", "", .) %>% gsub("Growers/", "Growers/invalid_", .)
-  )
-
-}
-
-
 ```
 
-Here is the list of data directories that are invalid (missing information in `field_parameter.json`):
+Here is the list of data directories that do not have any entry in `field_parameter.json`:
 
 ```{r }
 all_dirs[!is_dir_valid]
 ```
 
-First enter field information to `field_parameter.json`, run `00_generate_folder.R` and create the right folder structure for the field-year, and then place datasets where they should go.
+This happened because `initiate_fp_entry()` (available in `tools_for_trial_design_coordinators.R`) was not used to create the folders for these experiments. 
+
+## Raw data inconsistency
+
+```{r }
+  
+```
+
 
 # Field parameter (except input data) anomalies
 
 ```{r error = TRUE}
 #--- field data parameter dictionary ---#
 # does not include input parameter dictionary
-
-field_data <- jsonlite::fromJSON(
-  file.path(
-    here("Data", "CommonData"),
-    "fp_latest.json"
-  ),
-  flatten = TRUE
-) %>%
-data.table() %>%
-.[, field_year := paste(farm, field, year, sep = "_")]
-
-field_year_ls <- field_data[, field_year] %>% unique
 
 field_data_dict <- jsonlite::fromJSON(
   file.path(

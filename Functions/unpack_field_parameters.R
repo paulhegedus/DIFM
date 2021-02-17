@@ -218,7 +218,7 @@ if (is_base_N) {
 
 } else {
 
-  base_N <- 0  
+  n_base_rate <- 0  
 
 }
 

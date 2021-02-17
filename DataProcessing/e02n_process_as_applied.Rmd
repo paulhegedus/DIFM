@@ -36,12 +36,14 @@ if (is_aan_polygon) {
 
 #--- get variable names ---#
 aan_names <- names(aan)
+
 ```
 
 ```{r visialize-n-as-planted-data}
 #--- visualize the points ---#
 tm_shape(aan) +
   tm_dots()    
+
 ```   
 
 ### Medium distance of yield polygons
@@ -49,6 +51,7 @@ tm_shape(aan) +
 ```{r }
 #--- medium distance of yield polygons ---#
 med_distance_yp <- get_med_dist(yield_polygons)
+
 ```
 
 ## Miscellaneous operations and various checks
@@ -319,6 +322,15 @@ tm_shape(aan_sf) +
   ) +
 tm_layout_to_add
 
+```
+
+## Add base N rate
+
+Adding base N rate of `r n_base_rate`.
+
+```{r add-base-n}
+aan_sf <- mutate(aan_sf, n_rate = n_rate + n_base_rate) 
+  
 ```
 
 ## Save the data

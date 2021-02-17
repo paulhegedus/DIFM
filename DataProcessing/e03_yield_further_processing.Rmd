@@ -160,11 +160,18 @@ if (trial_type == "SN") {
     .[dev_n_rate < max_dev_allowed_n, ] %>% 
     .[, .(yield_id, n_rate)]
 }
-
 ```
 
-+ Before: `r nrow(yield_polygons)` observations
-+ After: `r nrow(data_to_merge)` observations
+```{r }
+cat(
+  paste0("Before: ",  nrow(yield_polygons), "observations")
+)
+
+cat(
+  paste0("After: ",  nrow(data_to_merge), "observations")
+)
+
+```
 
 ### Combine yield polygons with filtered data 
 
@@ -339,7 +346,16 @@ yield_sf <- all_data_ls %>%
 
 ```
 
-There are `r yield_sf$obs_id %>% unique() %>% length()` observations.
+```{r }
+cat(
+  paste0(
+    "There are", 
+    yield_sf$obs_id %>% unique() %>% length(),
+    "observations."
+  )
+) 
+```
+
 
 Please note that each of the polygons are not observations units here.
 
