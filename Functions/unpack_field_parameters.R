@@ -55,7 +55,7 @@ if (process_s) {
   #++++++++++++++++
   grower_chosen_rate_s <- input_data_s[, sq_rate]
 
-  if(!is.numeric(grower_chosen_rate_s)) {
+  if(!is.numeric(grower_chosen_rate_s) | is.na(grower_chosen_rate_s)) {
       
     Rx_file_s <- file.path(
       here("Data/Growers", ffy, "Raw"), 

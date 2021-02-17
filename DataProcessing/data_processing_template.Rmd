@@ -68,10 +68,10 @@ library(future.apply)
 ```
 
 ```{r preparations, cache = F}
-#--- local functions ---#
-list.files(here("Codes/Functions"), full.names = TRUE) %>% 
-  .[str_detect(., "functions")] %>% 
-  lapply(., function(x) source(x))
+source(
+  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
+  local = TRUE
+)
 
 #--- github ---#
 source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
@@ -91,7 +91,10 @@ data.table()
 
 #--- define field parameters ---#
 # source(here("Codes/Functions/unpack_field_parameters.R"))
-source(get_r_file_name_git("Functions/unpack_field_parameters.R"), local = TRUE)
+source(
+  get_r_file_name_git("Functions/unpack_field_parameters.R"), 
+  local = TRUE
+)
 
 #---  ---#
 plan(multiprocess, workers = detectCores() - 2)
