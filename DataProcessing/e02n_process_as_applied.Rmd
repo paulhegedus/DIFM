@@ -272,10 +272,13 @@ if (is_dense) {
 
   num_obs_rg <- ceiling(2 / (med_distance_v))
 
-  aan_reduced_v <- reduce_points_v(aan_grouped, num_obs_rg, "seed_rate", "new_group")
+  aan_reduced_v <- reduce_points_v(aan_grouped, num_obs_rg, "seed_rate", "new_group") %>% 
+    .[, .SD[.N != 1, ], by = new_group]
+
 } else {
 
-  aan_reduced_v <- data.table(aan_grouped)
+  aan_reduced_v <- data.table(aan_grouped) %>% 
+    .[, .SD[.N != 1, ], by = new_group]
 
 }
   

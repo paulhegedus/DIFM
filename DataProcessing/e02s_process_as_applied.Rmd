@@ -272,10 +272,13 @@ datasummary(
 if (is_dense) {
   num_obs_rg <- ceiling(2 / (med_distance_v))
 
-  asp_reduced_v <- reduce_points_v(asp_grouped, num_obs_rg, "seed_rate", "new_group")
+  asp_reduced_v <- reduce_points_v(asp_grouped, num_obs_rg, "seed_rate", "new_group") %>% 
+    .[, .SD[.N != 1, ], by = new_group]
+
 } else {
 
-  asp_reduced_v <- data.table(asp_grouped)
+  asp_reduced_v <- data.table(asp_grouped) %>% 
+    .[, .SD[.N != 1, ], by = new_group]
 
 }
   
