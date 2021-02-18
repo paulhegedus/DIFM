@@ -32,7 +32,7 @@ tm_shape(seed_polygons) +
 n_polygons <- here("Data/Growers", ffy, "Intermediate/as_applied_n.rds") %>% 
   readRDS()
 
-tm_shape(seed_polygons) +
+tm_shape(n_polygons) +
   tm_fill(col = "n_rate") 
 
 ```
