@@ -1,13 +1,8 @@
-# Process the trial design in place of as-planted data
-
-## Reduce as-planted data before 
+# Process the trial design in place of as-applied data
 
 **Caution!**:
 
 You are using the trial-design as the input data. Make sure you are okay with this!!!
-
-**Note:** at the moment, this is written specifically for Bohnhoff-Tims 2020.
-
 
 ```{r }
 library(sf)
@@ -41,27 +36,29 @@ td_names <- names(td)
 time variable needs to be dealt with separately
 
 ```{r }
-# td <- setnames(td, "hlfsdrt", "seed_rate")
+dict_td <- dictionary[type == "trial_design", ]
 
-# if("time" %in% names(asp) & "isotime" %in% names(asp)) {
-#   asp <- dplyr::select(asp, - time) 
-#   time_available <- TRUE
-# }
+td <- make_var_name_consistent(
+    td, 
+    dict_td 
+  )
+  
+td <- setnames(td, "tgt_n", "n_rate")
 
-# dict_asp <- dictionary[type == "seed_rate", ]
-# col_list <- dict_asp[, column]
-
-# asp <- make_var_name_consistent(
-#   asp,
-#   dict_asp
-# )
-
-# asp <- dplyr::select(asp, matches(col_list))
+td <- mutate(td, 
+    n_rate = convert_N_unit(
+      input_data_n$form, 
+      input_data_n$unit, 
+      n_rate, 
+      field_data$reporting_unit
+    ) + n_base_rate
+  )
 ```
 
 ## Save the data
 
 ```{r }
-saveRDS(td, "Intermediate/as_applied_sf.rds")
+here("Data/Growers", ffy, "Intermediate/as_applied_n.rds") %>% 
+saveRDS(td, .)
 ```
 
