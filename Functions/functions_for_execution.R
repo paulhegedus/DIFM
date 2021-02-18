@@ -453,7 +453,10 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
   #   here("Codes/Functions/unpack_field_parameters.R"),
   #   local = TRUE
   # )
-  source(get_r_file_name_git("Functions/unpack_field_parameters.R"), local = TRUE)
+  source(
+    get_r_file_name_git("Functions/unpack_field_parameters.R"), 
+    local = TRUE
+  )
 
   if (!analysis_data_exists) {
     return(print("No analysis results exist. Run analysis first."))
