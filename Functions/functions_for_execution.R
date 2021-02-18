@@ -286,6 +286,7 @@ f_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   #   file.path(., "Codes/DataProcessing/data_processing_template.Rmd") %>%
   #   readLines() %>%
   #   gsub("field-year-here", ffy, .)
+  source(get_r_file_name_git("Functions/unpack_field_parameters.R"), local = TRUE)
 
   fp_temp_rmd <- read_rmd("DataProcessing/data_processing_template.Rmd", local = local) %>%
     gsub("field-year-here", ffy, .)
@@ -337,7 +338,7 @@ f_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   # /*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### EC
   # /*~~~~~~~~~~~~~~~~~~~~~~*/
-  ec_exists <- field_data[field_year == ffy, ec == "received"]
+  ec_exists <- w_field_data[field_year == ffy, ec == "received"]
   ec_file <- file.path(here("Data", "Growers", ffy), "Intermediate/ec.rds")
 
   if (ec_exists & file.exists(ec_file)) {
@@ -349,7 +350,7 @@ f_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   # /*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Soil sampling
   # /*~~~~~~~~~~~~~~~~~~~~~~*/
-  gss_exists <- field_data[field_year == ffy, soil_sampling == "received"]
+  gss_exists <- w_field_data[field_year == ffy, soil_sampling == "received"]
   gss_file <- file.path(here("Data", "Growers", ffy), "Intermediate/gss.rds")
 
   if (gss_exists & file.exists(gss_file)) {

@@ -55,10 +55,10 @@ exp_process_make_report(
 # lapply(field_year_ls, f_process_make_report)
 
 #--- individually ---#
-# f_process_make_report(
-#   field_year_ls[30],
-#   rerun = TRUE
-# )
+f_process_make_report(
+  field_year_ls[30],
+  rerun = TRUE
+)
 
 # /*=================================================*/
 #' # Run analysis and make report
@@ -71,11 +71,11 @@ exp_process_make_report(
 # lapply(field_year_ls, run_analysis, rerun = TRUE)
 
 #--- individually ---#
-# run_analysis(
-#   field_year_ls[31],
-#   rerun = TRUE,
-#   local = TRUE
-# )
+run_analysis(
+  field_year_ls[31],
+  rerun = TRUE,
+  local = TRUE
+)
 
 # /*----------------------------------*/
 #' ## Make report
