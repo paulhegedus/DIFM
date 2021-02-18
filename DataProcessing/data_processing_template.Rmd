@@ -64,6 +64,7 @@ library(tidyverse)
 library(modelsummary)
 library(jsonlite)
 library(data.table)
+library(exactextractr)
 library(future.apply)
 ```
 
