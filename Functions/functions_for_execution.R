@@ -798,18 +798,18 @@ insert_rmd <- function(target_rmd, inserting_rmd, target_text) {
 
 }    
 
-get_ttest_text <- function(test_results, zone){
+get_ttest_text <- function(pi_dif_test_zone, zone){
 
-  t <- test_results[zone_txt == paste0("Zone ", zone), t]
+  t <- pi_dif_test_zone[zone_txt == paste0("Zone ", zone), t]
 
   if (t < 1.30){
-    temp_text <- "The data and model provide negligible evidence that the estimated optimal rate of `r get_seed(opt_gc_data, \"Optimal\", zone)`K does not provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(test_results, zone)`)"
+    temp_text <- "The data and model provide negligible evidence that the estimated optimal rate of `r get_seed(opt_gc_data, \"opt_v\", zone)`K does not provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(pi_dif_test_zone, zone)`)"
   } else if (1.30 <= t & t < 1.64){
-    temp_text <- "The data and model provide only limited evidence that the estimated optimal rate of `r get_seed(opt_gc_data, \"Optimal\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(test_results, zone)`)"
+    temp_text <- "The data and model provide only limited evidence that the estimated optimal rate of `r get_seed(opt_gc_data, \"opt_v\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(pi_dif_test_zone, zone)`)"
   } else if (1.64 <= t & t < 1.96){
-    temp_text <- "The data and model provide moderate evidence that the estimated optimal rate of `r get_seed(opt_gc_data, \"Optimal\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(test_results, zone)`)"
+    temp_text <- "The data and model provide moderate evidence that the estimated optimal rate of `r get_seed(opt_gc_data, \"opt_v\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(pi_dif_test_zone, zone)`)"
   } else {
-    temp_text <- "The data and model provide strong evidence that the estimated optimal rate of `r get_seed(opt_gc_data, \"Optimal\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(test_results, zone)`)" 
+    temp_text <- "The data and model provide strong evidence that the estimated optimal rate of `r get_seed(opt_gc_data, \"opt_v\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(pi_dif_test_zone, zone)`)" 
   }
 
   return(gsub("zone", zone, temp_text))

@@ -590,16 +590,16 @@ expand_grid_df <- function(data_1, data_2) {
 
 }
 
-get_seed <- function(opt_gc_data, c_type, w_zone){
-  opt_gc_data[type == c_type & zone_txt == paste0("Zone ", w_zone), seed_rate] %>% round(digits = 0)
+get_seed <- function(opt_data, c_type, w_zone){
+  opt_data[type == c_type & zone_txt == paste0("Zone ", w_zone), seed_rate] %>% round(digits = 0)
 }
 
-get_pi <- function(opt_gc_data, c_type, w_zone){
-  opt_gc_data[type == c_type & zone_txt == paste0("Zone ", w_zone), profit_hat] %>% round(digits = 2)
+get_pi <- function(opt_data, c_type, w_zone){
+  opt_data[type == c_type & zone_txt == paste0("Zone ", w_zone), profit_hat] %>% round(digits = 2)
 }
 
-get_t_value <- function(pi_dif_test_zone, w_zone){
-  pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), t] %>% 
+get_t_value <- function(test_data, w_zone){
+  test_data[zone_txt == paste0("Zone ", w_zone), t] %>% 
     round(digits = 2)
 }  
 
