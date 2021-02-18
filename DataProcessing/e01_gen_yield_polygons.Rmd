@@ -183,9 +183,17 @@ The following yield point reduction occurs when the medium distance between cons
 if (med_distance < 1){
   num_obs_rg <- floor(2 / (med_distance))
 
-  yield_reduced_v <- reduce_points_v(yield_grouped, num_obs_rg, "yield_vol", "group")
+  yield_reduced_v <- reduce_points_v(
+    data_sf = yield_grouped, 
+    nobs_per_group = num_obs_rg, 
+    var_interest = "yield_vol", 
+    by_var = "group"
+  )
+
 } else {
+
   yield_reduced_v <- data.table(yield_grouped)
+
 }
 ```
 

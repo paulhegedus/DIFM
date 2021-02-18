@@ -58,6 +58,7 @@ reduce_points_v <- function(data_sf, nobs_per_group, var_interest, by_var = NA){
   }
 
   return(data_dt)
+  
 }
 
 # /*=================================================*/
