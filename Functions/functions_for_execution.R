@@ -796,7 +796,7 @@ insert_rmd <- function(target_rmd, inserting_rmd, target_text) {
 
   return(return_md)
 
-}    
+}   
 
 get_ttest_text <- function(pi_dif_test_zone, zone){
 
@@ -812,6 +812,6 @@ get_ttest_text <- function(pi_dif_test_zone, zone){
     temp_text <- "The data and model provide strong evidence that the estimated optimal rate of `r get_seed(opt_gc_data, \"opt_v\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(pi_dif_test_zone, zone)`)" 
   }
 
-  return(gsub("zone", zone, temp_text))
+  return(gsub(", zone", paste0(", ", zone), temp_text))
 }
 
