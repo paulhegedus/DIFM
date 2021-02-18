@@ -17,7 +17,8 @@ library(here)
 
 ```{r }
 #--- trial design ---#
-td_file_name <- list.files(recursive = TRUE) %>%
+td_file_name <- here("Data/Growers", ffy, "TrialDesign") %>% 
+  list.files(recursive = TRUE, full.names = TRUE) %>%
   .[str_detect(., "shp")] %>%
   .[!str_detect(., "xml")] %>%
   .[str_detect(., "trial-design")] 

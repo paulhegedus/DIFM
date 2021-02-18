@@ -109,10 +109,11 @@ if (process_s) {
   }
 
   if(!is.numeric(seed_price)) {
-    seed_price <- case_when(
-      crop == "corn" ~ 0.00275 * 1000, # (thousand seed)
-      crop == "soy" ~ 0.000375 * 1000 # (thousand seed)
-    )
+    if (crop == "corn") {
+      seed_price <- 0.00275 * 1000 # (thousand seed)
+    } else if(crop == "soy") {
+      seed_price <- 0.000375 * 1000 # (thousand seed)
+    }
   }
 
   #++++++++++++++++
