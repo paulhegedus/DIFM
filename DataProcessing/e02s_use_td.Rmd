@@ -55,8 +55,6 @@ td <- setnames(td, "tgt_seed", "seed_rate")
 ### Seed rate conversion
 
 ```{r }
-td <- mutate(td, seed_rate := seed_rate * 2)  
-
 #--- seed rate conversion ---#
 if (any(td$seed_rate > 10000)){
   #--- convert to K ---#
