@@ -167,28 +167,16 @@ exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #--- check if trial design needs to be used ---#
   if (process_s) {
-    use_td_s <- input_data[form == "seed", use_target_rate_instead]
+    use_td_s <- input_data_s[, use_target_rate_instead]
   } else {
-    use_td_s <- FALSE
+    use_td_s <- FALSE  
   }
 
   if (process_s & !use_td_s) {
-    #--- use as-planted data ---#
-    # e02s <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/e02s_process_as_applied.Rmd"
-    # ) %>%
-    # readLines()
 
     e02s <- read_rmd("DataProcessing/e02s_process_as_applied.Rmd", local = local)
 
   } else if (process_s & use_td_s){
-    #--- use trial design instead ---#
-    # e02s <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/e02s_use_td.Rmd"
-    # ) %>%
-    # readLines()
 
     e02s <- read_rmd("DataProcessing/e02s_use_td.Rmd", local = local)
 
@@ -204,27 +192,23 @@ exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   #' ### Nitrogen
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   if (process_n) {
-    use_td_n <- input_data[form == n_var, use_target_rate_instead]
+    use_td_n <- input_data_n[, use_target_rate_instead]
   } else {
     use_td_n <- FALSE  
   }
  
   if (process_n & !use_td_n) {
-    # e02n <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/e02n_process_as_applied.Rmd"
-    # ) %>%
-    # readLines()
+
     e02n <- read_rmd("DataProcessing/e02n_process_as_applied.Rmd", local = local)
+
   } else if (process_n & use_td_n){
-    # e02n <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/e02n_use_td.Rmd"
-    # ) %>%
-    # readLines()
+
     e02n <- read_rmd("DataProcessing/e02n_use_td.Rmd", local = local)
+
   } else {
+
     e02n <- NULL
+
   }
 
   exp_rmd_y_sn <- c(exp_rmd_y_s, e02n)
@@ -235,7 +219,10 @@ exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   # e03 <- file.path(here(), "Codes/DataProcessing/e03_yield_further_processing.Rmd") %>%
   #   readLines()
 
-  e03 <- read_rmd("DataProcessing/e03_yield_further_processing.Rmd", local = local)
+  e03 <- read_rmd(
+    "DataProcessing/e03_yield_further_processing.Rmd", 
+    local = local
+  )
 
   #/*----------------------------------*/
   #' ## Personalize the report 
