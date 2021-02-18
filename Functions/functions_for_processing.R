@@ -23,7 +23,7 @@ reduce_points_v <- function(data_sf, nobs_per_group, var_interest, by_var = NA){
       min_distance = min(distance),
       max_distance = max(distance),
       speed = mean(speed),
-      flag_bad = mean(flag_bad),
+      flag_bad = mean(flag_bad)
     ),
     by = .(id_in_group, group_var)
     ] %>% 

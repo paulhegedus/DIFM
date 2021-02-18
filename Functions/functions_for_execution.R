@@ -402,15 +402,17 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
   source(get_r_file_name_git("Functions/unpack_field_parameters.R"), local = TRUE)
 
   if (trial_type == "S") {
-    # analysis_rmd <- here("Codes/Analysis/a01_seed_analysis.Rmd") %>% 
-    #   readLines()
+
     analysis_rmd <- read_rmd("Analysis/a01_seed_analysis.Rmd", local = local)
+
   } else if (trial_type == "N"){
-    # analysis_rmd <- here("Codes/Analysis/a01_nitrogen_analysis.Rmd") %>% 
-    #   readLines()
+
     analysis_rmd <- read_rmd("Analysis/a01_nitrogen_analysis.Rmd", local = local)
-  } else {
-     
+
+  } else if (trial_type == "SN"){
+
+    analysis_rmd <- read_rmd("Analysis/a01_seed_nitrogen_analysis.Rmd", local = local)
+
   }
   
   temp_rmd <- c(temp_rmd, analysis_rmd)
