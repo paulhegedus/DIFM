@@ -1,2 +1,2 @@
-For Zone _insert-zone-here_, the net revenue is predicted to be \$`r get_pi("gc", _insert-zone-here_)` per acre at the grower-chosen grower_chosen_rate_hereK seeds per acre, and \$`r get_pi("opt_v", _insert-zone-here_)` at the zone-specific optimal seed rate of `r get_seed("opt_v", _insert-zone-here_)`K per acre. _t-test-statement-here_.
+For Zone _insert-zone-here_, the net revenue is predicted to be \$`r get_pi(opt_gc_data, "gc", _insert-zone-here_)` per acre at the grower-chosen grower_chosen_rate_hereK seeds per acre, and \$`r get_pi(opt_gc_data, "opt_v", _insert-zone-here_)` at the zone-specific optimal seed rate of `r get_seed("opt_v", _insert-zone-here_)`K per acre. _t-test-statement-here_.
 
