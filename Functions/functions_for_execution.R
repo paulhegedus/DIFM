@@ -490,6 +490,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
   temp_rmd <- read_rmd("Report/r01_soy_make_report_html.Rmd", local = local) %>% 
     gsub("field-year-here", ffy, .)
 
+  cat("error-detector 1")
   #/*----------------------------------*/
   #' ## Insert appropriate texts  
   #/*----------------------------------*/
@@ -574,6 +575,8 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       target_text = "_results-and-discussions-here_"
     )
 
+  cat("error-detector 2")
+
   if (gc_type_s != "Rx") {
     #/*----------------------------------*/
     #' ## Difference between optimal vs grower-chosen rates
@@ -605,12 +608,13 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       temp_rmd
     )
 
-
   } 
   
   #/*----------------------------------*/
   #' ## Insert texts in the Summary section
   #/*----------------------------------*/ 
+  cat("error-detector 3")
+
   whole_pi_t <- whole_profits_test[type_short == "ovg", t]
 
   if (whole_pi_t > 1.96) {
@@ -632,6 +636,8 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
   #/*----------------------------------*/
   #' ## Write the rmd file and run
   #/*----------------------------------*/
+  cat("error-detector 4")
+
   analysis_rmd_file_name <- here() %>% 
     paste0(., "/Reports/Growers/", ffy, "/grower-report.Rmd")
 
