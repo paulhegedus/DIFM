@@ -554,7 +554,8 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       target_rmd = res_disc_rmd, 
       inserting_rmd = pi_dif_rmd,
       target_text = "_rest-of-the-zones-here_"
-    )
+    ) %>% 
+    gsub("grower_chosen_rate_here", grower_chosen_rate_s, .)
 
     #/*~~~~~~~~~~~~~~~~~~~~~~*/
     #' ### grower plan narrative
