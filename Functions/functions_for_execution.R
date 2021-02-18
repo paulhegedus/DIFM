@@ -464,10 +464,6 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
   #/*----------------------------------*/
   results <- readRDS(here("Reports", "Growers", ffy, "analysis_results.rds"))
 
-  data_sf <- results$data_sf[[1]]
-  ys_by_char <- results$ys_by_char[[1]]
-  eval_data <- results$eval_data[[1]]
-  opt_gc_data <- results$opt_gc_data[[1]]
   whole_profits_test <- results$whole_profits_test[[1]]
   pi_dif_test_zone <- results$pi_dif_test_zone[[1]]
 
