@@ -391,27 +391,55 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
   #/*----------------------------------*/
   #' ## Cases
   #/*----------------------------------*/
-  # source(
-  #   get_r_file_name("Functions/unpack_field_parameters.R"), 
-  #   local = TRUE
-  # )
+  source(
+    get_r_file_name("Functions/unpack_field_parameters.R"), 
+    local = TRUE
+  )
 
-  # if (trial_type == "S") {
+  if (trial_type == "S") {
 
-  #   analysis_rmd <- read_rmd("Analysis/a01_seed_analysis.Rmd", local = local)
+    temp_rmd <- insert_rmd(
+      temp_rmd, 
+      read_rmd(
+        "Analysis/a01_S_analysis.Rmd", 
+        local = local
+      ), 
+      "_seed_analysis_rmd_here_"
+    )
 
-  # } else if (trial_type == "N"){
+  } else if (trial_type == "N"){
 
-  #   analysis_rmd <- read_rmd("Analysis/a01_nitrogen_analysis.Rmd", local = local)
+    temp_rmd <- insert_rmd(
+      temp_rmd, 
+      read_rmd(
+        "Analysis/a01_N_analysis.Rmd", 
+        local = local
+      ), 
+      "_N_analysis_rmd_here_"
+    )
 
-  # } else if (trial_type == "SN"){
+  } else if (trial_type == "SN"){
 
-  #   analysis_rmd <- read_rmd("Analysis/a01_seed_nitrogen_analysis.Rmd", local = local)
+    temp_rmd <- insert_rmd(
+      temp_rmd, 
+      read_rmd(
+        "Analysis/a01_S_analysis.Rmd", 
+        local = local
+      ), 
+      "_S_analysis_rmd_here_"
+    )
 
-  # }
+    temp_rmd <- insert_rmd(
+      temp_rmd, 
+      read_rmd(
+        "Analysis/a01_N_analysis.Rmd", 
+        local = local
+      ), 
+      "_N_analysis_rmd_here_"
+    )
+
+  }
   
-  # temp_rmd <- c(temp_rmd, analysis_rmd)
-
   #/*----------------------------------*/
   #' ## Save and run
   #/*----------------------------------*/
@@ -795,7 +823,7 @@ read_rmd <- function(file_name, local = FALSE) {
 
 get_r_file_name <- function(file_name, local = FALSE) {
 
-  if (local == TRUE) {
+  if (local == FALSE) {
     file_name <- paste0("https://github.com/tmieno2/DIFM/blob/master/", file_name, "?raw=TRUE")  
   } else {
     file_name <- here("Codes", file_name)
