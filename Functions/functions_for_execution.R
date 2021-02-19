@@ -540,7 +540,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
       gc_type = gc_type_s, 
       locally_run = locally_run
     )
-    res_disc_rmd_s <- get_ERI_texts(
+    res_disc_rmd_n <- get_ERI_texts(
       input_type = "N", 
       results = results_n, 
       gc_type = gc_type_n, 
