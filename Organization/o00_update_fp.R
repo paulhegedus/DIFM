@@ -16,10 +16,6 @@ field_data <- relocate(field_data, trial_supervisor, researcher, farm, field, ye
   .[order(year),]
 
 
-
-i <- 47
-j <- 2
-
 update_fp <- function(i) {
 
   print(i)
@@ -84,11 +80,15 @@ update_fp <- function(i) {
 
       if (!"rate" %in% names(temp_input_data)) {
         temp_input_data$rate <- "numeric (no double quotes needed)"
-      }
+      } else if (is.na(temp_input_data$rate)) {
+        temp_input_data$rate <- "na"
+      } 
 
       if (!"data" %in% names(temp_input_data)) {
         temp_input_data$data <- "Rx file name, as-applied file name, or NA"
-      }      
+      } else if (is.na(temp_input_data$data)) {
+        temp_input_data$data <- "na"
+      } 
 
       input_data_to_assign <- temp_input_data[, 
         .(form, strategy, rate, unit, date, data
@@ -102,6 +102,8 @@ update_fp <- function(i) {
 }
 
 lapply(seq_len(nrow(field_data)), update_fp)
+
+field_data[, field_year := NULL]
 
 jsonlite::write_json(
     field_data, 
