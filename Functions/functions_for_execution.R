@@ -148,7 +148,7 @@ exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   #   here("Codes/Functions/unpack_field_parameters.R"),
   #   local = TRUE
   # )
-  source(get_r_file_name_git("Functions/unpack_field_parameters.R"), local = TRUE)
+  source(get_r_file_name("Functions/unpack_field_parameters.R"), local = TRUE)
 
   # exp_temp_rmd <- file.path(here(), "Codes/DataProcessing/data_processing_template.Rmd") %>%
     # readLines() 
@@ -273,7 +273,7 @@ f_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   #   file.path(., "Codes/DataProcessing/data_processing_template.Rmd") %>%
   #   readLines() %>%
   #   gsub("field-year-here", ffy, .)
-  source(get_r_file_name_git("Functions/unpack_field_parameters.R"), local = TRUE)
+  source(get_r_file_name("Functions/unpack_field_parameters.R"), local = TRUE)
 
   fp_temp_rmd <- read_rmd("DataProcessing/data_processing_template.Rmd", local = local) %>%
     gsub("field-year-here", ffy, .)
@@ -388,7 +388,7 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
   #   readLines() %>% 
   #   gsub("field-year-here", ffy, .)
 
-  temp_rmd <- read_rmd("Analysis/a00_analysis_template.Rmd", local = local) %>% 
+  temp_rmd <- read_rmd("Analysis/a00_analysis.Rmd", local = local) %>% 
     gsub("field-year-here", ffy, .)
 
   #/*----------------------------------*/
@@ -399,7 +399,7 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
   #   here("Codes/Functions/unpack_field_parameters.R"),
   #   local = TRUE
   # )
-  source(get_r_file_name_git("Functions/unpack_field_parameters.R"), local = TRUE)
+  source(get_r_file_name("Functions/unpack_field_parameters.R"), local = TRUE)
 
   if (trial_type == "S") {
 
@@ -435,6 +435,8 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
 
 make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
   
+  # spin("/Users/tmieno2/Box/DIFM_DevTeam/Codes/Analysis/a01_N_analysis_spin.R", knit = FALSE) 
+
   analysis_data_exists <- here("Reports/Growers", ffy, "analysis_results.rds") %>% 
     file.exists()
 
@@ -443,22 +445,13 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
   #   local = TRUE
   # )
   source(
-    get_r_file_name_git("Functions/unpack_field_parameters.R"), 
+    get_r_file_name("Functions/unpack_field_parameters.R"), 
     local = TRUE
   )
 
   if (!analysis_data_exists) {
     return(print("No analysis results exist. Run analysis first."))
   }
-
-  #/*----------------------------------*/
-  #' ## Read analysis results
-  #/*----------------------------------*/
-  results <- readRDS(here("Reports", "Growers", ffy, "analysis_results.rds"))
-
-  opt_gc_data <- results$opt_gc_data[[1]]
-  whole_profits_test <- results$whole_profits_test[[1]]
-  pi_dif_test_zone <- results$pi_dif_test_zone[[1]]
 
   #/*----------------------------------*/
   #' ## If rerun = TRUE
@@ -474,101 +467,138 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     unlink(recursive = TRUE)
   }
 
-  # temp_rmd <- "Codes/Report/r01_soy_make_report_html.Rmd" %>% 
-  #   file.path(here(), .) %>% 
-  #   readLines() %>% 
-  #   gsub("field-year-here", ffy, .)
+  #/*----------------------------------*/
+  #' ## Read analysis results
+  #/*----------------------------------*/
+  if (trial_type == "SN") {
+    results_s <- readRDS(here("Reports", "Growers", ffy, "analysis_results_s.rds"))
 
-  temp_rmd <- read_rmd("Report/r01_soy_make_report_html.Rmd", local = local) %>% 
-    gsub("field-year-here", ffy, .)
+    opt_gc_data_s <- results_s$opt_gc_data[[1]]
+    whole_profits_test_s <- results_s$whole_profits_test[[1]]
+    pi_dif_test_zone_s <- results_s$pi_dif_test_zone[[1]]
 
-  cat("error-detector 1")
+    results_n <- readRDS(here("Reports", "Growers", ffy, "analysis_results_n.rds"))
+
+    opt_gc_data_n <- results_n$opt_gc_data[[1]]
+    whole_profits_test_n <- results_n$whole_profits_test[[1]]
+    pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
+
+    temp_rmd <- read_rmd("Report/r01_SN_make_report_html.Rmd", local = local) %>% 
+      gsub("field-year-here", ffy, .)
+
+  } else if (trial_type == "S") {
+    results_s <- readRDS(here("Reports", "Growers", ffy, "analysis_results_s.rds"))
+
+    opt_gc_data_s <- results_s$opt_gc_data[[1]]
+    whole_profits_test_s <- results_s$whole_profits_test[[1]]
+    pi_dif_test_zone_s <- results_s$pi_dif_test_zone[[1]]
+
+    temp_rmd <- read_rmd("Report/r01_S_make_report_html.Rmd", local = local) %>% 
+      gsub("field-year-here", ffy, .)
+
+  } else if (trial_type == "N") {
+
+    results_n <- readRDS(here("Reports", "Growers", ffy, "analysis_results_n.rds"))
+
+    opt_gc_data_n <- results_n$opt_gc_data[[1]]
+    whole_profits_test_n <- results_n$whole_profits_test[[1]]
+    pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
+
+    temp_rmd <- read_rmd("Report/r01_N_make_report_html.Rmd", local = local) %>% 
+      gsub("field-year-here", ffy, .)
+
+  }
+
   #/*----------------------------------*/
   #' ## Insert appropriate texts  
   #/*----------------------------------*/
   # case 1: variable grower-chosen rates (Rx available)
   # case 2: uniform grower-chosen rate
 
-  if (gc_type_s == "Rx") {
+  insert_ERI_texts <- function(){
 
-    t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
+    if (gc_type_s == "Rx") {
 
-    # res_disc_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_Rx.Rmd")) %>% 
-    res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_Rx.Rmd", local = local) %>% 
-      gsub(
-        "_stat_confidence_here_", 
-        case_when(
-          t_whole_ovg >= 1.96 ~ "high",
-          t_whole_ovg >= 1.3 & t_whole_ovg < 1.96 ~ "moderate",
-          t_whole_ovg < 1.3 ~ "low"
-        ), 
-        .
-      )
+      t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
 
-    growe_plan_text <- "follow the commercial prescription depicted 
-      in figure \\\\@ref(fig:rx-s-map)"
+      # res_disc_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_Rx.Rmd")) %>% 
+      res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_Rx.Rmd", local = local) %>% 
+        gsub(
+          "_stat_confidence_here_", 
+          case_when(
+            t_whole_ovg >= 1.96 ~ "high",
+            t_whole_ovg >= 1.3 & t_whole_ovg < 1.96 ~ "moderate",
+            t_whole_ovg < 1.3 ~ "low"
+          ), 
+          .
+        )
 
-  } else {
-    # res_disc_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_non_Rx.Rmd"))
-    res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_non_Rx.Rmd", local = local)
-    
-    #/*----------------------------------*/
-    #' ## Profit differential narrative
-    #/*----------------------------------*/
-    # Statements about the difference between 
-    # optimal vs grower-chosen rates
+      growe_plan_text <- "follow the commercial prescription depicted 
+        in figure \\\\@ref(fig:rx-s-map)"
 
-    num_zones <- nrow(pi_dif_test_zone)
+    } else {
+      # res_disc_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_non_Rx.Rmd"))
+      res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_non_Rx.Rmd", local = local)
+      
+      #/*----------------------------------*/
+      #' ## Profit differential narrative
+      #/*----------------------------------*/
+      # Statements about the difference between 
+      # optimal vs grower-chosen rates
 
-    for (i in 2:num_zones) {
-    # note: zone 1 has a longer version already in res_disc_rmd 
-      if (i == 2) {
+      num_zones <- nrow(pi_dif_test_zone)
 
-        pi_dif_rmd <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local) %>% 
-          gsub("_insert-zone-here_", i, .) %>% 
-          gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
+      for (i in 2:num_zones) {
+      # note: zone 1 has a longer version already in res_disc_rmd 
+        if (i == 2) {
 
-      } else {
+          pi_dif_rmd <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local) %>% 
+            gsub("_insert-zone-here_", i, .) %>% 
+            gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
 
-        temp_pi_dif_rmd <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local) %>% 
-          gsub("_insert-zone-here_", i, .) %>% 
-          gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
+        } else {
 
-        pi_dif_rmd <- c(pi_dif_rmd, temp_pi_dif_rmd) 
+          temp_pi_dif_rmd <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local) %>% 
+            gsub("_insert-zone-here_", i, .) %>% 
+            gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
 
+          pi_dif_rmd <- c(pi_dif_rmd, temp_pi_dif_rmd) 
+
+        }
       }
+
+      res_disc_rmd <- insert_rmd(
+        target_rmd = res_disc_rmd, 
+        inserting_rmd = pi_dif_rmd,
+        target_text = "_rest-of-the-zones-here_"
+      ) %>% 
+      gsub("grower_chosen_rate_here", grower_chosen_rate_s, .)
+
+      #/*~~~~~~~~~~~~~~~~~~~~~~*/
+      #' ### grower plan narrative
+      #/*~~~~~~~~~~~~~~~~~~~~~~*/
+      growe_plan_text <- "apply grower_chosen_rate_hereK seeds per acre 
+        uniformly across the field. numb_seed_rates_here 
+        experimental seed rates were assigned randomly and in 
+        roughly equal number to plots" 
+
     }
 
-    res_disc_rmd <- insert_rmd(
-      target_rmd = res_disc_rmd, 
-      inserting_rmd = pi_dif_rmd,
-      target_text = "_rest-of-the-zones-here_"
-    ) %>% 
-    gsub("grower_chosen_rate_here", grower_chosen_rate_s, .)
-
-    #/*~~~~~~~~~~~~~~~~~~~~~~*/
-    #' ### grower plan narrative
-    #/*~~~~~~~~~~~~~~~~~~~~~~*/
-    growe_plan_text <- "apply grower_chosen_rate_hereK seeds per acre 
-      uniformly across the field. numb_seed_rates_here 
-      experimental seed rates were assigned randomly and in 
-      roughly equal number to plots" 
-
-  }
-
-  temp_rmd <- gsub(
-    "_grower-plan-here_", 
-    growe_plan_text, 
-    temp_rmd
-  )
-  
-  temp_rmd <- insert_rmd(
+    temp_rmd <- gsub(
+      "_grower-plan-here_", 
+      growe_plan_text, 
+      temp_rmd
+    )
+    
+    temp_rmd <- insert_rmd(
       target_rmd = temp_rmd, 
       inserting_rmd = res_disc_rmd,
       target_text = "_results-and-discussions-here_"
     )
+  }
 
-  cat("error-detector 2")
+
+
 
   if (gc_type_s != "Rx") {
     #/*----------------------------------*/
@@ -768,9 +798,15 @@ read_rmd <- function(file_name, local = FALSE) {
 
 }
 
-get_r_file_name_git <- function(file_name) {
+get_r_file_name <- function(file_name, local = FALSE) {
 
-  file_name_on_github <- paste0("https://github.com/tmieno2/DIFM/blob/master/", file_name, "?raw=TRUE")  
+  if (local == TRUE) {
+    file_name <- paste0("https://github.com/tmieno2/DIFM/blob/master/", file_name, "?raw=TRUE")  
+  } else {
+    file_name <- here("Codes", file_name)
+  }
+
+  return(file_name)
 
 }
 

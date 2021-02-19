@@ -72,7 +72,7 @@ if (gc_type_n == "uniform") {
 #/*----------------------------------*/
 #' ## Read Rx data
 #/*----------------------------------*/
-  Rx_s <- st_read(Rx_file_n) %>% 
+  Rx_n <- st_read(Rx_file_n) %>% 
     st_set_crs(4326) %>% 
     st_transform(st_crs(data_sf)) %>%
     st_make_valid()
@@ -369,7 +369,7 @@ results <- tibble(
   whole_profits_test = list(whole_profits_test)
 )  
 
-saveRDS(results, here("Reports", "Growers", ffy, "analysis_results.rds"))
+saveRDS(results, here("Reports", "Growers", ffy, "analysis_results_n.rds"))
 ```
 
 

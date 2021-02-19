@@ -1,25 +1,25 @@
-# Read the analysis data 
+#/*=================================================*/
+#' # Read the analysis data 
+#/*=================================================*/
 
-```{r data-prep, cache = F, results = "hide"}
+#+ data-prep-s, cache = F, results = "hide"
 data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>% 
   readRDS() %>% 
   rename(yield = yield_vol) %>% 
   filter(!is.na(yield)) %>% 
   cbind(., st_coordinates(st_centroid(.)))
 
-```
+#/*=================================================*/
+#' # GWR estimation for management zone delineation
+#/*=================================================*/
 
-# GWR estimation for management zone delineation
+#/*----------------------------------*/
+#' ## GWR estimation
+#/*----------------------------------*/
 
-## GWR estimation
+#+ gwr, results = "hide"
+data_sf <- run_gwr(data_sf, "seed_rate")
 
-```{r gwr, results = "hide"}
-data_sf <- run_gwr(data_sf, "seed_rate") %>% 
-  rename(b_slope_s = b_slope) %>% 
-  rename(b_int_s = b_int)
-```
-
-```{r }
 ggplot(data_sf) +
   geom_histogram(
     aes(x = b_slope), 
@@ -27,41 +27,40 @@ ggplot(data_sf) +
     fill = "white"
   )
 
-```
+#/*----------------------------------*/
+#' ## Define management zones based on GWR
+#/*----------------------------------*/
 
-## Define management zones based on GWR
+#+ yield-response-functions-by-group
 
-```{r yield-response-functions-by-group}
 data_sf <- define_mz(
   data_sf = data_sf, 
   max_num_zones = 4, 
   min_obs = 300
 )
 
-```
-
-```{r }
 tm_shape(data_sf) +
   tm_fill(col = "zone_txt", palette = "Set1") +
 tm_layout_to_add
 
-```
+#/*=================================================*/
+#' # Yield response function (GAM) estimation by zone
+#/*=================================================*/
 
-# Yield response function (GAM) estimation by zone
+#/*----------------------------------*/
+#' ## GAM estimation by zone
+#/*----------------------------------*/
 
-## GAM estimation by zone
+#+ gam-estimate
 
-```{r gam-estimate}
 gam_res <- gam(
   yield ~ s(seed_rate, k = 4, by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5)), 
   data = data_sf
 ) 
 
-```
-
-# Define grower-chose rate
-
-```{r }
+#/*=================================================*/
+#' # Define grower-chose rate
+#/*=================================================*/
 
 if (gc_type_s == "uniform") {
 
@@ -69,9 +68,9 @@ if (gc_type_s == "uniform") {
 
 } else if (gc_type_s == "Rx") {
 
-#/*----------------------------------*/
-#' ## Read Rx data
-#/*----------------------------------*/
+  #--------------------------
+  # Read Rx data
+  #--------------------------
   Rx_s <- st_read(Rx_file_s) %>% 
     st_set_crs(4326) %>% 
     st_transform(st_crs(data_sf)) %>%
@@ -85,19 +84,19 @@ if (gc_type_s == "uniform") {
     dict_yield 
   )
 
-  #--- seed rate conversion ---#
+  #=== seed rate conversion ===#
   if (any(Rx_s$tgts > 10000)){
-    #--- convert to K ---#
+    #=== convert to K ===#
     Rx_s <- mutate(Rx_s, tgts = tgts / 1000)
   }
 
-  #--- map ---#
+  #=== map ===#
   tm_shape(Rx_s) +
     tm_fill(col = "tgts")
 
-#/*----------------------------------*/
-#' ## Identify grower-chosen rate by observation
-#/*----------------------------------*/
+  #--------------------------
+  # Identify grower-chosen rate by observation
+  #--------------------------
   obs_tgts <- st_intersection(data_sf, Rx_s) %>% 
     mutate(area = as.numeric(st_area(.))) %>% 
     data.table() %>% 
@@ -112,16 +111,14 @@ if (gc_type_s == "uniform") {
 
 }
 
-```
+#/*=================================================*/
+#' # Profit estimation and economic optimization
+#/*=================================================*/
 
-# Profit estimation and economic optimization
-
-## Yield-Profit Estimation (at hypothetical points)
-
-```{r }
 #/*----------------------------------*/
-#' ## Evaluation data (hypothetical points)
+#' ## Yield-Profit Estimation (at hypothetical points)
 #/*----------------------------------*/
+
 eval_data <- predict_yield_pi(
     data = data_sf, 
     est = gam_res, 
@@ -133,8 +130,6 @@ eval_data <- predict_yield_pi(
     seed_rate, zone_txt, type, yield_hat, yield_hat_se,
     profit_hat, profit_hat_se
   )] 
-
-#--- assign grower-chosen rate ---#
 
 if (gc_type_s == "uniform") {
   gc_rate_data <- data.table(data_sf) %>% 
@@ -178,17 +173,19 @@ eval_data %>%
   facet_grid(. ~ zone_txt) +
   ylim(ymin, NA)
 
-```
 
-## Optimal Variable Seed Rate
+#/*----------------------------------*/
+#' ## Optimal Variable Seed Rate
+#/*----------------------------------*/
 
-```{r gen-opt-S-v-data-map}
+#+ gen-opt-S-v-data-map
+
 opt_s_data <- eval_data %>% 
   .[type == "opt_v", ] %>% 
   .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
   setnames("seed_rate", "opt_s") 
 
-#--- assign opt_s to each observation ---#
+#=== assign opt_s to each observation ===#
 data_sf <- left_join(
   data_sf, 
   opt_s_data[, .(zone_txt, opt_s)], 
@@ -205,22 +202,21 @@ if (gc_type_s == "uniform") {
 
 }
 
-  
-```
+#/*----------------------------------*/
+#' ## Optimal Uniform Seed Rate
+#/*----------------------------------*/
 
-## Optimal Uniform Seed Rate
+#+ get-opt-S-u
 
-```{r get-opt-S-u}
 data_sf <- mutate(
   data_sf, 
   opt_s_u = find_opt_u(data_sf, "seed_rate", gam_res)
 )
 
-```
+#/*=================================================*/
+#' # Profit differential at each observation
+#/*=================================================*/
 
-# Profit differential at each observation
-
-```{r }
 pi_data_opt <- data_sf %>% 
   data.table() %>% 
   .[, .(opt_s, X, Y, zone_txt, obs_id)] %>% 
@@ -246,13 +242,13 @@ pi_data_indiv_sf <- rbind(pi_data_opt, pi_data_gc) %>%
 # ggplot(pi_data_indiv) +
 #   geom_sf(aes(fill = pi_dif))
 
-```
+#/*=================================================*/
+#' # Statistical testing
+#/*=================================================*/
 
-# Statistical testing
-
-## Profit by zone
-
-```{r }
+#/*----------------------------------*/
+#' ## Profit by zone
+#/*----------------------------------*/
 
 if (gc_type_s == "uniform") {
 
@@ -310,16 +306,14 @@ if (gc_type_s == "uniform") {
 
 }
  
- 
-```
+#/*----------------------------------*/
+#' ## Whole-field profit
+#/*----------------------------------*/
 
-## Whole-field profit
-
-```{r }
 test_data <- data.table(data_sf) 
 
 whole_profits_test <- rbind(
-  #--- opt (V) vs gc ---#
+  #=== opt (V) vs gc ===#
   get_dif_stat(
     test_data, 
     "seed_rate", 
@@ -330,7 +324,7 @@ whole_profits_test <- rbind(
   .[, type := "optimal site-specific rate strategy \n vs \n grower-chosen strategy"] %>% 
   .[, type_short := "ovg"],
 
-  #--- opt (u) vs gc ---#
+  #=== opt (u) vs gc ===#
   get_dif_stat(
     test_data, 
     "seed_rate", 
@@ -341,7 +335,7 @@ whole_profits_test <- rbind(
   .[, type := "optimal site-specific rate strategy \n vs \n optimal uniform rate strategy"] %>% 
   .[, type_short := "ovou"],
 
-  #--- opt (u) vs gc ---#
+  #=== opt (u) vs gc ===#
   get_dif_stat(
     test_data, 
     "seed_rate", 
@@ -353,18 +347,17 @@ whole_profits_test <- rbind(
   .[, type_short := "oug"]
 )
   
-```
+#/*=================================================*/
+#' # Create figures of yield response functions by character
+#/*=================================================*/
 
-# Create figures of yield response functions by character
-
-```{r }
 ys_by_char <- make_ys_by_chars(data_sf)
-```
 
+#/*=================================================*/
+#' # Save the results
+#/*=================================================*/
+# 
 
-# Save the results
-
-```{r }
 results <- tibble(
   data_sf = list(data_sf),
   ys_by_char = list(ys_by_char),
@@ -375,7 +368,6 @@ results <- tibble(
   whole_profits_test = list(whole_profits_test)
 )  
 
-saveRDS(results, here("Reports", "Growers", ffy, "analysis_results.rds"))
-```
+saveRDS(results, here("Reports", "Growers", ffy, "analysis_results_s.rds"))
 
 
