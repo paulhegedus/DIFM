@@ -1,4 +1,6 @@
-# Read the analysis data
+# N analysis
+
+## Read the analysis data
 
 ```{r data-prep-n, cache = F, results = "hide"}
 data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>% 
@@ -8,8 +10,8 @@ data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>%
   cbind(., st_coordinates(st_centroid(.)))
 ```
 
-# GWR estimation for management zone delineation
-## GWR estimation
+## GWR estimation for management zone delineation
+### GWR estimation
 
 ```{r }
 data_sf <- run_gwr(data_sf, "n_rate")
@@ -22,7 +24,7 @@ ggplot(data_sf) +
   )
 ```
 
-## Define management zones based on GWR
+### Define management zones based on GWR
 
 ```{r yield-response-functions-by-group}
 data_sf <- define_mz(
@@ -36,8 +38,8 @@ tm_shape(data_sf) +
 tm_layout_to_add
 ```
 
-# Yield response function (GAM) estimation by zone
-## GAM estimation by zone
+## Yield response function (GAM) estimation by zone
+### GAM estimation by zone
 
 ```{r gam-estimation}
 gam_res <- gam(
@@ -46,7 +48,7 @@ gam_res <- gam(
 ) 
 ```
 
-# Define grower-chose rate
+## Define grower-chose rate
 
 ```{r }
 if (gc_type_n == "uniform") {
@@ -93,8 +95,8 @@ if (gc_type_n == "uniform") {
 }
 ```
 
-# Profit estimation and economic optimization
-## Yield-Profit Estimation (at hypothetical points)
+## Profit estimation and economic optimization
+### Yield-Profit Estimation (at hypothetical points)
 
 ```{r }
 eval_data <- predict_yield_pi(
@@ -130,7 +132,7 @@ if (gc_type_n == "uniform") {
 }
 ```
 
-## Yield response functions by zone
+### Yield response functions by zone
 
 ```{r }
 ymin <- eval_data[, min(yield_hat - 1.96 * yield_hat_se)] - 10
@@ -152,7 +154,7 @@ eval_data %>%
   ylim(ymin, NA)
 ```
 
-## Optimal Variable Nitrogen Rate
+### Optimal Variable Nitrogen Rate
 
 ```{r gen-opt-N-v-data-map}
 opt_n_data <- eval_data %>% 
@@ -178,7 +180,7 @@ if (gc_type_n == "uniform") {
 }
 ```
 
-## Optimal Uniform Nitrogen Rate
+### Optimal Uniform Nitrogen Rate
 
 ```{r get-opt-S-u}
 
@@ -188,7 +190,7 @@ data_sf <- mutate(
 )
 ```
 
-# Profit differential at each observation
+## Profit differential at each observation
 
 ```{r }
 pi_data_opt <- data_sf %>% 
@@ -217,8 +219,8 @@ pi_data_indiv_sf <- rbind(pi_data_opt, pi_data_gc) %>%
 #   geom_sf(aes(fill = pi_dif))
 ```
 
-# Statistical testing
-## Profit by zone
+## Statistical testing
+### Profit by zone
 
 ```{r }
 if (gc_type_n == "uniform") {
@@ -278,7 +280,7 @@ if (gc_type_n == "uniform") {
 }
 ```
 
-## Whole-field profit
+### Whole-field profit
 
 ```{r }
 test_data <- data.table(data_sf) 
@@ -319,13 +321,13 @@ whole_profits_test <- rbind(
 )
 ```
 
-# Create figures of yield response functions by character
+## Create figures of yield response functions by character
 
 ```{r }
 ys_by_char <- make_ys_by_chars(data_sf)
 ```
 
-# Save the results
+## Save the results
 
 ```{r }
 results <- tibble(

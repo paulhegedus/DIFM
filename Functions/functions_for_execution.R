@@ -404,7 +404,13 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
         "Analysis/a01_S_analysis.Rmd", 
         local = local
       ), 
-      "_seed_analysis_rmd_here_"
+      "_S_analysis_rmd_here_"
+    )
+
+    temp_rmd <- gsub(
+      "_N_analysis_rmd_here_", 
+      "", 
+      temp_rmd
     )
 
   } else if (trial_type == "N"){
@@ -416,6 +422,12 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
         local = local
       ), 
       "_N_analysis_rmd_here_"
+    )
+
+    temp_rmd <- gsub(
+      "_S_analysis_rmd_here_", 
+      "", 
+      temp_rmd
     )
 
   } else if (trial_type == "SN"){
