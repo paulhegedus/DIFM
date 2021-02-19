@@ -24,6 +24,8 @@ knitr::opts_chunk$set(
   message = FALSE
 )
 
+options(knitr.duplicate.label = "allow")
+
 #--- working field-year ---#
 ffy <- "field-year-here" 
 

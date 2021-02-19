@@ -19,7 +19,8 @@ field_data <- jsonlite::fromJSON(
   .[, field_year := paste(farm, field, year, sep = "_")]
 
 #--- get the field-year combinations ---#
-field_year_ls <- field_data[year == 2020, ]$field_year
+# field_year_ls <- field_data[year == 2020, ]$field_year
+field_year_ls <- field_data$field_year
 
 # /*=================================================*/
 #' # Data Processing
