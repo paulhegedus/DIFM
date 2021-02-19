@@ -891,6 +891,14 @@ get_ERI_texts <- function(input_type, results, gc_type, locally_run = FALSE){
     input_type == "S" ~ "Report/ri02_profit_dif_statement_S.Rmd"
   )
 
+  if (input_type == "S") {
+    grower_chosen_rate <- grower_chosen_rate_s
+    pi_rmd_file <- "Report/ri02_profit_dif_statement_N.Rmd"
+  } else if (input_type == "N") {
+    grower_chosen_rate <- grower_chosen_rate_n
+    pi_rmd_file <- "Report/ri02_profit_dif_statement_S.Rmd"
+  }
+
   if (gc_type == "Rx") {
 
     t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
@@ -942,7 +950,7 @@ get_ERI_texts <- function(input_type, results, gc_type, locally_run = FALSE){
       inserting_rmd = pi_dif_rmd,
       target_text = "_rest-of-the-zones-here_"
     ) %>% 
-    gsub("grower_chosen_rate_here", grower_chosen_rate_s, .)
+    gsub("grower_chosen_rate_here", grower_chosen_rate, .)
 
     #/*----------------------------------*/
     #' ## Difference between optimal vs grower-chosen rates
