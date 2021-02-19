@@ -682,7 +682,8 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     target_text = "_trial_design_information_here_"
   )
 
-  temp_rmd <- c(base_rmd, temp_rmd)
+  temp_rmd <- c(base_rmd, temp_rmd) %>% 
+    gsub("field-year-here", ffy, .)
 
   #/*----------------------------------*/
   #' ## Write the rmd file and run
