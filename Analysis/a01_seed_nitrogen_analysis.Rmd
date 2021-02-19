@@ -14,7 +14,13 @@ data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>%
 ## GWR estimation
 
 ```{r gwr, results = "hide"}
-data_sf <- run_gwr(data_sf, "seed_rate")
+data_sf <- run_gwr(data_sf, "seed_rate") %>% 
+  rename(b_slope_s = b_slope) %>% 
+  rename(b_int_s = b_int)
+
+data_sf <- run_gwr(data_sf, "n_rate") %>% 
+  rename(b_slope_n = b_slope) %>% 
+  rename(b_int_n = b_int)
 
 ```
 

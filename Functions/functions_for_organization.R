@@ -125,7 +125,7 @@ gen_fp_template <- function(farm, field, year, crop, input_ls, strategy_ls, json
       temp_input_data <- data.table(
         form = input_ls[i],
         strategy = "base",
-        data = "Rx file name or as-applied file name",
+        data = "Rx file name, as-applied file name, or NA",
         unit = "gallons, lbs, Mg, kg, bales",
         price = "numeric (no double quotes needed)",
         date = "mm/dd/yyyy",

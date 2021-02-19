@@ -185,17 +185,24 @@ if (trial_type == "SN") {
     filter(!is.na(seed_rate)) %>% 
     filter(!is.na(n_rate))  
 
+  input_var <- c("seed_rate", "n_rate")
+
 } else if (trial_type == "S") {
 
   yield_combined <- yield_combined %>% 
     #--- drop observations with no match ---#
     filter(!is.na(seed_rate))  
 
+  input_var <- c("seed_rate")
+
 } else {
 
   yield_combined <- yield_combined %>% 
     #--- drop observations with no match ---#
     filter(!is.na(n_rate))  
+
+  input_var <- c("n_rate")
+
 }
 
 ```
@@ -342,7 +349,12 @@ yield_sf <- all_data_ls %>%
   rbindlist() %>% 
   .[, obs_id := .GRP, by = .(group_id, sub_group_id)] %>% 
   st_as_sf() %>% 
-  dplyr::select(yield_id, yield_vol, seed_rate, obs_id)
+  dplyr::select(
+    any_of(c(
+      c("yield_id", "yield_vol", "obs_id"), 
+      input_var
+    ))
+  )
 
 ```
 
