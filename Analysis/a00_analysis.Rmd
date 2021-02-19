@@ -1,6 +1,12 @@
 ---
 title: "Run Analysis for A crop-type-here Experiment"
-output: html_document
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: true
+    number_sections: true
 ---
 
 # Preparation
