@@ -523,8 +523,18 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     ) %>% 
     gsub("field-year-here", ffy, .)
 
-    res_disc_rmd_s <- get_ERI_texts(results_s, gc_type_s)
-    res_disc_rmd_n <- get_ERI_texts(results_n, gc_type_n)
+    res_disc_rmd_s <- get_ERI_texts(
+      input_type = "S", 
+      results = results_s, 
+      gc_type = gc_type_s, 
+      local = local
+    )
+    res_disc_rmd_s <- get_ERI_texts(
+      input_type = "N", 
+      results = results_n, 
+      gc_type = gc_type_n, 
+      local = local
+    )
     res_disc_rmd <- c(res_disc_rmd_s, res_disc_rmd_n)
 
     #++++++++++++++++
@@ -541,6 +551,23 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       get_while_pi_txt(results_n), 
       temp_rmd
     )
+
+    #++++++++++++++++
+    # Trial design and implementation
+    #++++++++++++++++
+    td_s_txt <- get_td_text(
+      input_type = "S", 
+      gc_type = gc_type_s, 
+      local = local
+    )
+
+    td_n_txt <- get_td_text(
+      input_type = "N", 
+      gc_type = gc_type_n, 
+      local = local
+    )
+
+    td_txt <- c(td_s_txt, td_n_txt)
 
   } else if (trial_type == "S") {
 
@@ -560,7 +587,12 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     ) %>% 
     gsub("field-year-here", ffy, .)
 
-    res_disc_rmd <- get_ERI_texts(results_s, gc_type_s)
+    res_disc_rmd <- get_ERI_texts(
+      input_type = "S", 
+      results = results_s, 
+      gc_type = gc_type_s, 
+      local = local
+    )
 
     #++++++++++++++++
     # whole pi summary statement
@@ -570,6 +602,16 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       get_while_pi_txt(results_s), 
       temp_rmd
     )
+
+    #++++++++++++++++
+    # Trial design and implementation
+    #++++++++++++++++
+    td_txt <- get_td_text(
+      input_type = "S", 
+      gc_type = gc_type_s, 
+      local = local
+    )
+
 
   } else if (trial_type == "N") {
 
@@ -589,7 +631,12 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     ) %>% 
     gsub("field-year-here", ffy, .)
 
-    res_disc_rmd <- get_ERI_texts(results_n, gc_type_n)
+    res_disc_rmd <- get_ERI_texts(
+      input_type = "N", 
+      results = results_n, 
+      gc_type = gc_type_n, 
+      local = local
+    )
 
     #++++++++++++++++
     # whole pi summary statement
@@ -600,6 +647,16 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       temp_rmd
     )
 
+    #++++++++++++++++
+    # Trial design and implementation
+    #++++++++++++++++
+    td_txt <- get_td_text(
+      input_type = "N", 
+      gc_type = gc_type_n, 
+      local = local
+    )
+
+
   }
 
   temp_rmd <- insert_rmd(
@@ -608,36 +665,12 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     target_text = "_results-and-discussions-here_"
   )
 
-  analysis_rmd_file_name <- here() %>% 
-    paste0(., "/Reports/Growers/", ffy, "/grower-report.Rmd")
-
-  writeLines(temp_rmd, con = analysis_rmd_file_name)
-
-
-  #--------------------------
-  # grower plan narrative
-  #--------------------------
-  
-  get_gc_plan_narrative <- function(input_type, gc_type) {
-
-    if (gc_type == "Rx") {
-      grower_plan_text <- "follow the commercial prescription depicted 
-        in figure \\\\@ref(fig:rx-s-map)"
-    } else if () {
-      grower_plan_text <- "apply grower_chosen_rate_hereK seeds per acre 
-        uniformly across the field. numb_seed_rates_here 
-        experimental seed rates were assigned randomly and in 
-        roughly equal number to plots" 
-    }
-
-  }
-  
-  temp_rmd <- gsub(
-    "_grower-plan-here_", 
-    grower_plan_text, 
-    temp_rmd
+  temp_rmd <- insert_rmd(
+    target_rmd = temp_rmd, 
+    inserting_rmd = td_txt,
+    target_text = "_trial_design_information_here__"
   )
-  
+
   #/*----------------------------------*/
   #' ## Write the rmd file and run
   #/*----------------------------------*/
@@ -821,7 +854,8 @@ get_ttest_text <- function(pi_dif_test_zone, zone){
   return(gsub(", zone", paste0(", ", zone), temp_text))
 }
 
-get_ERI_texts <- function(input_type, results, gc_type){
+
+get_ERI_texts <- function(input_type, results, gc_type, local = FALSE){
 
   whole_profits_test <- results$whole_profits_test[[1]]
   pi_dif_test_zone <- results$pi_dif_test_zone[[1]]
@@ -829,18 +863,18 @@ get_ERI_texts <- function(input_type, results, gc_type){
 
   res_disc_rmd_file <- case_when(
     input_type == "N" & gc_type == "Rx" ~ 
-      "ri01_results_by_zone_Rx_N.Rmd", 
+      "Report/ri01_results_by_zone_Rx_N.Rmd", 
     input_type == "S" & gc_type == "Rx" ~ 
-      "ri01_results_by_zone_Rx_S.Rmd",  
+      "Report/ri01_results_by_zone_Rx_S.Rmd",  
     input_type == "N" & gc_type == "uniform" ~ 
-      "ri01_results_by_zone_non_Rx_N.Rmd",
+      "Report/ri01_results_by_zone_non_Rx_N.Rmd",
     input_type == "S" & gc_type == "uniform" ~ 
-      "ri01_results_by_zone_non_Rx_S.Rmd"
+      "Report/ri01_results_by_zone_non_Rx_S.Rmd"
   )
 
   pi_rmd_file <- case_when(
-    input_type == "N" ~ "ri02_profit_dif_statement_N.Rmd",
-    input_type == "S" ~ "ri02_profit_dif_statement_S.Rmd"
+    input_type == "N" ~ "Report/ri02_profit_dif_statement_N.Rmd",
+    input_type == "S" ~ "Report/ri02_profit_dif_statement_S.Rmd"
   )
 
   if (gc_type == "Rx") {
@@ -950,5 +984,32 @@ get_while_pi_txt <- function(results) {
   }
 
   return(text_summary)
+
+}
+
+
+get_td_text <- function(input_type, gc_type, local = FALSE) {
+
+  td_rmd_file <- case_when(
+    input_type == "N" ~ "Report/ri03_trial_design_N.Rmd",
+    input_type == "S" ~ "Report/ri03_trial_design_S.Rmd"
+  )
+
+  td_rmd <- read_rmd(td_rmd_file, local = local)
+
+  if (gc_type == "Rx") {
+    grower_plan_text <- "follow the commercial prescription depicted 
+      in figure \\\\@ref(fig:rx-input-map)" %>% 
+      gsub("input", input_type)
+  } else if (gc_type == "uniform") {
+    grower_plan_text <- "apply grower_chosen_rate_hereK seeds per acre 
+      uniformly across the field. numb_seed_rates_here 
+      experimental seed rates were assigned randomly and in 
+      roughly equal number to plots" 
+  }
+
+  td_rmd <- gsub("_grower-plan-here_", grower_plan_text, td_rmd)
+
+  return(td_rmd)    
 
 }

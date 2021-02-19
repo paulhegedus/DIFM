@@ -33,12 +33,7 @@ g_whole_pi
 
 # Trial Design and Implementation
 
-Figure \@ref(fig:tgts-yield-ap) displays the trial design and the resultant as-planted map.  Casual observation shows that <!--NEED to determine and assign:  "trial implementation was basically accurate", or "the accuracy of trial implementation was limited by" (add text by hand) -->.  The field's status quo planting plan (that is, the one that would have been used had there been no field trial conducted) was to _grower-plan-here_.  Plots were all `r plot_width` feet wide.  Plot were all between <!--shortest_plot_length_hereK--> and <!--longest_plot_length_hereK-->feet long. A rate of <!--buffer_zone_rate_hereK--> per acre was assigned to a buffer zone around the perimeter of the trial, but observations from the buffer zone were not included as part of the trial in later analysis. Figure \@ref(fig:tgts-yield-ap) pairs the trial's tiral design, as-planted, and yield maps.  No relationship between seed rate and yield is readily detectable with the naked eye. 
-
-
-```{r tgts-yield-ap, fig.cap = "Trial design, as-planted seed rates, and soybean yields, 2020)", fig.height = 10}
-tmap_arrange(tm_tgts, tm_asp, tm_ry, ncol = 2)  
-```
+_trial_design_information_here_
 
 # Overview of Data Processing
 
