@@ -72,9 +72,8 @@ f_process_make_report(
 
 #--- individually ---#
 run_analysis(
-  field_year_ls[31],
-  rerun = TRUE,
-  local = TRUE
+  field_year_ls[17],
+  rerun = TRUE
 )
 
 # /*----------------------------------*/
