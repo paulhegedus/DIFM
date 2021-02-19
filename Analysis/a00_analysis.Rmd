@@ -32,8 +32,7 @@ opts_knit$set(root.dir = here("Data", "Growers", ffy))
 
 #--- source functions ---#
 source(
-  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
-  local = TRUE
+  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE"
 )
 
 ```
@@ -77,7 +76,6 @@ source(
   get_r_file_name("Functions/unpack_field_parameters.R"), 
   local = TRUE
 )
-
 
 ```
 
