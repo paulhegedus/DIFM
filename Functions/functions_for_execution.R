@@ -2,7 +2,7 @@
 #' # Non experimental data processing and reporting
 # /*=================================================*/
 
-non_exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
+non_exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 
   print(paste0("Proessing non-experiment data for ", ffy))
 
@@ -14,7 +14,7 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   }
 
   #--- read in the template ---#
-  nep_rmd <- read_rmd("DataProcessing/data_processing_template.Rmd", local = local)
+  nep_rmd <- read_rmd("DataProcessing/data_processing_template.Rmd", locally_run = locally_run)
 
   if (rerun) {
     #--- remove cached files ---#
@@ -36,14 +36,14 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
     #   "Codes/DataProcessing/ne01_topography.Rmd"
     # ) %>%
     # readLines() 
-    ne01 <- read_rmd("DataProcessing/ne01_topography.Rmd", local = local)
+    ne01 <- read_rmd("DataProcessing/ne01_topography.Rmd", locally_run = locally_run)
   } else {
     # ne01 <- file.path(
     #   here(), 
     #   "Codes/DataProcessing/ne01_topography_show.Rmd"
     # ) %>%
     # readLines() 
-    ne01 <- read_rmd("DataProcessing/ne01_topography_show.Rmd", local = local)
+    ne01 <- read_rmd("DataProcessing/ne01_topography_show.Rmd", locally_run = locally_run)
   }
 
   nep_rmd_t <- c(nep_rmd, ne01)
@@ -57,14 +57,14 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
     #   "Codes/DataProcessing/ne02_ssurgo.Rmd"
     # ) %>%
     # readLines() 
-    ne02 <- read_rmd("DataProcessing/ne02_ssurgo.Rmd", local = local)
+    ne02 <- read_rmd("DataProcessing/ne02_ssurgo.Rmd", locally_run = locally_run)
   } else {
     # ne02 <- file.path(
     #   here(), 
     #   "Codes/DataProcessing/ne02_ssurgo_show.Rmd"
     # ) %>%
     # readLines() 
-    ne02 <- read_rmd("DataProcessing/ne02_ssurgo_show.Rmd", local = local)
+    ne02 <- read_rmd("DataProcessing/ne02_ssurgo_show.Rmd", locally_run = locally_run)
   }
 
   nep_rmd_ts <- c(nep_rmd_t, ne02)
@@ -78,14 +78,14 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
     #   "Codes/DataProcessing/ne03_weather.Rmd"
     # ) %>%
     # readLines() 
-    ne03 <- read_rmd("DataProcessing/ne03_weather.Rmd", local = local)
+    ne03 <- read_rmd("DataProcessing/ne03_weather.Rmd", locally_run = locally_run)
   } else {
     # ne03 <- file.path(
     #   here(), 
     #   "Codes/DataProcessing/ne03_weather_show.Rmd"
     # ) %>%
     # readLines() 
-    ne03 <- read_rmd("DataProcessing/ne03_weather_show.Rmd", local = local)
+    ne03 <- read_rmd("DataProcessing/ne03_weather_show.Rmd", locally_run = locally_run)
   }
 
   nep_rmd_tsw <- c(nep_rmd_ts, ne03)
@@ -102,7 +102,7 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
     #   "Codes/DataProcessing/ne04_ec_show.Rmd"
     # ) %>%
     # readLines() 
-    ne04 <- read_rmd("DataProcessing/ne04_ec_show.Rmd", local = local)
+    ne04 <- read_rmd("DataProcessing/ne04_ec_show.Rmd", locally_run = locally_run)
   } else {
     if (ec_exists & file.exists(ec_raw_file)) {
       # if ec.shp exists, but it has not been processed
@@ -111,7 +111,7 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
       #   "Codes/DataProcessing/ne04_ec.Rmd"
       # ) %>%
       # readLines()
-      ne04 <- read_rmd("DataProcessing/ne04_ec.Rmd", local = local)
+      ne04 <- read_rmd("DataProcessing/ne04_ec.Rmd", locally_run = locally_run)
     } else {
       # if ec.shp does not exist
       print("This field either does not have EC data or EC data has not been uploaded in the right place")
@@ -138,7 +138,7 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
 #' # Experiment data processing and reporting
 # /*=================================================*/
 
-exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
+exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 
   cat(paste0("============================================\n= Proessing experiment data for ", ffy, 
     "\n============================================")
@@ -148,17 +148,20 @@ exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   #   here("Codes/Functions/unpack_field_parameters.R"),
   #   local = TRUE
   # )
-  source(get_r_file_name("Functions/unpack_field_parameters.R"), local = TRUE)
+  source(
+    get_r_file_name("Functions/unpack_field_parameters.R"), 
+    local = TRUE
+  )
 
   # exp_temp_rmd <- file.path(here(), "Codes/DataProcessing/data_processing_template.Rmd") %>%
     # readLines() 
 
-  exp_temp_rmd <- read_rmd("DataProcessing/data_processing_template.Rmd", local = local)
+  exp_temp_rmd <- read_rmd("DataProcessing/data_processing_template.Rmd", locally_run = locally_run)
 
   # e01 <- file.path(here(), "Codes/DataProcessing/e01_gen_yield_polygons.Rmd") %>%
   #   readLines()
 
-  e01 <- read_rmd("DataProcessing/e01_gen_yield_polygons.Rmd", local = local)
+  e01 <- read_rmd("DataProcessing/e01_gen_yield_polygons.Rmd", locally_run = locally_run)
 
   exp_rmd_y <- c(exp_temp_rmd, e01)
  
@@ -174,11 +177,11 @@ exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
 
   if (process_s & !use_td_s) {
 
-    e02s <- read_rmd("DataProcessing/e02s_process_as_applied.Rmd", local = local)
+    e02s <- read_rmd("DataProcessing/e02s_process_as_applied.Rmd", locally_run = locally_run)
 
   } else if (process_s & use_td_s){
 
-    e02s <- read_rmd("DataProcessing/e02s_use_td.Rmd", local = local)
+    e02s <- read_rmd("DataProcessing/e02s_use_td.Rmd", locally_run = locally_run)
 
   } else {
 
@@ -199,11 +202,11 @@ exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
  
   if (process_n & !use_td_n) {
 
-    e02n <- read_rmd("DataProcessing/e02n_process_as_applied.Rmd", local = local)
+    e02n <- read_rmd("DataProcessing/e02n_process_as_applied.Rmd", locally_run = locally_run)
 
   } else if (process_n & use_td_n){
 
-    e02n <- read_rmd("DataProcessing/e02n_use_td.Rmd", local = local)
+    e02n <- read_rmd("DataProcessing/e02n_use_td.Rmd", locally_run = locally_run)
 
   } else {
 
@@ -221,7 +224,7 @@ exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
 
   e03 <- read_rmd(
     "DataProcessing/e03_yield_further_processing.Rmd", 
-    local = local
+    locally_run = locally_run
   )
 
   #/*----------------------------------*/
@@ -264,7 +267,7 @@ exp_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
 # /*=================================================*/
 #' # Final data processing and reporting
 # /*=================================================*/
-f_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
+f_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 
   # /*----------------------------------*/
   #' ## Experiment data processing
@@ -273,14 +276,17 @@ f_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
   #   file.path(., "Codes/DataProcessing/data_processing_template.Rmd") %>%
   #   readLines() %>%
   #   gsub("field-year-here", ffy, .)
-  source(get_r_file_name("Functions/unpack_field_parameters.R"), local = TRUE)
+  source(
+    get_r_file_name("Functions/unpack_field_parameters.R"), 
+    local = TRUE
+  )
 
-  fp_temp_rmd <- read_rmd("DataProcessing/data_processing_template.Rmd", local = local) %>%
+  fp_temp_rmd <- read_rmd("DataProcessing/data_processing_template.Rmd", locally_run = locally_run) %>%
     gsub("field-year-here", ffy, .)
 
   # f01_rmd <- readLines(file.path(here(), "Codes/DataProcessing/f01_combine_all_datasets.Rmd"))
 
-  f01_rmd <- read_rmd("DataProcessing/f01_combine_all_datasets.Rmd", local = local)
+  f01_rmd <- read_rmd("DataProcessing/f01_combine_all_datasets.Rmd", locally_run = locally_run)
 
   fp_rmd <- c(fp_temp_rmd, f01_rmd)
 
@@ -362,7 +368,7 @@ f_process_make_report <- function(ffy, rerun = FALSE, local = FALSE) {
 #/*=================================================*/
 #' # Run analysis
 #/*=================================================*/
-run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
+run_analysis <- function(ffy, rerun = FALSE, locally_run = FALSE){
 
   data_for_analysis_exists <- here("Data", "Growers", ffy, "Analysis-Ready", "analysis_data.rds") %>% 
     file.exists()
@@ -384,7 +390,7 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
   
   temp_rmd <- read_rmd(
     "Analysis/a00_analysis.Rmd", 
-    local = local
+    locally_run = locally_run
   ) %>% 
   gsub("field-year-here", ffy, .)
 
@@ -402,7 +408,7 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
       temp_rmd, 
       read_rmd(
         "Analysis/a01_S_analysis.Rmd", 
-        local = local
+        locally_run = locally_run
       ), 
       "_S_analysis_rmd_here_"
     )
@@ -419,7 +425,7 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
       temp_rmd, 
       read_rmd(
         "Analysis/a01_N_analysis.Rmd", 
-        local = local
+        locally_run = locally_run
       ), 
       "_N_analysis_rmd_here_"
     )
@@ -436,7 +442,7 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
       temp_rmd, 
       read_rmd(
         "Analysis/a01_S_analysis.Rmd", 
-        local = local
+        locally_run = locally_run
       ), 
       "_S_analysis_rmd_here_"
     )
@@ -445,7 +451,7 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
       temp_rmd, 
       read_rmd(
         "Analysis/a01_N_analysis.Rmd", 
-        local = local
+        locally_run = locally_run
       ), 
       "_N_analysis_rmd_here_"
     )
@@ -468,7 +474,7 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
 #' # Make report (run after run_analysis)
 #/*=================================================*/
 
-make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
+make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
  
   source(
     get_r_file_name("Functions/unpack_field_parameters.R"), 
@@ -519,7 +525,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
 
     temp_rmd <- read_rmd(
       "Report/r01_SN_make_report_html.Rmd",
-      local = local
+      locally_run = locally_run
     ) %>% 
     gsub("field-year-here", ffy, .)
 
@@ -527,13 +533,13 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       input_type = "S", 
       results = results_s, 
       gc_type = gc_type_s, 
-      local = local
+      locally_run = locally_run
     )
     res_disc_rmd_s <- get_ERI_texts(
       input_type = "N", 
       results = results_n, 
       gc_type = gc_type_n, 
-      local = local
+      locally_run = locally_run
     )
     res_disc_rmd <- c(res_disc_rmd_s, res_disc_rmd_n)
 
@@ -558,13 +564,13 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     td_s_txt <- get_td_text(
       input_type = "S", 
       gc_type = gc_type_s, 
-      local = local
+      locally_run = locally_run
     )
 
     td_n_txt <- get_td_text(
       input_type = "N", 
       gc_type = gc_type_n, 
-      local = local
+      locally_run = locally_run
     )
 
     td_txt <- c(td_s_txt, td_n_txt)
@@ -583,7 +589,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
 
     temp_rmd <- read_rmd(
       "Report/r01_S_make_report_html.Rmd",
-      local = local
+      locally_run = locally_run
     ) %>% 
     gsub("field-year-here", ffy, .)
 
@@ -591,7 +597,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       input_type = "S", 
       results = results_s, 
       gc_type = gc_type_s, 
-      local = local
+      locally_run = locally_run
     )
 
     #++++++++++++++++
@@ -609,7 +615,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     td_txt <- get_td_text(
       input_type = "S", 
       gc_type = gc_type_s, 
-      local = local
+      locally_run = locally_run
     )
 
 
@@ -627,7 +633,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
 
     temp_rmd <- read_rmd(
       "Report/r01_N_make_report_html.Rmd",
-      local = local
+      locally_run = locally_run
     ) %>% 
     gsub("field-year-here", ffy, .)
 
@@ -635,7 +641,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
       input_type = "N", 
       results = results_n, 
       gc_type = gc_type_n, 
-      local = local
+      locally_run = locally_run
     )
 
     #++++++++++++++++
@@ -653,7 +659,7 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
     td_txt <- get_td_text(
       input_type = "N", 
       gc_type = gc_type_n, 
-      local = local
+      locally_run = locally_run
     )
 
 
@@ -798,9 +804,9 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, head_dist = NA, 
 # file_name <- "DataProcessing/data_processing_template.Rmd"
 # rmd_file[1:10]
 
-read_rmd <- function(file_name, local = FALSE) {
+read_rmd <- function(file_name, locally_run = FALSE) {
 
-  if (local == FALSE) {
+  if (locally_run == FALSE) {
     file_name_on_github <- paste0("https://github.com/tmieno2/DIFM/blob/master/", file_name, "?raw=TRUE")  
     rmd_file <- suppressMessages(readLines(file_name_on_github))
   } else {
@@ -811,9 +817,9 @@ read_rmd <- function(file_name, local = FALSE) {
 
 }
 
-get_r_file_name <- function(file_name, local = FALSE) {
+get_r_file_name <- function(file_name, locally_run = FALSE) {
 
-  if (local == FALSE) {
+  if (locally_run == FALSE) {
     file_name <- paste0("https://github.com/tmieno2/DIFM/blob/master/", file_name, "?raw=TRUE")  
   } else {
     file_name <- here("Codes", file_name)
@@ -855,7 +861,7 @@ get_ttest_text <- function(pi_dif_test_zone, zone){
 }
 
 
-get_ERI_texts <- function(input_type, results, gc_type, local = FALSE){
+get_ERI_texts <- function(input_type, results, gc_type, locally_run = FALSE){
 
   whole_profits_test <- results$whole_profits_test[[1]]
   pi_dif_test_zone <- results$pi_dif_test_zone[[1]]
@@ -881,7 +887,7 @@ get_ERI_texts <- function(input_type, results, gc_type, local = FALSE){
 
     t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
 
-    res_disc_rmd <- read_rmd(res_disc_rmd_file, local = local) %>% 
+    res_disc_rmd <- read_rmd(res_disc_rmd_file, locally_run = locally_run) %>% 
     gsub(
       "_stat_confidence_here_", 
       case_when(
@@ -894,7 +900,7 @@ get_ERI_texts <- function(input_type, results, gc_type, local = FALSE){
 
   } else {
 
-    res_disc_rmd <- read_rmd(res_disc_rmd_file, local = local)
+    res_disc_rmd <- read_rmd(res_disc_rmd_file, locally_run = locally_run)
     
     #/*----------------------------------*/
     #' ## Profit differential narrative
@@ -908,13 +914,13 @@ get_ERI_texts <- function(input_type, results, gc_type, local = FALSE){
     # note: zone 1 has a longer version already in res_disc_rmd 
       if (i == 2) {
 
-        pi_dif_rmd <- read_rmd(pi_rmd_file, local = local) %>% 
+        pi_dif_rmd <- read_rmd(pi_rmd_file, locally_run = locally_run) %>% 
         gsub("_insert-zone-here_", i, .) %>% 
         gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
 
       } else {
 
-        temp_pi_dif_rmd <- read_rmd(pi_rmd_file, local = local) %>% 
+        temp_pi_dif_rmd <- read_rmd(pi_rmd_file, locally_run = locally_run) %>% 
         gsub("_insert-zone-here_", i, .) %>% 
         gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
 
@@ -988,14 +994,14 @@ get_while_pi_txt <- function(results) {
 }
 
 
-get_td_text <- function(input_type, gc_type, local = FALSE) {
+get_td_text <- function(input_type, gc_type, locally_run = FALSE) {
 
   td_rmd_file <- case_when(
     input_type == "N" ~ "Report/ri03_trial_design_N.Rmd",
     input_type == "S" ~ "Report/ri03_trial_design_S.Rmd"
   )
 
-  td_rmd <- read_rmd(td_rmd_file, local = local)
+  td_rmd <- read_rmd(td_rmd_file, locally_run = locally_run)
 
   if (gc_type == "Rx") {
     grower_plan_text <- "follow the commercial prescription depicted 
