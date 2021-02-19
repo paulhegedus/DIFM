@@ -91,8 +91,6 @@ make_grower_report(
   local = TRUE
 )
 
-
-
 # render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")
 
 

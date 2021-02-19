@@ -674,7 +674,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
   temp_rmd <- insert_rmd(
     target_rmd = temp_rmd, 
     inserting_rmd = td_txt,
-    target_text = "_trial_design_information_here__"
+    target_text = "_trial_design_information_here_"
   )
 
   #/*----------------------------------*/
