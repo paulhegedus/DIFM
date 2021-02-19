@@ -495,6 +495,11 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     unlink(recursive = TRUE)
   }
 
+  base_rmd <- read_rmd(
+    "Report/r0_report_header.Rmd",
+    locally_run = locally_run
+  ) 
+
   #/*----------------------------------*/
   #' ## Insert appropriate texts  
   #/*----------------------------------*/
@@ -676,6 +681,8 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     inserting_rmd = td_txt,
     target_text = "_trial_design_information_here_"
   )
+
+  temp_rmd <- c(base_rmd, temp_rmd)
 
   #/*----------------------------------*/
   #' ## Write the rmd file and run
