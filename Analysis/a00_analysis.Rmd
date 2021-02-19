@@ -79,9 +79,9 @@ source(
 ```{r }
 if (trial_type %in% c("SN", "S")) {
   get_r_file_name(
-    "Analysis/a01_S_analysis.R",
-    local = FALSE
-  )
+    "Analysis/a01_S_analysis.R"
+  ) %>% 
+  source(local = TRUE)
 } else {
   cat("No seed analysis for this field") 
 }
@@ -96,7 +96,8 @@ if (trial_type %in% c("SN", "N")) {
   get_r_file_name(
     "Analysis/a01_N_analysis.R",
     local = FALSE
-  )
+  ) %>% 
+  source(local = TRUE)
 } else {
   cat("No nitrogen analysis for this field") 
 }
