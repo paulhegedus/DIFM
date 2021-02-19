@@ -469,25 +469,12 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
 #/*=================================================*/
 
 make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
-  
-  # spin("/Users/tmieno2/Box/DIFM_DevTeam/Codes/Analysis/a01_N_analysis_spin.R", knit = FALSE) 
-
-  analysis_data_exists <- here("Reports/Growers", ffy, "analysis_results.rds") %>% 
-    file.exists()
-
-  # source(
-  #   here("Codes/Functions/unpack_field_parameters.R"),
-  #   local = TRUE
-  # )
+ 
   source(
     get_r_file_name("Functions/unpack_field_parameters.R"), 
     local = TRUE
   )
-
-  if (!analysis_data_exists) {
-    return(print("No analysis results exist. Run analysis first."))
-  }
-
+  
   #/*----------------------------------*/
   #' ## If rerun = TRUE
   #/*----------------------------------*/
@@ -503,199 +490,157 @@ make_grower_report <- function(ffy, rerun = TRUE, local = FALSE){
   }
 
   #/*----------------------------------*/
-  #' ## Read analysis results
-  #/*----------------------------------*/
-  if (trial_type == "SN") {
-    results_s <- readRDS(here("Reports", "Growers", ffy, "analysis_results_s.rds"))
-
-    opt_gc_data_s <- results_s$opt_gc_data[[1]]
-    whole_profits_test_s <- results_s$whole_profits_test[[1]]
-    pi_dif_test_zone_s <- results_s$pi_dif_test_zone[[1]]
-
-    results_n <- readRDS(here("Reports", "Growers", ffy, "analysis_results_n.rds"))
-
-    opt_gc_data_n <- results_n$opt_gc_data[[1]]
-    whole_profits_test_n <- results_n$whole_profits_test[[1]]
-    pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
-
-    temp_rmd <- read_rmd("Report/r01_SN_make_report_html.Rmd", local = local) %>% 
-      gsub("field-year-here", ffy, .)
-
-  } else if (trial_type == "S") {
-    results_s <- readRDS(here("Reports", "Growers", ffy, "analysis_results_s.rds"))
-
-    opt_gc_data_s <- results_s$opt_gc_data[[1]]
-    whole_profits_test_s <- results_s$whole_profits_test[[1]]
-    pi_dif_test_zone_s <- results_s$pi_dif_test_zone[[1]]
-
-    temp_rmd <- read_rmd("Report/r01_S_make_report_html.Rmd", local = local) %>% 
-      gsub("field-year-here", ffy, .)
-
-  } else if (trial_type == "N") {
-
-    results_n <- readRDS(here("Reports", "Growers", ffy, "analysis_results_n.rds"))
-
-    opt_gc_data_n <- results_n$opt_gc_data[[1]]
-    whole_profits_test_n <- results_n$whole_profits_test[[1]]
-    pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
-
-    temp_rmd <- read_rmd("Report/r01_N_make_report_html.Rmd", local = local) %>% 
-      gsub("field-year-here", ffy, .)
-
-  }
-
-  #/*----------------------------------*/
   #' ## Insert appropriate texts  
   #/*----------------------------------*/
   # case 1: variable grower-chosen rates (Rx available)
   # case 2: uniform grower-chosen rate
 
-  insert_ERI_texts <- function(){
+  #=== analysis data file names ===#
+  AD_fiel_s <- here("Reports/Growers", ffy, "analysis_results_s.rds")
+  AD_fiel_n <- here("Reports/Growers", ffy, "analysis_results_n.rds")
 
-    if (gc_type_s == "Rx") {
+  if (trial_type == "SN") {
 
-      t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
+    if (!file.exists(AD_fiel_s) | !file.exists(AD_fiel_n)) {
+      return(print("No analysis results exist. Run analysis first."))
+    }
 
-      # res_disc_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_Rx.Rmd")) %>% 
-      res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_Rx.Rmd", local = local) %>% 
-        gsub(
-          "_stat_confidence_here_", 
-          case_when(
-            t_whole_ovg >= 1.96 ~ "high",
-            t_whole_ovg >= 1.3 & t_whole_ovg < 1.96 ~ "moderate",
-            t_whole_ovg < 1.3 ~ "low"
-          ), 
-          .
-        )
+    results_s <- readRDS(AD_fiel_s)
 
-      growe_plan_text <- "follow the commercial prescription depicted 
+    opt_gc_data_s <- results_s$opt_gc_data[[1]]
+    whole_profits_test_s <- results_s$whole_profits_test[[1]]
+    pi_dif_test_zone_s <- results_s$pi_dif_test_zone[[1]]
+
+    results_n <- readRDS(AD_fiel_s)
+
+    opt_gc_data_n <- results_n$opt_gc_data[[1]]
+    whole_profits_test_n <- results_n$whole_profits_test[[1]]
+    pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
+
+    temp_rmd <- read_rmd(
+      "Report/r01_SN_make_report_html.Rmd",
+      local = local
+    ) %>% 
+    gsub("field-year-here", ffy, .)
+
+    res_disc_rmd_s <- get_ERI_texts(results_s, gc_type_s)
+    res_disc_rmd_n <- get_ERI_texts(results_n, gc_type_n)
+    res_disc_rmd <- c(res_disc_rmd_s, res_disc_rmd_n)
+
+    #++++++++++++++++
+    # whole pi summary statement
+    #++++++++++++++++
+    temp_rmd <- gsub(
+      "_statement-whole-field-pi-s-here_", 
+      get_while_pi_txt(results_s), 
+      temp_rmd
+    )
+
+    temp_rmd <- gsub(
+      "_statement-whole-field-pi-n-here_", 
+      get_while_pi_txt(results_n), 
+      temp_rmd
+    )
+
+  } else if (trial_type == "S") {
+
+    if (!file.exists(AD_fiel_s)) {
+      return(print("No analysis results exist. Run analysis first."))
+    }
+    
+    results_s <- readRDS(AD_fiel_s)
+
+    opt_gc_data_s <- results_s$opt_gc_data[[1]]
+    whole_profits_test_s <- results_s$whole_profits_test[[1]]
+    pi_dif_test_zone_s <- results_s$pi_dif_test_zone[[1]]
+
+    temp_rmd <- read_rmd(
+      "Report/r01_S_make_report_html.Rmd",
+      local = local
+    ) %>% 
+    gsub("field-year-here", ffy, .)
+
+    res_disc_rmd <- get_ERI_texts(results_s, gc_type_s)
+
+    #++++++++++++++++
+    # whole pi summary statement
+    #++++++++++++++++
+    temp_rmd <- gsub(
+      "_statement-whole-field-pi-here_", 
+      get_while_pi_txt(results_s), 
+      temp_rmd
+    )
+
+  } else if (trial_type == "N") {
+
+    if (!file.exists(AD_fiel_n)) {
+      return(print("No analysis results exist. Run analysis first."))
+    }
+    
+    results_n <- readRDS(AD_fiel_n)
+
+    opt_gc_data_n <- results_n$opt_gc_data[[1]]
+    whole_profits_test_n <- results_n$whole_profits_test[[1]]
+    pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
+
+    temp_rmd <- read_rmd(
+      "Report/r01_N_make_report_html.Rmd",
+      local = local
+    ) %>% 
+    gsub("field-year-here", ffy, .)
+
+    res_disc_rmd <- get_ERI_texts(results_n, gc_type_n)
+
+    #++++++++++++++++
+    # whole pi summary statement
+    #++++++++++++++++
+    temp_rmd <- gsub(
+      "_statement-whole-field-pi-here_", 
+      get_while_pi_txt(results_n), 
+      temp_rmd
+    )
+
+  }
+
+  temp_rmd <- insert_rmd(
+    target_rmd = temp_rmd, 
+    inserting_rmd = res_disc_rmd,
+    target_text = "_results-and-discussions-here_"
+  )
+
+  analysis_rmd_file_name <- here() %>% 
+    paste0(., "/Reports/Growers/", ffy, "/grower-report.Rmd")
+
+  writeLines(temp_rmd, con = analysis_rmd_file_name)
+
+
+  #--------------------------
+  # grower plan narrative
+  #--------------------------
+  
+  get_gc_plan_narrative <- function(input_type, gc_type) {
+
+    if (gc_type == "Rx") {
+      grower_plan_text <- "follow the commercial prescription depicted 
         in figure \\\\@ref(fig:rx-s-map)"
-
-    } else {
-      # res_disc_rmd <- readLines(here("Codes", "Report", "ri01_results_by_zone_non_Rx.Rmd"))
-      res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_non_Rx.Rmd", local = local)
-      
-      #/*----------------------------------*/
-      #' ## Profit differential narrative
-      #/*----------------------------------*/
-      # Statements about the difference between 
-      # optimal vs grower-chosen rates
-
-      num_zones <- nrow(pi_dif_test_zone)
-
-      for (i in 2:num_zones) {
-      # note: zone 1 has a longer version already in res_disc_rmd 
-        if (i == 2) {
-
-          pi_dif_rmd <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local) %>% 
-            gsub("_insert-zone-here_", i, .) %>% 
-            gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
-
-        } else {
-
-          temp_pi_dif_rmd <- read_rmd("Report/ri02_profit_dif_statement.Rmd", local = local) %>% 
-            gsub("_insert-zone-here_", i, .) %>% 
-            gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
-
-          pi_dif_rmd <- c(pi_dif_rmd, temp_pi_dif_rmd) 
-
-        }
-      }
-
-      res_disc_rmd <- insert_rmd(
-        target_rmd = res_disc_rmd, 
-        inserting_rmd = pi_dif_rmd,
-        target_text = "_rest-of-the-zones-here_"
-      ) %>% 
-      gsub("grower_chosen_rate_here", grower_chosen_rate_s, .)
-
-      #/*~~~~~~~~~~~~~~~~~~~~~~*/
-      #' ### grower plan narrative
-      #/*~~~~~~~~~~~~~~~~~~~~~~*/
-      growe_plan_text <- "apply grower_chosen_rate_hereK seeds per acre 
+    } else if () {
+      grower_plan_text <- "apply grower_chosen_rate_hereK seeds per acre 
         uniformly across the field. numb_seed_rates_here 
         experimental seed rates were assigned randomly and in 
         roughly equal number to plots" 
-
     }
 
-    temp_rmd <- gsub(
-      "_grower-plan-here_", 
-      growe_plan_text, 
-      temp_rmd
-    )
-    
-    temp_rmd <- insert_rmd(
-      target_rmd = temp_rmd, 
-      inserting_rmd = res_disc_rmd,
-      target_text = "_results-and-discussions-here_"
-    )
   }
-
-
-
-
-  if (gc_type_s != "Rx") {
-    #/*----------------------------------*/
-    #' ## Difference between optimal vs grower-chosen rates
-    #/*----------------------------------*/
-    # Statements about the difference between 
-    # optimal vs grower-chosen rates
-
-    gc_opt_comp_txt_ls <- c()
-    
-    for (i in 1:num_zones) {
-      temp_dif <- get_seed(opt_gc_data, "gc", i) - get_seed(opt_gc_data, "opt_v", i)
-      gc_opt_comp_txt_ls <- c(gc_opt_comp_txt_ls,
-        paste0(
-          "`r get_seed(opt_gc_data, \"gc\", ", 
-          i, 
-          ") - get_seed(opt_gc_data, \"opt_v\", ", 
-          i,
-          ")`K seeds ", 
-          ifelse(temp_dif > 0, "too high", "too low"),
-          " in Zone ", i
-        )
-      )
-    }
-    gc_opt_comp_txt <- paste0(gc_opt_comp_txt_ls, collapse = ", ")
-
-    temp_rmd <- gsub(
-      "_gc-opt-comp-txt-comes-here_",
-      gc_opt_comp_txt,
-      temp_rmd
-    )
-
-  } 
   
-  #/*----------------------------------*/
-  #' ## Insert texts in the Summary section
-  #/*----------------------------------*/ 
-  cat("error-detector 3")
-
-  whole_pi_t <- whole_profits_test[type_short == "ovg", t]
-
-  if (whole_pi_t > 1.96) {
-
-    text_summary <- "The data and model provide a high degree of statistical confidence in this result"
-
-  } else if (whole_pi_t > 1.3) {
-
-    text_summary <- "The data and model provide a moderate degree of statistical confidence in this result"
-
-  } else {
-    
-    text_summary <- "But, the data and model provide a low degree of statistical confidence in this result"
-
-  } 
-
-  temp_rmd <- gsub("_statement-whole-field-pi-here_", text_summary, temp_rmd)
-
+  temp_rmd <- gsub(
+    "_grower-plan-here_", 
+    grower_plan_text, 
+    temp_rmd
+  )
+  
   #/*----------------------------------*/
   #' ## Write the rmd file and run
   #/*----------------------------------*/
-  cat("error-detector 4")
-
   analysis_rmd_file_name <- here() %>% 
     paste0(., "/Reports/Growers/", ffy, "/grower-report.Rmd")
 
@@ -876,3 +821,134 @@ get_ttest_text <- function(pi_dif_test_zone, zone){
   return(gsub(", zone", paste0(", ", zone), temp_text))
 }
 
+get_ERI_texts <- function(input_type, results, gc_type){
+
+  whole_profits_test <- results$whole_profits_test[[1]]
+  pi_dif_test_zone <- results$pi_dif_test_zone[[1]]
+  opt_gc_data <- results$opt_gc_data[[1]]
+
+  res_disc_rmd_file <- case_when(
+    input_type == "N" & gc_type == "Rx" ~ 
+      "ri01_results_by_zone_Rx_N.Rmd", 
+    input_type == "S" & gc_type == "Rx" ~ 
+      "ri01_results_by_zone_Rx_S.Rmd",  
+    input_type == "N" & gc_type == "uniform" ~ 
+      "ri01_results_by_zone_non_Rx_N.Rmd",
+    input_type == "S" & gc_type == "uniform" ~ 
+      "ri01_results_by_zone_non_Rx_S.Rmd"
+  )
+
+  pi_rmd_file <- case_when(
+    input_type == "N" ~ "ri02_profit_dif_statement_N.Rmd",
+    input_type == "S" ~ "ri02_profit_dif_statement_S.Rmd"
+  )
+
+  if (gc_type == "Rx") {
+
+    t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
+
+    res_disc_rmd <- read_rmd(res_disc_rmd_file, local = local) %>% 
+    gsub(
+      "_stat_confidence_here_", 
+      case_when(
+        t_whole_ovg >= 1.96 ~ "high",
+        t_whole_ovg >= 1.3 & t_whole_ovg < 1.96 ~ "moderate",
+        t_whole_ovg < 1.3 ~ "low"
+      ), 
+      .
+    )
+
+  } else {
+
+    res_disc_rmd <- read_rmd(res_disc_rmd_file, local = local)
+    
+    #/*----------------------------------*/
+    #' ## Profit differential narrative
+    #/*----------------------------------*/
+    # Statements about the difference between 
+    # optimal vs grower-chosen rates
+
+    num_zones <- nrow(pi_dif_test_zone)
+
+    for (i in 2:num_zones) {
+    # note: zone 1 has a longer version already in res_disc_rmd 
+      if (i == 2) {
+
+        pi_dif_rmd <- read_rmd(pi_rmd_file, local = local) %>% 
+        gsub("_insert-zone-here_", i, .) %>% 
+        gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
+
+      } else {
+
+        temp_pi_dif_rmd <- read_rmd(pi_rmd_file, local = local) %>% 
+        gsub("_insert-zone-here_", i, .) %>% 
+        gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
+
+        pi_dif_rmd <- c(pi_dif_rmd, temp_pi_dif_rmd) 
+
+      }
+    }
+
+    res_disc_rmd <- insert_rmd(
+      target_rmd = res_disc_rmd, 
+      inserting_rmd = pi_dif_rmd,
+      target_text = "_rest-of-the-zones-here_"
+    ) %>% 
+    gsub("grower_chosen_rate_here", grower_chosen_rate_s, .)
+
+    #/*----------------------------------*/
+    #' ## Difference between optimal vs grower-chosen rates
+    #/*----------------------------------*/
+    # Statements about the difference between 
+    # optimal vs grower-chosen rates
+    gc_opt_comp_txt_ls <- c()
+    
+    for (i in 1:num_zones) {
+      temp_dif <- get_seed(opt_gc_data, "gc", i) - get_seed(opt_gc_data, "opt_v", i)
+      gc_opt_comp_txt_ls <- c(gc_opt_comp_txt_ls,
+        paste0(
+          "`r get_seed(opt_gc_data, \"gc\", ", 
+          i, 
+          ") - get_seed(opt_gc_data, \"opt_v\", ", 
+          i,
+          ")`K seeds ", 
+          ifelse(temp_dif > 0, "too high", "too low"),
+          " in Zone ", i
+        )
+      )
+    }
+    gc_opt_comp_txt <- paste0(gc_opt_comp_txt_ls, collapse = ", ")
+
+    res_disc_rmd <- gsub(
+      "_gc-opt-comp-txt-comes-here_",
+      gc_opt_comp_txt,
+      res_disc_rmd
+    )
+
+  }
+
+  return(res_disc_rmd) 
+
+}
+
+get_while_pi_txt <- function(results) {
+
+  whole_pi_t <- results$whole_profits_test[[1]][type_short == "ovg", t]
+
+  if (whole_pi_t > 1.96) {
+
+    text_summary <- "The data and model provide a high degree of statistical confidence in this result"
+
+  } else if (whole_pi_t > 1.3) {
+
+    text_summary <- "The data and model provide a moderate degree of statistical confidence in this result"
+
+  } else {
+    
+    text_summary <- "But, the data and model provide a low degree of statistical confidence in this result"
+
+  }
+
+  return(text_summary)
+
+}

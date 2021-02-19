@@ -14,9 +14,9 @@
 
 # Summary  
 
-A corn seed-nitrogen rate trial was conducted on the field_name_here field in crop year 2020. The trial was <!--NEED to determine and assign: "was" or "was not". If the trial was not implemented accurately, for now we can write explanations by hand.  But eventually, we could probably write up a list of common reasons why implementation wasn't accurate, and choose one from that list to put in the text.--> implemented with a high level of accuracy. The data and model provide an estimate that, under growing conditions identical to those of the field in 2020, implementing the recommended site-specific seed rate strategy would have increased profits by \$`r round(whole_profits_test_s[type_short == "ovg", point_est_dif], digits = 0)` per acre. _statement-whole-field-pi-here_.
+A corn seed-nitrogen rate trial was conducted on the field_name_here field in crop year 2020. The trial was <!--NEED to determine and assign: "was" or "was not". If the trial was not implemented accurately, for now we can write explanations by hand.  But eventually, we could probably write up a list of common reasons why implementation wasn't accurate, and choose one from that list to put in the text.--> implemented with a high level of accuracy. The data and model provide an estimate that, under growing conditions identical to those of the field in 2020, implementing the recommended site-specific seed rate strategy would have increased profits by \$`r round(whole_profits_test_s[type_short == "ovg", point_est_dif], digits = 0)` per acre. _statement-whole-field-pi-n-here_.
 
-It also provides an estimate that implementing the recommended site-specific nitrogen rate strategy would have increased profits by \$`r round(whole_profits_test_n[type_short == "ovg", point_est_dif], digits = 0)` per acre. _statement-whole-field-pi-here_.
+It also provides an estimate that implementing the recommended site-specific nitrogen rate strategy would have increased profits by \$`r round(whole_profits_test_n[type_short == "ovg", point_est_dif], digits = 0)` per acre. _statement-whole-field-pi-s-here_.
 
 
 # Economic Results and Implications 
@@ -53,7 +53,11 @@ g_whole_pi_s
 
 # Trial Design and Implementation
 
-Figure \@ref(fig:tgts-yield-ap) displays the trial design and the resultant as-applied map.  Casual observation shows that <!--NEED to determine and assign:  "trial implementation was basically accurate", or "the accuracy of trial implementation was limited by" (add text by hand) -->.  The field's status quo planting plan (that is, the one that would have been used had there been no field trial conducted) was to _grower-plan-here_.  Plots were all `r plot_width` feet wide.  Plot were all between <!--shortest_plot_length_hereK--> and <!--longest_plot_length_hereK-->feet long. A rate of <!--buffer_zone_rate_hereK--> per acre was assigned to a buffer zone around the perimeter of the trial, but observations from the buffer zone were not included as part of the trial in later analysis. Figure \@ref(fig:tgts-yield-ap) pairs the trial's design, as-applied, and yield maps.  No relationship between nitrogen rate and yield is readily detectable with the naked eye. 
+Figure \@ref(fig:tgts-yield-ap) displays the trial design and the resultant as-applied map.  Casual observation shows that <!--NEED to determine and assign:  "trial implementation was basically accurate", or "the accuracy of trial implementation was limited by" (add text by hand) -->.  
+
+The field's status quo planting plan (that is, the one that would have been used had there been no field trial conducted) was to _grower-plan-here_.  
+
+Plots were all `r plot_width` feet wide.  Plot were all between <!--shortest_plot_length_hereK--> and <!--longest_plot_length_hereK-->feet long. A rate of <!--buffer_zone_rate_hereK--> per acre was assigned to a buffer zone around the perimeter of the trial, but observations from the buffer zone were not included as part of the trial in later analysis. Figure \@ref(fig:tgts-yield-ap) pairs the trial's design, as-applied, and yield maps.  No relationship between nitrogen rate and yield is readily detectable with the naked eye. 
 
 
 ```{r tgts-yield-ap, fig.cap = "Trial design, as-applied nitrogen rates, and corn yields, 2020)", fig.height = 10}
