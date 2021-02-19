@@ -371,7 +371,6 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
     return(print("No data that is ready for analysis exist. Process the datasets first."))
   }
 
-
   if (rerun){
     #--- remove cached files ---#
     list.files(
@@ -382,40 +381,36 @@ run_analysis <- function(ffy, rerun = FALSE, local = FALSE){
     .[str_detect(., c("cache|files"))] %>% 
     unlink(recursive = TRUE)
   }
-
-  # temp_rmd <- "Codes/Analysis/a00_analysis_template.Rmd" %>% 
-  #   file.path(here(), .) %>% 
-  #   readLines() %>% 
-  #   gsub("field-year-here", ffy, .)
-
-  temp_rmd <- read_rmd("Analysis/a00_analysis.Rmd", local = local) %>% 
-    gsub("field-year-here", ffy, .)
+  
+  temp_rmd <- read_rmd(
+    "Analysis/a00_analysis.Rmd", 
+    local = local
+  ) %>% 
+  gsub("field-year-here", ffy, .)
 
   #/*----------------------------------*/
-  #' ## Bifurcations
+  #' ## Cases
   #/*----------------------------------*/
-  #--- define field parameters ---#
   # source(
-  #   here("Codes/Functions/unpack_field_parameters.R"),
+  #   get_r_file_name("Functions/unpack_field_parameters.R"), 
   #   local = TRUE
   # )
-  source(get_r_file_name("Functions/unpack_field_parameters.R"), local = TRUE)
 
-  if (trial_type == "S") {
+  # if (trial_type == "S") {
 
-    analysis_rmd <- read_rmd("Analysis/a01_seed_analysis.Rmd", local = local)
+  #   analysis_rmd <- read_rmd("Analysis/a01_seed_analysis.Rmd", local = local)
 
-  } else if (trial_type == "N"){
+  # } else if (trial_type == "N"){
 
-    analysis_rmd <- read_rmd("Analysis/a01_nitrogen_analysis.Rmd", local = local)
+  #   analysis_rmd <- read_rmd("Analysis/a01_nitrogen_analysis.Rmd", local = local)
 
-  } else if (trial_type == "SN"){
+  # } else if (trial_type == "SN"){
 
-    analysis_rmd <- read_rmd("Analysis/a01_seed_nitrogen_analysis.Rmd", local = local)
+  #   analysis_rmd <- read_rmd("Analysis/a01_seed_nitrogen_analysis.Rmd", local = local)
 
-  }
+  # }
   
-  temp_rmd <- c(temp_rmd, analysis_rmd)
+  # temp_rmd <- c(temp_rmd, analysis_rmd)
 
   #/*----------------------------------*/
   #' ## Save and run

@@ -68,7 +68,7 @@ tm_layout_to_add <- tm_layout(
 #--- define field parameters ---#
 # source(here("Codes/Functions/unpack_field_parameters.R"))
 source(
-  get_r_file_name_git("Functions/unpack_field_parameters.R"), 
+  get_r_file_name("Functions/unpack_field_parameters.R"), 
   local = TRUE
 )
 
