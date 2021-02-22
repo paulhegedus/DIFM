@@ -4,6 +4,9 @@
 
 non_exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 
+  library(knitr)
+  options(knitr.duplicate.label = "allow")
+
   print(paste0("Proessing non-experiment data for ", ffy))
 
   boundary_file <- here("Data", "Growers", ffy) %>%
@@ -140,6 +143,9 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE)
 
 exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 
+  library(knitr)
+  options(knitr.duplicate.label = "allow")
+
   cat(paste0("============================================\n= Proessing experiment data for ", ffy, 
     "\n============================================")
   )
@@ -269,6 +275,8 @@ exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 # /*=================================================*/
 f_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 
+  library(knitr)
+  options(knitr.duplicate.label = "allow")
 
   # /*----------------------------------*/
   #' ## Experiment data processing
