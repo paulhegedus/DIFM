@@ -63,9 +63,11 @@ yield <- filter(yield_raw, !(yp_id %in% drop_yp_ids))
 
 ```
 
-```{r viz-yield-data}
+```{r viz-yield-data-2}
 tm_shape(yield) +
-  tm_dots() +
+  tm_dots(col = "red") +
+tm_shape(yield_raw) +
+  tm_dots(col = "blue") +
 tm_layout_to_add 
 
 ```
