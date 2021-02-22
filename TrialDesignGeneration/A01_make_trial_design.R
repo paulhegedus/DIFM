@@ -55,7 +55,7 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[3]
+ffy <- field_year_ls[2]
 
 make_trial_design(ffy, rerun = TRUE)
 

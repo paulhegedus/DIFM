@@ -269,6 +269,7 @@ exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 # /*=================================================*/
 f_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 
+
   # /*----------------------------------*/
   #' ## Experiment data processing
   # /*----------------------------------*/
@@ -369,6 +370,9 @@ f_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
 #' # Run analysis
 #/*=================================================*/
 run_analysis <- function(ffy, rerun = FALSE, locally_run = FALSE){
+
+  library(knitr)
+  options(knitr.duplicate.label = "allow")
 
   data_for_analysis_exists <- here("Data", "Growers", ffy, "Analysis-Ready", "analysis_data.rds") %>% 
     file.exists()
@@ -476,6 +480,9 @@ run_analysis <- function(ffy, rerun = FALSE, locally_run = FALSE){
 
 make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
  
+  library(knitr)
+  options(knitr.duplicate.label = "allow")
+
   source(
     get_r_file_name("Functions/unpack_field_parameters.R"), 
     local = TRUE
@@ -551,17 +558,17 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     #++++++++++++++++
     # whole pi summary statement
     #++++++++++++++++
-    temp_rmd <- gsub(
-      "_statement-whole-field-pi-s-here_", 
-      get_while_pi_txt(results_s), 
-      temp_rmd
-    )
+    # temp_rmd <- gsub(
+    #   "_statement-whole-field-pi-s-here_", 
+    #   get_whole_pi_txt(results_s), 
+    #   temp_rmd
+    # )
 
-    temp_rmd <- gsub(
-      "_statement-whole-field-pi-n-here_", 
-      get_while_pi_txt(results_n), 
-      temp_rmd
-    )
+    # temp_rmd <- gsub(
+    #   "_statement-whole-field-pi-n-here_", 
+    #   get_whole_pi_txt(results_n), 
+    #   temp_rmd
+    # )
 
     #++++++++++++++++
     # Trial design and implementation
@@ -608,11 +615,11 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     #++++++++++++++++
     # whole pi summary statement
     #++++++++++++++++
-    temp_rmd <- gsub(
-      "_statement-whole-field-pi-here_", 
-      get_while_pi_txt(results_s), 
-      temp_rmd
-    )
+    # temp_rmd <- gsub(
+    #   "_statement-whole-field-pi-here_", 
+    #   get_whole_pi_txt(results_s), 
+    #   temp_rmd
+    # )
 
     #++++++++++++++++
     # Trial design and implementation
@@ -652,11 +659,11 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     #++++++++++++++++
     # whole pi summary statement
     #++++++++++++++++
-    temp_rmd <- gsub(
-      "_statement-whole-field-pi-here_", 
-      get_while_pi_txt(results_n), 
-      temp_rmd
-    )
+    # temp_rmd <- gsub(
+    #   "_statement-whole-field-pi-here_", 
+    #   get_whole_pi_txt(results_n), 
+    #   temp_rmd
+    # )
 
     #++++++++++++++++
     # Trial design and implementation
@@ -987,7 +994,7 @@ get_ERI_texts <- function(input_type, results, gc_type, locally_run = FALSE){
 
 }
 
-get_while_pi_txt <- function(results) {
+get_whole_pi_txt <- function(results) {
 
   whole_pi_t <- results$whole_profits_test[[1]][type_short == "ovg", t]
 

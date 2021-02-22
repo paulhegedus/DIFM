@@ -174,7 +174,7 @@ if (!is.na(rates_ls)) {
 #/*~~~~~~~~~~~~~~~~~~~~~~*/
   experiment_design <- assign_rates(
     data_sf = experiment_plots, 
-    rates_ls = rate_ls,
+    rates_ls = rates_ls,
     # pattern = "block_randomized"
     pattern = "fixed-latin-square"
     # pattern = "sequential"
@@ -182,7 +182,7 @@ if (!is.na(rates_ls)) {
   #--- keep cell_id here for orthogonality check later ---#
   dplyr::select(rate)
 
-  trial_desisn <- rbind(
+  trial_design <- rbind(
     experiment_design,
     headland
   )

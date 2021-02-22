@@ -6,19 +6,59 @@
 
 ```{r Reading-yield-data}
 #--- yield ---#
-yield <- here("Data/Growers", ffy) %>% 
+yield_raw <- here("Data/Growers", ffy) %>% 
   list.files(recursive = TRUE, full.names = TRUE) %>%
   .[str_detect(., "shp")] %>%
   .[str_detect(., "yield")] %>%
   st_read() 
 
 if (is.na(st_crs(yield))) {
-  yield <- st_set_crs(yield, 4326) 
+  yield_raw <- st_set_crs(yield_raw, 4326) 
 } 
 
-yield <- yield %>% 
+yield_raw <- yield_raw %>% 
   st_transform_utm() %>%
-  setnames(names(.), tolower(names(.)))
+  setnames(names(.), tolower(names(.))) %>% 
+  mutate(yp_id = seq_len(nrow(.)))
+
+
+```
+
+```{r viz-yield-data}
+tm_shape(yield_raw) +
+  tm_dots() +
+tm_layout_to_add 
+
+```
+
+## Drop observations in the headland 
+
+```{r }
+drop_yp_ids <- here("Data/Growers", ffy, "TrialDesign") %>% 
+  list.files(recursive = TRUE, full.names = TRUE) %>%
+  .[str_detect(., "shp")] %>%
+  .[str_detect(., "trial-design")] %>%
+  tibble(td_file = .) %>% 
+  rowwise() %>% 
+  mutate(
+    design_sf = list(
+      st_read(td_file) %>% 
+      setnames(names(.), tolower(names(.))) %>% 
+      st_transform_utm()
+    )
+  ) %>% 
+  mutate(
+    intersecting_id = list(
+      design_sf %>% 
+        filter(type == "headland") %>% 
+        yield[., ] %>% 
+        pull(yp_id)
+    )
+  ) %>% 
+  pull(intersecting_id) %>% 
+  reduce(c)  
+
+yield <- filter(yield_raw, !(yp_id %in% drop_yp_ids))
 
 
 ```
@@ -27,6 +67,7 @@ yield <- yield %>%
 tm_shape(yield) +
   tm_dots() +
 tm_layout_to_add 
+
 ```
 
 ## Various checks and consistency 
@@ -283,7 +324,7 @@ tm_shape(yield_polygons) +
     lwd = 0.3
   ) +
 tm_layout_to_add
-  
+
 ```
 
 ## Save the data
@@ -291,5 +332,6 @@ tm_layout_to_add
 ```{r saving-the-polygons}
 here("Data/Growers", ffy, "Intermediate/yield_polygons.rds") %>% 
   saveRDS(yield_polygons, .) 
+
 ```
 

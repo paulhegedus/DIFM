@@ -92,7 +92,7 @@ data.table()
 
 #--- define field parameters ---#
 source(
-  get_r_file_name_git("Functions/unpack_field_parameters.R"), 
+  get_r_file_name_git("Functions/unpack_trial_information.R"), 
   local = TRUE
 )
 

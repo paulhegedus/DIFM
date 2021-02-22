@@ -45,7 +45,7 @@ tm_layout_to_add
 ```{r gam-estimate}
 
 gam_res <- gam(
-  yield ~ s(seed_rate, k = 4, by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5)), 
+  yield ~ s(seed_rate, k = 5, by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5)), 
   data = data_sf
 ) 
 ```

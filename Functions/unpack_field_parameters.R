@@ -87,32 +87,18 @@ if (process_s) {
   #++++++++++++++++
   # seed price
   #++++++++++++++++
-  if ("price" %in% names(input_data_s)) { # if seed price is available
-
-    seed_price <- input_data_s[, price]
-    
-    if ("unit" %in% names(input_data_s)) { # if unit is available
-      seed_unit <- input_data_s[, unit]
-
-      if (seed_unit == "seeds") {
-        seed_price <- seed_price * 1000
-      }
-
-    } else { # if unit is missing
-      if (seed_price < 0.1) {
-        seed_price <- seed_price * 1000
-      }
-    }
-
-  } else { # if seed price is missing
-    seed_price <- NA
-  }
+  seed_price <- input_data_s[, price]
 
   if(!is.numeric(seed_price)) {
+    #=== default price ===#
     if (crop == "corn") {
       seed_price <- 0.00275 * 1000 # (thousand seed)
     } else if(crop == "soy") {
       seed_price <- 0.000375 * 1000 # (thousand seed)
+    }
+  } else { # if price is numeric
+    if (seed_price < 0.01) {
+      seed_price <- seed_price * 1000
     }
   }
 
@@ -121,10 +107,32 @@ if (process_s) {
   #++++++++++++++++
   planter_width <- input_data_s[, machine_width]
   
-} else {
+} else { # if not seed trial
 
   gc_type_s <- NA
   seed_price <- NA
+
+}
+
+
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### Base nitrogen 
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+is_base_N <- "base" %in% input_data[, strategy]
+
+if (is_base_N) {
+
+  n_base_rate <- input_data[strategy == "base", ] %>% 
+    rowwise() %>% 
+    mutate(
+      n_equiv_rate = convert_N_unit(form, unit, rate, reporting_unit) 
+    ) %>% 
+    data.table() %>% 
+    .[, sum(n_equiv_rate)]
+
+} else {
+
+  n_base_rate <- 0  
 
 }
 
@@ -145,7 +153,7 @@ if (process_n) {
   #++++++++++++++++
   grower_chosen_rate_n <- input_data_n[, sq_rate]
 
-  if(!is.numeric(grower_chosen_rate_n)) {
+  if (!is.numeric(grower_chosen_rate_n)) {
       
     Rx_file_n <- file.path(
       here("Data/Growers", ffy, "Raw"), 
@@ -158,14 +166,21 @@ if (process_n) {
     } else {
       #--- if the Rx file doe NOT exist ---#
       # default rate
-      grower_chosen_rate_n <- case_when(
-        crop == "corn" ~ 36,
-        crop == "soy" ~ 120
-      )
+      grower_chosen_rate_n <- 180
       gc_type_n <- "uniform"
     }
   } else {
+
+    grower_chosen_rate_n <- convert_N_unit(
+      input_data_n[, form], 
+      input_data_n[, unit], 
+      grower_chosen_rate_n, 
+      reporting_unit
+    ) + 
+    n_base_rate
+
     gc_type_n <- "uniform"
+
   }
 
   #++++++++++++++++
@@ -202,26 +217,6 @@ trial_type <- case_when(
   !process_n & process_s ~ "S"
 )
 
-#/*----------------------------------*/
-#' ## Base nitrogen
-#/*----------------------------------*/
-is_base_N <- "base" %in% input_data[, strategy]
-
-if (is_base_N) {
-
-  n_base_rate <- input_data[strategy == "base", ] %>% 
-    rowwise() %>% 
-    mutate(
-      n_equiv_rate = convert_N_unit(form, unit, rate, reporting_unit) 
-    ) %>% 
-    data.table() %>% 
-    .[, sum(n_equiv_rate)]
-
-} else {
-
-  n_base_rate <- 0  
-
-}
 
 #/*=================================================*/
 #' # Dictionary
