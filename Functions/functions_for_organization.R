@@ -80,7 +80,7 @@ gen_fp_template <- function(farm, field, year, crop, input_ls, strategy_ls, json
     raw_yield = "not received, lost, received",
     land_unit = "ac or ha",
     reporting_unit = "imperial or metric",
-    h_width = "numeric (no double quotes needed)",
+    h_width = list("numeric (no double quotes needed)"),
     ec = "not available, exists (not received), received",
     soil_sampling = "not available, exists (not received), received",
     trial_notes = "true or false (no double quotes needed)"
@@ -195,7 +195,7 @@ initiate_fp_entry <- function(farm, field, year, fp_file = NULL) {
     raw_yield = "not received, lost, received",
     land_unit = "ac or ha",
     reporting_unit = "imperial or metric",
-    h_width = "numeric (no double quotes needed)",
+    h_width = list("numeric (no double quotes needed)"),
     ec = "not available, exists (not received), received",
     soil_sampling = "not available, exists (not received), received",
     trial_notes = "true or false (no double quotes needed)"
