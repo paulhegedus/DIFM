@@ -111,7 +111,7 @@ tm_layout_to_add <- tm_layout(
 
 ```
 
-```{r }
+```{r results = "hide"}
 #/*----------------------------------*/
 #' ## Read in datasets for visualization 
 #/*----------------------------------*/

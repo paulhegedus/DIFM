@@ -111,20 +111,11 @@ predict_yield_pi <- function(data, est, var_name, by = NULL) {
 
     yield_prediction <- predict(est, newdata = eval_data, se = TRUE)
 
-    actual_mean_yield <- data_dt[, .(actual_m_yield = mean(yield)), by = by]
-
     #--- predict yield ---#
     eval_data <- eval_data %>% 
       .[, `:=`(
         yield_hat = yield_prediction$fit,
         yield_hat_se = yield_prediction$se.fit
-      )] %>% 
-      actual_mean_yield[, on = by] %>% 
-      .[, mean_yield_hat := mean(yield_hat), by = by] %>% 
-      .[, yield_hat := yield_hat + mean_yield_hat - actual_m_yield] %>% 
-      .[, `:=`(
-        actual_m_yield = NULL,
-        mean_yield_hat = NULL
       )] 
 
     if (all(c("seed_rate", "n_rate") %in% c(var_name))) {
