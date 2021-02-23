@@ -45,7 +45,7 @@ field_year_ls <- field_data[year == 2020, ]$field_year
 
 #--- individually ---#
 exp_process_make_report(
-  ffy = field_year_ls[5],
+  ffy = field_year_ls[6],
   rerun = TRUE
 )
 

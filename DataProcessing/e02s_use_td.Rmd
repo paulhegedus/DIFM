@@ -28,6 +28,11 @@ td_file_name <- here("Data/Growers", ffy, "TrialDesign") %>%
   .[!str_detect(., "xml")] %>%
   .[str_detect(., "trial-design")] 
 
+if (length(td_file_name) > 1) {
+  td_file_name <- td_file_name %>% 
+    .[str_detect(., "trial-design-s")]
+}
+
 td <- st_read(td_file_name) %>%
   st_transform_utm() %>%
   setnames(names(.), tolower(names(.)))
