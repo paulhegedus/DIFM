@@ -12,7 +12,7 @@ yield_raw <- here("Data/Growers", ffy) %>%
   .[str_detect(., "yield")] %>%
   st_read() 
 
-if (is.na(st_crs(yield))) {
+if (is.na(st_crs(yield_raw))) {
   yield_raw <- st_set_crs(yield_raw, 4326) 
 } 
 
