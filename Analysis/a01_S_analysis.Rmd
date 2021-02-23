@@ -48,6 +48,15 @@ gam_res <- gam(
   yield ~ s(seed_rate, k = 5, by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5)), 
   data = data_sf
 ) 
+
+#=== make the same observations have the same X and Y ===#
+data_sf <- data.table(data_sf) %>% 
+  .[, `:=`(
+    X = mean(X), 
+    Y = mean(Y)
+  ), by = "zone_txt"] %>% 
+  st_as_sf()
+
 ```
 
 ## Define grower-chose rate
@@ -119,6 +128,14 @@ eval_data <- predict_yield_pi(
     profit_hat, profit_hat_se
   )] 
 
+mean_yield_hat <- eval_data[, .(mean_yield_hat = mean(yield_hat)), by = zone_txt]
+
+mean_yield_actual <- data.table(data_sf)[, .(mean_yield_actual = mean(yield)), by = zone_txt]
+
+yield_shift <- mean_yield_actual[mean_yield_hat, on = "zone_txt"] %>% 
+  .[, yield_shift :=  mean_yield_actual - mean_yield_hat] %>% 
+  .[, .(zone_txt, yield_shift)]
+
 if (gc_type_s == "uniform") {
   gc_rate_data <- data.table(data_sf) %>% 
     unique(by = "zone") %>% 
@@ -138,6 +155,11 @@ if (gc_type_s == "uniform") {
   eval_data <- rbind(eval_data, eval_data_gc)
 
 }
+
+eval_data <- yield_shift[eval_data, on = "zone_txt"] %>% 
+  .[, yield_hat := yield_hat + yield_shift] %>% 
+  .[, profit_hat := profit_hat + crop_price * yield_shift]  
+
 ```
 
 ### Yield response functions by zone
@@ -158,6 +180,7 @@ eval_data %>%
     fill = "red",
     alpha = 0.4
   ) +
+  geom_point(data = data_sf, aes(y = yield, x = seed_rate)) +
   facet_grid(. ~ zone_txt) +
   ylim(ymin, NA)
 ```

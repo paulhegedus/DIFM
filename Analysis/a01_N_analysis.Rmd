@@ -46,7 +46,16 @@ gam_res <- gam(
   yield ~ s(n_rate, k = 5, by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5)), 
   data = data_sf
 ) 
+
+#=== make the same observations have the same X and Y ===#
+data_sf <- data.table(data_sf) %>% 
+  .[, `:=`(
+    X = mean(X), 
+    Y = mean(Y)
+  ), by = "zone_txt"] %>% 
+  st_as_sf()
 ```
+
 
 ## Define grower-chose rate
 
@@ -111,10 +120,18 @@ eval_data <- predict_yield_pi(
     profit_hat, profit_hat_se
   )] 
 
-if (gc_type_n == "uniform") {
+mean_yield_hat <- eval_data[, .(mean_yield_hat = mean(yield_hat)), by = zone_txt]
+
+mean_yield_actual <- data.table(data_sf)[, .(mean_yield_actual = mean(yield)), by = zone_txt]
+
+yield_shift <- mean_yield_actual[mean_yield_hat, on = "zone_txt"] %>% 
+  .[, yield_shift :=  mean_yield_actual - mean_yield_hat] %>% 
+  .[, .(zone_txt, yield_shift)]
+
+if (gc_type_s == "uniform") {
   gc_rate_data <- data.table(data_sf) %>% 
     unique(by = "zone") %>% 
-    .[, n_rate := grower_chosen_rate_n]  
+    .[, n_rate := grower_chosen_rate_s]  
 
   eval_data_gc <- predict_yield_pi_simple(
       data = gc_rate_data, 
@@ -130,6 +147,11 @@ if (gc_type_n == "uniform") {
   eval_data <- rbind(eval_data, eval_data_gc)
 
 }
+
+eval_data <- yield_shift[eval_data, on = "zone_txt"] %>% 
+  .[, yield_hat := yield_hat + yield_shift] %>% 
+  .[, profit_hat := profit_hat + crop_price * yield_shift]  
+
 ```
 
 ### Yield response functions by zone
