@@ -866,10 +866,10 @@ get_ERI_texts <- function(input_type, results, gc_type, locally_run = FALSE){
 
   if (input_type == "S") {
     grower_chosen_rate <- grower_chosen_rate_s
-    pi_rmd_file <- "Report/ri02_profit_dif_statement_N.Rmd"
+    pi_rmd_file <- "Report/ri02_profit_dif_statement_S.Rmd"
   } else if (input_type == "N") {
     grower_chosen_rate <- grower_chosen_rate_n
-    pi_rmd_file <- "Report/ri02_profit_dif_statement_S.Rmd"
+    pi_rmd_file <- "Report/ri02_profit_dif_statement_N.Rmd"
   }
 
   if (gc_type == "Rx") {
