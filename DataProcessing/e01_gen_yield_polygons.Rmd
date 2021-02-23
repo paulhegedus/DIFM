@@ -50,6 +50,7 @@ drop_yp_ids <- here("Data/Growers", ffy, "TrialDesign") %>%
   mutate(
     intersecting_id = list(
       design_sf %>% 
+        mutate(type = tolower(type)) %>% 
         filter(type == "headland") %>% 
         yield_raw[., ] %>% 
         pull(yp_id)
@@ -59,7 +60,6 @@ drop_yp_ids <- here("Data/Growers", ffy, "TrialDesign") %>%
   reduce(c)  
 
 yield <- filter(yield_raw, !(yp_id %in% drop_yp_ids))
-
 
 ```
 
