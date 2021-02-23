@@ -324,7 +324,12 @@ yield_polygons <- yield_sf %>%
 ```
 
 ```{r }
-cat(paste(length(overlap_id_ls), " were identified as polygons that visited previously visited area with significant overlap.")
+cat(
+  paste(
+    length(overlap_id_ls), 
+    " were identified as polygons that visited previously visited area with significant overlap."
+  )
+)
 ```
 
 ```{r dependson = "map-layout"}
