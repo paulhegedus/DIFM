@@ -502,7 +502,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
 
     temp_rmd <- read_rmd(
-      "Report/r01_SN_make_report_html.Rmd",
+      "Report/r01_SN_make_report.Rmd",
       locally_run = locally_run
     ) %>% 
     gsub("field-year-here", ffy, .)
@@ -566,7 +566,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     pi_dif_test_zone_s <- results_s$pi_dif_test_zone[[1]]
 
     temp_rmd <- read_rmd(
-      "Report/r01_S_make_report_html.Rmd",
+      "Report/r01_S_make_report.Rmd",
       locally_run = locally_run
     ) %>% 
     gsub("field-year-here", ffy, .)
@@ -610,7 +610,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
 
     temp_rmd <- read_rmd(
-      "Report/r01_N_make_report_html.Rmd",
+      "Report/r01_N_make_report.Rmd",
       locally_run = locally_run
     ) %>% 
     gsub("field-year-here", ffy, .)
