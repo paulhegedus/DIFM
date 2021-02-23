@@ -22,7 +22,7 @@ g_opt_s
 _results-and-discussions-here_
 
 ```{r yield-summary-table, tab.cap = "Summary yield and seed rate data by zone"}
-sum_tab
+sum_tab_s
 
 ```
 
