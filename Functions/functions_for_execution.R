@@ -146,7 +146,7 @@ exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
   library(knitr)
   options(knitr.duplicate.label = "allow")
 
-  cat(paste0("============================================\n= Proessing experiment data for ", ffy, 
+  cat(paste0("============================================\n= Processing experiment data for ", ffy, 
     "\n============================================")
   )
   #--- define field parameters ---#

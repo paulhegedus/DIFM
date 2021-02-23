@@ -238,10 +238,19 @@ if (med_distance < 1){
   yield_reduced_v <- data.table(yield_grouped)
 
 }
+
 ```
 
-+ before: `r nrow(yield_grouped)`
-+ after: `r nrow(yield_reduced_v)`
+```{r }
+cat(
+  paste0("Before: ",  nrow(yield_grouped), "observations")
+)
+
+cat(
+  paste0("After: ",  nrow(yield_reduced_v), "observations")
+)
+
+```
 
 
 ## Create polygons
