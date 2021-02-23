@@ -10,7 +10,7 @@ if (gc_type_s == "Rx") {
 #/*----------------------------------*/
   Rx_s <- st_read(Rx_file_s) %>% 
     st_set_crs(4326) %>% 
-    st_transform(st_crs(data_sf)) %>%
+    st_transform(st_crs(data_sf_n)) %>%
     st_make_valid()
 
   dict_yield <- dictionary[type == "Rx-s", ]
