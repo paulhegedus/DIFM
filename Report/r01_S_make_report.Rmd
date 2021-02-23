@@ -27,7 +27,7 @@ sum_tab_s
 ```
 
 ```{r whole-field-profit-comp, fig.cap = "Confidence intervals of whole-field profit differences, by management strategy", fig.height = 3.5, fig.width = 6.5}
-g_whole_pi
+g_whole_pi_s
 
 ```
 
