@@ -20,7 +20,7 @@ field_data <- jsonlite::fromJSON(
 
 #--- get the field-year combinations ---#
 # field_year_ls <- field_data[year == 2020, ]$field_year
-field_year_ls <- field_data$field_year
+field_year_ls <- field_data[year == 2020, ]$field_year
 
 # /*=================================================*/
 #' # Data Processing
@@ -45,7 +45,7 @@ field_year_ls <- field_data$field_year
 
 #--- individually ---#
 exp_process_make_report(
-  ffy = field_year_ls[8],
+  ffy = field_year_ls[5],
   rerun = TRUE
 )
 
