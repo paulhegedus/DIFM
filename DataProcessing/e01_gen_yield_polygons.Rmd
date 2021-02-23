@@ -48,19 +48,40 @@ drop_yp_ids <- here("Data/Growers", ffy, "TrialDesign") %>%
     )
   ) %>% 
   mutate(
-    intersecting_id = list(
+    in_headland_id = list(
       design_sf %>% 
         mutate(type = tolower(type)) %>% 
         filter(type == "headland") %>% 
-        st_buffer(10) %>% 
         yield_raw[., ] %>% 
         pull(yp_id)
     )
   ) %>% 
-  pull(intersecting_id) %>% 
-  reduce(c)  
+  #=== which yield points are inside? ===#
+  # Some yield observations are outside of the trial design.
+  # inside_td is use to remove such points
+  mutate(
+    inside_td = list(
+        yield_raw[design_sf, ] %>% 
+        pull(yp_id)
+      ) 
+  ) %>% 
+  ungroup() %>% 
+  dplyr::select(in_headland_id, inside_td) 
 
-yield <- filter(yield_raw, !(yp_id %in% drop_yp_ids))
+
+in_headland_id <- pull(drop_yp_ids, in_headland_id) %>% 
+    reduce(c) %>% 
+    unique()
+
+in_td_id <- pull(drop_yp_ids, inside_td) %>% 
+    reduce(c) %>% 
+    unique()
+
+yield <- filter(
+  yield_raw, 
+  !(yp_id %in% in_headland_id) & (yp_id %in% in_td_id) 
+)
+
 
 ```
 
