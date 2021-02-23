@@ -45,7 +45,7 @@ field_year_ls <- field_data[year == 2020, ]$field_year
 
 #--- individually ---#
 exp_process_make_report(
-  ffy = field_year_ls[6],
+  ffy = field_year_ls[18],
   rerun = TRUE
 )
 
@@ -74,8 +74,7 @@ f_process_make_report(
 #--- individually ---#
 run_analysis(
   ffy = field_year_ls[17],
-  rerun = TRUE,
-  locally_run = TRUE
+  rerun = TRUE
 )
 
 # /*----------------------------------*/
@@ -87,8 +86,7 @@ run_analysis(
 #--- individually ---#
 make_grower_report(
   ffy = field_year_ls[17],
-  rerun = TRUE,
-  locally_run = TRUE
+  rerun = TRUE
 )
 
 # render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")

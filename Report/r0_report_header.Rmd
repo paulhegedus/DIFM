@@ -122,6 +122,8 @@ trial_design <- here("Data/Growers", ffy, "TrialDesign/trial-design.shp") %>%
   setnames(names(.), tolower(names(.))) %>% 
   st_transform_utm()
 
+yield_polygons <- readRDS(here("Data/Growers", ffy, "Intermediate/yield_polygons.rds"))
+
 if (trial_type == "SN"){
   as_applied_s <- readRDS(here("Data/Growers", ffy, "Intermediate/as_applied_s.rds"))
 
@@ -156,8 +158,6 @@ if (trial_type == "SN"){
   )
 
 }
-
-yield_polygons <- readRDS(here("Data/Growers", ffy, "Intermediate/yield_polygons.rds"))
 
 ```
 
