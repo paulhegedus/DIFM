@@ -5,7 +5,7 @@
 field_data <- jsonlite::fromJSON(
   file.path(
     here("Data", "CommonData"),
-    "fp_DSB.json"
+    "field_parameter.json"
   ),
   flatten = TRUE
 ) %>%
@@ -15,7 +15,9 @@ data.table() %>%
 field_data <- relocate(field_data, trial_supervisor, researcher, farm, field, year, crop) %>% 
   .[order(year),]
 
-
+#/*----------------------------------*/
+#' ## Insert missing variable
+#/*----------------------------------*/
 update_fp <- function(i) {
 
   print(i)

@@ -35,7 +35,7 @@ if(!is.numeric(crop_price)) {
 }
 land_unit <- w_field_data[, land_unit] 
 reporting_unit <- w_field_data[, reporting_unit] 
-harvester_width <- w_field_data[, h_width]
+harvester_width <- w_field_data[, h_width][[1]]
 
 #/*----------------------------------*/
 #' ## Input information
