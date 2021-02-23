@@ -509,12 +509,14 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 
     res_disc_rmd_s <- get_ERI_texts(
       input_type = "S", 
+      grower_chosen_rate = grower_chosen_rate_s,
       results = results_s, 
       gc_type = gc_type_s, 
       locally_run = locally_run
     )
     res_disc_rmd_n <- get_ERI_texts(
       input_type = "N", 
+      grower_chosen_rate = grower_chosen_rate_n,
       results = results_n, 
       gc_type = gc_type_n, 
       locally_run = locally_run
@@ -573,6 +575,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 
     res_disc_rmd <- get_ERI_texts(
       input_type = "S", 
+      grower_chosen_rate = grower_chosen_rate_s,
       results = results_s, 
       gc_type = gc_type_s, 
       locally_run = locally_run
@@ -617,6 +620,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 
     res_disc_rmd <- get_ERI_texts(
       input_type = "N", 
+      grower_chosen_rate = grower_chosen_rate_n,
       results = results_n, 
       gc_type = gc_type_n, 
       locally_run = locally_run
@@ -842,7 +846,7 @@ get_ttest_text <- function(pi_dif_test_zone, zone){
 }
 
 
-get_ERI_texts <- function(input_type, results, gc_type, locally_run = FALSE){
+get_ERI_texts <- function(input_type, grower_chosen_rate, results, gc_type, locally_run = FALSE){
 
   whole_profits_test <- results$whole_profits_test[[1]]
   pi_dif_test_zone <- results$pi_dif_test_zone[[1]]
@@ -865,10 +869,8 @@ get_ERI_texts <- function(input_type, results, gc_type, locally_run = FALSE){
   )
 
   if (input_type == "S") {
-    grower_chosen_rate <- grower_chosen_rate_s
     pi_rmd_file <- "Report/ri02_profit_dif_statement_S.Rmd"
   } else if (input_type == "N") {
-    grower_chosen_rate <- grower_chosen_rate_n
     pi_rmd_file <- "Report/ri02_profit_dif_statement_N.Rmd"
   }
 
