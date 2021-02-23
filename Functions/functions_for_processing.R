@@ -1011,8 +1011,10 @@ make_var_name_consistent <- function(data, dictionary) {
 #/*=================================================*/
 #' # Convert nitrogen units to N-equivalent
 #/*=================================================*/
-# form <- "uan32"
-# unit <- "gallons"
+# form <- "NH3"
+# unit <- "lbs"
+# rate <- 130
+
 convert_N_unit <- function(form, unit, rate, reporting_unit){
 
   conv_table <- fromJSON(file.path(here("Data", "CommonData"),"nitrogen_conversion.json"), flatten = TRUE) %>% 

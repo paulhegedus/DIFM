@@ -125,7 +125,12 @@ if (is_base_N) {
   n_base_rate <- input_data[strategy == "base", ] %>% 
     rowwise() %>% 
     mutate(
-      n_equiv_rate = convert_N_unit(form, unit, rate, reporting_unit) 
+      n_equiv_rate = convert_N_unit(
+        form = form, 
+        unit = unit, 
+        rate = rate, 
+        reporting_unit = reporting_unit
+      ) 
     ) %>% 
     data.table() %>% 
     .[, sum(n_equiv_rate)]

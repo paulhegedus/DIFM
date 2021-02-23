@@ -34,18 +34,8 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE)
   topo_file <- file.path(here("Data", "Growers", ffy), "Intermediate/topography.rds")
 
   if (!file.exists(topo_file)) {
-    # ne01 <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/ne01_topography.Rmd"
-    # ) %>%
-    # readLines() 
     ne01 <- read_rmd("DataProcessing/ne01_topography.Rmd", locally_run = locally_run)
   } else {
-    # ne01 <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/ne01_topography_show.Rmd"
-    # ) %>%
-    # readLines() 
     ne01 <- read_rmd("DataProcessing/ne01_topography_show.Rmd", locally_run = locally_run)
   }
 
@@ -55,18 +45,8 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE)
   ssurgo_file <- file.path(here("Data", "Growers", ffy), "Intermediate/ssurgo.rds")
 
   if (!file.exists(ssurgo_file)) {
-    # ne02 <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/ne02_ssurgo.Rmd"
-    # ) %>%
-    # readLines() 
     ne02 <- read_rmd("DataProcessing/ne02_ssurgo.Rmd", locally_run = locally_run)
   } else {
-    # ne02 <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/ne02_ssurgo_show.Rmd"
-    # ) %>%
-    # readLines() 
     ne02 <- read_rmd("DataProcessing/ne02_ssurgo_show.Rmd", locally_run = locally_run)
   }
 
@@ -76,18 +56,8 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE)
   weather_file <- file.path(here("Data", "Growers", ffy), "Intermediate/weather_daymet.rds")
 
    if (!file.exists(weather_file)) {
-    # ne03 <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/ne03_weather.Rmd"
-    # ) %>%
-    # readLines() 
     ne03 <- read_rmd("DataProcessing/ne03_weather.Rmd", locally_run = locally_run)
   } else {
-    # ne03 <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/ne03_weather_show.Rmd"
-    # ) %>%
-    # readLines() 
     ne03 <- read_rmd("DataProcessing/ne03_weather_show.Rmd", locally_run = locally_run)
   }
 
@@ -99,21 +69,9 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE)
   ec_file <- file.path(here("Data", "Growers", ffy), "Intermediate/ec.rds")
 
   if (!file.exists(ec_file)) {
-    # if ec.shp exists and it has not been processed
-    # ne04 <- file.path(
-    #   here(), 
-    #   "Codes/DataProcessing/ne04_ec_show.Rmd"
-    # ) %>%
-    # readLines() 
     ne04 <- read_rmd("DataProcessing/ne04_ec_show.Rmd", locally_run = locally_run)
   } else {
     if (ec_exists & file.exists(ec_raw_file)) {
-      # if ec.shp exists, but it has not been processed
-      # ne04 <- file.path(
-      #   here(), 
-      #   "Codes/DataProcessing/ne04_ec.Rmd"
-      # ) %>%
-      # readLines()
       ne04 <- read_rmd("DataProcessing/ne04_ec.Rmd", locally_run = locally_run)
     } else {
       # if ec.shp does not exist
