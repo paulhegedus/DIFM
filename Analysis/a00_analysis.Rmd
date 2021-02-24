@@ -34,7 +34,8 @@ opts_knit$set(root.dir = here("Data", "Growers", ffy))
 
 #--- source functions ---#
 source(
-  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE"
+  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
+  local = TRUE
 )
 
 ```

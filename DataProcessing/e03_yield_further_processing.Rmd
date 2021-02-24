@@ -37,6 +37,16 @@ tm_shape(n_polygons) +
 
 ```
 
+```{r eval = (trial_type == "K"), echo = (trial_type == "K")}
+#--- as-applied ---#
+k_polygons <- here("Data/Growers", ffy, "Intermediate/as_applied_k.rds") %>% 
+  readRDS()
+
+tm_shape(k_polygons) +
+  tm_fill(col = "k_rate") 
+
+```
+
 ## Filter out unreliable polygons
 
 ### Intersect yield and seed polygons
