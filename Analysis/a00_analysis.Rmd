@@ -32,11 +32,6 @@ ffy <- "field-year-here"
 #--- root directory ---#
 opts_knit$set(root.dir = here("Data", "Growers", ffy))
 
-#--- source functions ---#
-source(
-  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
-  local = TRUE
-)
 
 ```
 
@@ -72,11 +67,17 @@ tm_layout_to_add <- tm_layout(
 
 ## Field parameters
 
-```{r }
+```{r echo = F, results = "hide"}
 #--- define field parameters ---#
 # source(here("Codes/Functions/unpack_field_parameters.R"))
 source(
   get_r_file_name("Functions/unpack_field_parameters.R"), 
+  local = TRUE
+)
+
+#--- source functions ---#
+source(
+  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
   local = TRUE
 )
 
