@@ -191,8 +191,8 @@ if (process_n) {
   #++++++++++++++++
   # N price
   #++++++++++++++++
-  if ("price" %in% names(input_data_s)) {
-    n_price <- input_data_s[, price]
+  if ("price" %in% names(input_data_n)) {
+    n_price <- input_data_n[, price]
   } else {
     n_price <- NA
   }
