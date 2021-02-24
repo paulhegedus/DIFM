@@ -41,12 +41,6 @@ tm_shape(asp) +
 med_distance_yp <- get_med_dist(yield_polygons)
 ```
 
-### Field data
-
-```{r }
-#--- parameters for seed ---#
-field_data_s <- input_data[strategy == "trial" & form == "seed", ]
-```
 
 ## Miscellaneous operations and various checks
 
@@ -170,7 +164,7 @@ if (section_num != 1) {
 } else {
   # if only one observation 
   asp <- mutate(asp, 
-    width = field_data_s$machine_width %>% 
+    width = input_data_s$machine_width %>% 
       conv_unit("ft", "m")
   )
 }

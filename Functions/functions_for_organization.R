@@ -1,6 +1,14 @@
 ######################################
 # Collection of functions for organizing data
 ######################################
+#/*=================================================*/
+#' # Make data availability check  
+#/*=================================================*/
+make_data_report <- function() {
+  temp <- read_rmd("DataProcessing/data_availability_check.Rmd")
+  writeLines(temp, con = here("Reports/ProjectTeam/data_availability_check.Rmd"))
+  render(here("Reports/ProjectTeam/data_availability_check.Rmd"))
+}
 
 #/*=================================================*/
 #' # Create Grower Data Folders

@@ -25,8 +25,8 @@ field_year_ls <- field_data[year == 2020, ]$field_year
 # /*=================================================*/
 #' # Data Processing
 # /*=================================================*/
+make_data_report()
 
-render(here("Codes/DataProcessing/data_availability_check.Rmd"))
 # ffy <- field_year_ls[30]
 
 # /*----------------------------------*/

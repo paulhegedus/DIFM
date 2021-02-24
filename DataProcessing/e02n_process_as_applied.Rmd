@@ -166,7 +166,7 @@ if (section_num != 1) {
 } else {
   # if only one observation 
   aan <- mutate(aan, 
-    width = field_data_s$machine_width %>% 
+    width = input_data_n$machine_width %>% 
       conv_unit("ft", "m")
   )
 }
