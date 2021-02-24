@@ -529,7 +529,7 @@ lapply(field_year_ls, check_availability_p) %>%
   .[order(year, field),] %>% 
   flextable() %>%
   color(
-    j = c(4:7),
+    j = c(4:7, 10),
     color = "blue"
   ) %>% 
   color(
