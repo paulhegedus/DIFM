@@ -354,7 +354,7 @@ run_analysis <- function(ffy, rerun = FALSE, locally_run = FALSE){
       full.names = TRUE
     ) %>% 
     .[str_detect(., "analysis")] %>% 
-    .[str_detect(., c("cache|files"))] %>% 
+    .[str_detect(., "cache|files")] %>% 
     unlink(recursive = TRUE)
   }
   
