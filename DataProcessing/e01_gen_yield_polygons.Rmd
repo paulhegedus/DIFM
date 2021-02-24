@@ -21,7 +21,6 @@ yield_raw <- yield_raw %>%
   setnames(names(.), tolower(names(.))) %>% 
   mutate(yp_id = seq_len(nrow(.)))
 
-
 ```
 
 ```{r viz-yield-data}
@@ -113,7 +112,8 @@ yield <- make_var_name_consistent(
 )
 
 yield <- dplyr::select(yield, matches(col_list)) %>% 
-  mutate(yield_id := 1:nrow(.))
+  mutate(yield_id := 1:nrow(.)) %>% 
+  filter(!is.na(yield_vol))
 
 ```
 
@@ -167,7 +167,7 @@ if (units == "imperial") {
 
 ```{r Grouping-yield-points-by-angle-and-detecting-sharp-turns-and-changes-of-rows}
 
-yield_grouped <- group_points_sc(yield, by_var = NA, 30)
+yield_grouped <- group_points_sc(yield, by_var = NA, 30)  
 
 ```
 
@@ -192,6 +192,7 @@ yield_grouped <- flag_bad_points(
   "yield_vol", 
   sd = sd_factor
 )  
+
 ```
 
 Yield distribution after cleaning (sd = `r sd_factor`)

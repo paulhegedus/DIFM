@@ -328,9 +328,9 @@ flag_bad_points <- function(data, var_name, sd_factor) {
     setnames(var_name, "var")
 
   var_sd <- temp_data[
-    var >= quantile(var, prob = 0.05) &
-      var <= quantile(var, prob = 0.95),
-    .(median = median(var), sd = sd(var))
+    var >= quantile(var, prob = 0.05, na.rm = TRUE) &
+      var <= quantile(var, prob = 0.95, na.rm = TRUE),
+    .(median = median(var, na.rm = TRUE), sd = sd(var, na.rm = TRUE))
   ]
 
   temp_data <- temp_data %>%

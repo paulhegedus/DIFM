@@ -26,6 +26,7 @@ field_year_ls <- field_data[year == 2020, ]$field_year
 #' # Data Processing
 # /*=================================================*/
 
+render(here("Codes/DataProcessing/data_availability_check.Rmd"))
 # ffy <- field_year_ls[30]
 
 # /*----------------------------------*/
@@ -45,7 +46,7 @@ field_year_ls <- field_data[year == 2020, ]$field_year
 
 #--- individually ---#
 exp_process_make_report(
-  ffy = field_year_ls[18],
+  ffy = field_year_ls[14],
   rerun = TRUE
 )
 
