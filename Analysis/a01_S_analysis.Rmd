@@ -120,7 +120,8 @@ eval_data <- predict_yield_pi(
     data = data_sf, 
     est = gam_res, 
     var_name = "seed_rate", 
-    by = "zone_txt"
+    by = "zone_txt",
+    crop_price = crop_price
   ) %>% 
   .[, type := "opt_v"]%>% 
   .[, .(
