@@ -508,7 +508,7 @@ check_availability_p <- function(ffy) {
   .[trial_type == "SN" & (as_applied_s == "available" | use_td_s == TRUE) & (as_applied_n == "available" | use_td_n == TRUE), e_processing := "Ready to process"] %>%
   .[trial_type == "S" & (as_applied_s == "available" | use_td_n == TRUE), e_processing := "Ready to process"] %>%
   .[trial_type == "N" & (as_applied_n == "available" | use_td_n == TRUE), e_processing := "Ready to process"] %>%
-  .[trial_type == "K" & as_applied_k == "available", e_processing := "Ready to process"] %>%
+  .[trial_type == "K" & (as_applied_k == "available" | use_td_k == TRUE), e_processing := "Ready to process"] %>%
   .[, as_applied_s := ifelse(is_trial_s, as_applied_s, "irrelevant")] %>% 
   .[, as_applied_n := ifelse(is_trial_n, as_applied_n, "irrelevant")] %>% 
   .[, as_applied_k := ifelse(is_trial_k, as_applied_k, "irrelevant")] %>% 
