@@ -13,13 +13,8 @@ aan <- here("Data/Growers", ffy, "Raw") %>%
   .[!str_detect(., "xml")] %>%
   .[str_detect(., "as-applied-n")] %>% 
   #--- read the data ---#
-  st_read(.) 
-
-if (is.na(st_crs(aan))) {
-  aan <- st_set_crs(aan, 4326) 
-} 
-
-aan <- aan %>% 
+  st_read() %>% 
+  st_set_4326() %>% 
   st_transform_utm() %>%
   setnames(names(.), tolower(names(.))) %>% 
   mutate(id = 1:nrow(.))

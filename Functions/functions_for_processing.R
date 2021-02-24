@@ -1090,6 +1090,21 @@ close_unclosed <- function(data_sf) {
 }
 
 
+#/*=================================================*/
+#' # set crs to 4326
+#/*=================================================*/
+
+st_set_4326 <- function(data_sf) {
+
+  if (is.na(st_crs(data_sf))) {
+    data_sf <- st_set_crs(data_sf, 4326)
+    cat("Warning: valid crs was not set for this data. Check carefully if this has caused any problems below.")
+  }
+
+  return(data_sf)
+   
+} 
+
 
 
 

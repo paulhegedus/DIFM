@@ -10,13 +10,9 @@ yield_raw <- here("Data/Growers", ffy) %>%
   list.files(recursive = TRUE, full.names = TRUE) %>%
   .[str_detect(., "shp")] %>%
   .[str_detect(., "yield")] %>%
-  st_read() 
-
-if (is.na(st_crs(yield_raw))) {
-  yield_raw <- st_set_crs(yield_raw, 4326) 
-} 
-
-yield_raw <- yield_raw %>% 
+  st_read() %>% 
+  #=== this took effect only when crs is missing ===#
+  st_set_4326() %>% 
   st_transform_utm() %>%
   setnames(names(.), tolower(names(.))) %>% 
   mutate(yp_id = seq_len(nrow(.)))
@@ -43,6 +39,7 @@ drop_yp_ids <- here("Data/Growers", ffy, "TrialDesign") %>%
     design_sf = list(
       st_read(td_file) %>% 
       setnames(names(.), tolower(names(.))) %>% 
+      st_set_4326() %>% 
       st_transform_utm()
     )
   ) %>% 

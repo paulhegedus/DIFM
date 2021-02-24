@@ -13,13 +13,8 @@ asp <- here("Data/Growers", ffy, "Raw") %>%
   .[!str_detect(., "xml")] %>%
   .[str_detect(., "as-applied-s")] %>% 
   #--- read the data ---#
-  st_read(.) 
-
-if (is.na(st_crs(asp))) {
-  asp <- st_set_crs(asp, 4326) 
-} 
-
-asp <- asp %>% 
+  st_read() %>% 
+  st_set_4326() %>% 
   st_transform_utm() %>%
   setnames(names(.), tolower(names(.))) %>% 
   mutate(id = 1:nrow(.))
