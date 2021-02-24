@@ -27,7 +27,7 @@ field_year_ls <- field_data[year == 2020, ]$field_year
 # /*=================================================*/
 make_data_report()
 
-# ffy <- field_year_ls[30]
+# ffy <- field_year_ls[8]
 
 # /*----------------------------------*/
 #' ## Non-experiment Data
@@ -74,7 +74,7 @@ f_process_make_report(
 
 #--- individually ---#
 run_analysis(
-  ffy = field_year_ls[17],
+  ffy = field_year_ls[4],
   rerun = TRUE
 )
 

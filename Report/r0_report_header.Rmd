@@ -4,7 +4,7 @@ output:
   bookdown::word_document2:
     toc: false
     number_sections: false
-    reference_docx: "/Users/tmieno2/Box/DIFM_HQ/Reports/Growers/word_template.docx"
+    reference_docx: here("Reports/Growers/word_template.doc")
   bookdown::html_document2:
     toc: true
     toc_depth: 2

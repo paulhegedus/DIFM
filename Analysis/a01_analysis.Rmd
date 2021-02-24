@@ -1,0 +1,395 @@
+# Title-here analysis
+
+## Read the analysis data 
+
+```{r data-prep-s, cache = F, results = "hide"}
+data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>% 
+  readRDS() %>% 
+  rename(
+    yield = yield_vol,
+    input_rate = input_name_here_rate,
+    # input_rate = seed_rate,
+  ) %>% 
+  filter(!is.na(yield)) %>% 
+  cbind(., st_coordinates(st_centroid(.)))  
+
+input_price <- input_name_here_price
+
+```
+
+## GWR estimation for management zone delineation
+### GWR estimation
+
+```{r gwr, results = "hide"}
+data_sf <- run_gwr(data_sf, "input_rate")
+
+ggplot(data_sf) +
+  geom_histogram(
+    aes(x = b_slope), 
+    color = "blue", 
+    fill = "white"
+  )
+```
+
+### Define management zones based on GWR
+
+```{r yield-response-functions-by-group}
+
+data_sf <- define_mz(
+  data_sf = data_sf, 
+  max_num_zones = 4, 
+  min_obs = 300
+)
+
+tm_shape(data_sf) +
+  tm_fill(col = "zone_txt", palette = "Set1") +
+tm_layout_to_add
+
+```
+
+## Yield response function (GAM) estimation by zone
+### GAM estimation by zone
+
+```{r gam-estimate}
+
+gam_res <- gam(
+  yield ~ s(input_rate, k = 5, by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5)), 
+  data = data_sf
+) 
+
+#=== make the same observations have the same X and Y ===#
+data_sf <- data.table(data_sf) %>% 
+  .[, `:=`(
+    X = mean(X), 
+    Y = mean(Y)
+  ), by = "zone_txt"] %>% 
+  st_as_sf()
+
+```
+
+## Define grower-chose rate
+
+```{r }
+if (gc_type_s == "uniform") {
+
+  data_sf <- mutate(data_sf, gc_rate = grower_chosen_rate_s) 
+} else if (gc_type_s == "Rx") {
+
+  #--------------------------
+  # Read Rx data
+  #--------------------------
+  Rx_s <- st_read(Rx_file_s) %>% 
+    st_set_crs(4326) %>% 
+    st_transform(st_crs(data_sf)) %>%
+    st_make_valid()
+
+  dict_yield <- dictionary[type == "Rx-s", ]
+  col_list <- dict_yield[, column]
+
+  Rx_s <- make_var_name_consistent(
+    Rx_s, 
+    dict_yield 
+  )
+
+  #=== seed rate conversion ===#
+  if (any(Rx_s$tgts > 10000)){
+    #=== convert to K ===#
+    Rx_s <- mutate(Rx_s, tgts = tgts / 1000)
+  }
+
+  #=== map ===#
+  tm_shape(Rx_s) +
+    tm_fill(col = "tgts")
+
+  #--------------------------
+  # Identify grower-chosen rate by observation
+  #--------------------------
+  obs_tgts <- st_intersection(data_sf, Rx_s) %>% 
+    mutate(area = as.numeric(st_area(.))) %>% 
+    data.table() %>% 
+    .[, .SD[area == max(area)], by = obs_id] %>% 
+    .[, num_obs_per_zone := .N, tgts] %>% 
+    .[, analyze := FALSE] %>% 
+    .[num_obs_per_zone >= 200, analyze := TRUE] %>% 
+    .[, .(obs_id, tgts, analyze)] 
+
+  data_sf <- left_join(data_sf, obs_tgts, by = "obs_id") %>% 
+    rename(gc_rate = tgts)
+
+}
+```
+
+## Profit estimation and economic optimization
+### Yield-Profit Estimation (at hypothetical points)
+
+```{r }
+eval_data <- predict_yield_range(
+    data = data_sf, 
+    est = gam_res, 
+    var_name = "input_rate", 
+    by = "zone_txt"
+  ) %>% 
+  .[, type := "opt_v"]%>% 
+  .[, .(
+    input_rate, zone_txt, type, yield_hat, yield_hat_se
+  )] 
+
+mean_yield_hat <- eval_data[, .(mean_yield_hat = mean(yield_hat)), by = zone_txt]
+
+mean_yield_actual <- data.table(data_sf)[, .(mean_yield_actual = mean(yield)), by = zone_txt]
+
+yield_shift <- mean_yield_actual[mean_yield_hat, on = "zone_txt"] %>% 
+  .[, yield_shift :=  mean_yield_actual - mean_yield_hat] %>% 
+  .[, .(zone_txt, yield_shift)]
+
+if (gc_type_s == "uniform") {
+
+  gc_rate_data <- data.table(data_sf) %>% 
+    unique(by = "zone") %>% 
+    .[, input_rate := grower_chosen_rate_s] 
+
+  eval_data_gc <- predict_yield(
+      data = gc_rate_data, 
+      est = gam_res,
+      var_name = "input_rate"
+    ) %>% 
+    .[, type := "gc"] %>% 
+    .[, .(
+      input_rate, zone_txt, type, yield_hat, yield_hat_se
+    )]
+
+  eval_data <- rbind(eval_data, eval_data_gc)
+
+}
+
+eval_data <- yield_shift[eval_data, on = "zone_txt"] %>% 
+  .[, yield_hat := yield_hat + yield_shift] %>% 
+  .[, profit_hat := crop_price * yield_hat - input_price * input_rate] %>% 
+  .[, profit_hat_se := crop_price * yield_hat_se] 
+
+```
+
+### Yield response functions by zone
+
+```{r }
+ymin <- eval_data[, min(yield_hat - 1.96 * yield_hat_se)] - 10
+
+eval_data %>% 
+  filter(type == "opt_v") %>% 
+  ggplot(data = .) +
+  geom_line(aes(y = yield_hat, x = input_rate)) +
+  geom_ribbon(
+    aes(
+      ymin = yield_hat - 1.96 * yield_hat_se, 
+      ymax = yield_hat + 1.96 * yield_hat_se, 
+      x = input_rate
+    ),
+    fill = "red",
+    alpha = 0.4
+  ) +
+  geom_point(data = data_sf, aes(y = yield, x = input_rate)) +
+  facet_grid(. ~ zone_txt) +
+  ylim(ymin, NA)
+```
+
+### Optimal Variable Seed Rate
+
+```{r gen-opt-S-v-data-map}
+
+opt_input_data <- eval_data %>% 
+  .[type == "opt_v", ] %>% 
+  .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
+  setnames("input_rate", "opt_input") 
+
+#=== assign opt_input to each observation ===#
+data_sf <- left_join(
+  data_sf, 
+  opt_input_data[, .(zone_txt, opt_input)], 
+  by = "zone_txt"
+)
+
+if (gc_type_s == "uniform") {
+
+  opt_gc_data <- copy(opt_input_data) %>% 
+    setnames("opt_input", "input_rate") %>% 
+    rbind(., eval_data[type == "gc",]) %>% 
+    .[, pi_upper := profit_hat + profit_hat_se * 1.96] %>% 
+    .[, pi_lower := profit_hat - profit_hat_se * 1.96]
+
+}
+
+```
+
+### Optimal Uniform Seed Rate
+
+```{r get-opt-S-u}
+
+data_sf <- mutate(
+  data_sf, 
+  opt_input_u = find_opt_u(data_sf, "input_rate", gam_res)
+)
+```
+
+## Profit differential at each observation
+
+```{r }
+pi_data_opt <- data_sf %>% 
+  data.table() %>% 
+  .[, .(opt_input, X, Y, zone_txt, obs_id)] %>% 
+  setnames("opt_input", "input_rate") %>% 
+  predict_yield(., gam_res, "input_rate") %>% 
+  .[, profit_hat := crop_price * yield_hat - input_price * input_rate] %>% 
+  .[, .(obs_id, zone_txt, profit_hat)] %>% 
+  .[, type := "opt_v"]
+  
+pi_data_gc <- data_sf %>% 
+  data.table() %>% 
+  .[, .(gc_rate, X, Y, zone_txt, obs_id)] %>% 
+  setnames("gc_rate", "input_rate") %>% 
+  predict_yield(., gam_res, "input_rate") %>% 
+  .[, profit_hat := crop_price * yield_hat - input_price * input_rate] %>% 
+  .[, .(obs_id, zone_txt, profit_hat)] %>% 
+  .[, type := "gc"]
+  
+pi_data_indiv_sf <- rbind(pi_data_opt, pi_data_gc) %>% 
+  .[order(obs_id, type), ] %>% 
+  .[, pi_dif := diff(profit_hat), by = obs_id] %>% 
+  left_join(., dplyr::select(data_sf, obs_id), by = "obs_id") %>% 
+  st_as_sf()
+
+# ggplot(pi_data_indiv) +
+#   geom_sf(aes(fill = pi_dif))
+```
+
+## Statistical testing
+### Profit by zone
+
+```{r }
+if (gc_type_s == "uniform") {
+
+  data_for_test <- data.table(data_sf) %>% unique(by = "zone_txt")
+
+  pi_dif_test_zone <- get_dif_stat_zone(
+    data = data_for_test, 
+    test_var = "input_rate", 
+    opt_var = "opt_input",
+    gc_var = "gc_rate",
+    gam_res = gam_res,
+    by_var = "zone_txt"
+  )
+
+} else {
+
+  pi_dif_test_zone <- get_dif_stat_zone(
+    data = data.table(data_sf), 
+    test_var = "input_rate", 
+    opt_var = "opt_input",
+    gc_var = "gc_rate",
+    gam_res = gam_res,
+    by_var = "zone_txt"
+  )
+
+  mean_gc_rate_by_zone <- data.table(data_sf)[, .(input_rate = mean(gc_rate)), by = zone_txt]
+
+  gc_data <- pi_dif_test_zone %>% 
+    .[, .(yhat_est_gc, point_est_gc, point_est_gc_se, zone_txt)] %>% 
+    mean_gc_rate_by_zone[., on = "zone_txt"] %>% 
+    setnames(
+      c("yhat_est_gc", "point_est_gc", "point_est_gc_se"), 
+      c("yield_hat", "profit_hat", "profit_hat_se")
+    ) %>% 
+    .[, `:=`(
+      pi_upper = profit_hat + 1.96 * profit_hat_se,
+      pi_lower = profit_hat - 1.96 * profit_hat_se
+    )] %>% 
+    .[, type := "gc"]
+
+  opt_data <- pi_dif_test_zone %>% 
+    .[, .(yhat_est_opt, point_est_opt, point_est_opt_inpute, zone_txt)] %>% 
+    opt_input_data[, .(zone_txt, opt_input)][., on = "zone_txt"] %>% 
+    setnames(
+      c("yhat_est_opt", "point_est_opt", "point_est_opt_inpute", "opt_input"), 
+      c("yield_hat", "profit_hat", "profit_hat_se", "input_rate")
+    ) %>% 
+    .[, `:=`(
+      pi_upper = profit_hat + 1.96 * profit_hat_se,
+      pi_lower = profit_hat - 1.96 * profit_hat_se
+    )] %>% 
+    .[, type := "opt_v"]
+
+  opt_gc_data <- rbind(opt_data, gc_data)
+
+}
+```
+
+### Whole-field profit
+
+```{r }
+test_data <- data.table(data_sf) 
+
+whole_profits_test <- rbind(
+  #=== opt (V) vs gc ===#
+  get_dif_stat(
+    test_data, 
+    "input_rate", 
+    "opt_input", 
+    "gc_rate",
+    gam_res
+  ) %>% 
+  .[, type := "optimal site-specific rate strategy \n vs \n grower-chosen strategy"] %>% 
+  .[, type_short := "ovg"],
+
+  #=== opt (u) vs gc ===#
+  get_dif_stat(
+    test_data, 
+    "input_rate", 
+    "opt_input", 
+    "opt_input_u",
+    gam_res
+  ) %>% 
+  .[, type := "optimal site-specific rate strategy \n vs \n optimal uniform rate strategy"] %>% 
+  .[, type_short := "ovou"],
+
+  #=== opt (u) vs gc ===#
+  get_dif_stat(
+    test_data, 
+    "input_rate", 
+    "opt_input_u", 
+    "gc_rate",
+    gam_res
+  ) %>% 
+  .[, type := "optimal uniform rate strategy \n vs \n grower-chosen strategy"] %>% 
+  .[, type_short := "oug"]
+)
+
+```
+
+## Create figures of yield response functions by character
+
+```{r }
+ys_by_char <- make_ys_by_chars(data_sf)
+```
+
+## Save the results
+
+```{r }
+
+results <- tibble(
+  data_sf = list(data_sf),
+  ys_by_char = list(ys_by_char),
+  eval_data = list(eval_data),
+  opt_gc_data = list(opt_gc_data),
+  pi_data_indiv_sf = list(pi_data_indiv_sf),
+  pi_dif_test_zone = list(pi_dif_test_zone),
+  whole_profits_test = list(whole_profits_test)
+)  
+
+file_name <- here(
+  "Reports/Growers", 
+  ffy, 
+  paste0("analysis_results_", input_name_here, ".rds")
+)
+
+saveRDS(results, file_name)
+```
+

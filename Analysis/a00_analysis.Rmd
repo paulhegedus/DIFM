@@ -83,7 +83,5 @@ source(
 
 ```
 
-_S_analysis_rmd_here_
-
-_N_analysis_rmd_here_
+_analysis_rmd_here_
 

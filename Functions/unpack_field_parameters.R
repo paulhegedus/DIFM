@@ -49,17 +49,18 @@ process_s <- "seed" %in% input_data[strategy == "trial", form]
 if (process_s) {
 
   input_data_s <- input_data[strategy == "trial" & form == "seed", ]
+  use_td_s <- input_data_s[, use_target_rate_instead]
 
   #++++++++++++++++
   # grower chosen rate and analysis type 
   #++++++++++++++++
-  grower_chosen_rate_s <- input_data_s[, sq_rate]
+  gc_rate_s <- input_data_s[, sq_rate]
 
-  if(!is.numeric(grower_chosen_rate_s) | is.na(grower_chosen_rate_s)) {
+  if(!is.numeric(gc_rate_s) | is.na(gc_rate_s)) {
       
     Rx_file_s <- file.path(
       here("Data/Growers", ffy, "Raw"), 
-      paste0(grower_chosen_rate_s, ".shp")
+      paste0(gc_rate_s, ".shp")
     )
 
     if (file.exists(Rx_file_s)){
@@ -68,7 +69,7 @@ if (process_s) {
     } else {
       #--- if the Rx file doe NOT exist ---#
       # default rate
-      grower_chosen_rate_s <- case_when(
+      gc_rate_s <- case_when(
         crop == "corn" ~ 36,
         crop == "soy" ~ 120
       )
@@ -76,9 +77,9 @@ if (process_s) {
     }
   } else {
     #--- seed rate conversion ---#
-    if (grower_chosen_rate_s > 10000){
+    if (gc_rate_s > 10000){
       #--- convert to K ---#
-      grower_chosen_rate_s <- grower_chosen_rate_s / 1000
+      gc_rate_s <- gc_rate_s / 1000
     }
 
     gc_type_s <- "uniform"
@@ -87,18 +88,18 @@ if (process_s) {
   #++++++++++++++++
   # seed price
   #++++++++++++++++
-  seed_price <- input_data_s[, price]
+  s_price <- input_data_s[, price]
 
-  if(!is.numeric(seed_price)) {
+  if(!is.numeric(s_price)) {
     #=== default price ===#
     if (crop == "corn") {
-      seed_price <- 0.00275 * 1000 # (thousand seed)
+      s_price <- 0.00275 * 1000 # (thousand seed)
     } else if(crop == "soy") {
-      seed_price <- 0.000375 * 1000 # (thousand seed)
+      s_price <- 0.000375 * 1000 # (thousand seed)
     }
   } else { # if price is numeric
-    if (seed_price < 0.01) {
-      seed_price <- seed_price * 1000
+    if (s_price < 0.01) {
+      s_price <- s_price * 1000
     }
   }
 
@@ -110,7 +111,9 @@ if (process_s) {
 } else { # if not seed trial
 
   gc_type_s <- NA
-  seed_price <- NA
+  gc_rate_s <- NA
+  s_price <- NA
+  use_td_s <- NA
 
 }
 
@@ -152,17 +155,18 @@ process_n <- any(process_n_idv)
 if (process_n) {
   n_var <- n_var_ls[process_n_idv]
   input_data_n <- input_data[strategy == "trial" & form == n_var, ]
+  use_td_n <- input_data_n[, use_target_rate_instead]
 
   #++++++++++++++++
   # grower chosen rate and analysis type 
   #++++++++++++++++
-  grower_chosen_rate_n <- input_data_n[, sq_rate]
+  gc_rate_n <- input_data_n[, sq_rate]
 
-  if (!is.numeric(grower_chosen_rate_n)) {
+  if (!is.numeric(gc_rate_n)) {
       
     Rx_file_n <- file.path(
       here("Data/Growers", ffy, "Raw"), 
-      paste0(grower_chosen_rate_n, ".shp")
+      paste0(gc_rate_n, ".shp")
     )
 
     if (file.exists(Rx_file_n)){
@@ -171,15 +175,15 @@ if (process_n) {
     } else {
       #--- if the Rx file doe NOT exist ---#
       # default rate
-      grower_chosen_rate_n <- 180
+      gc_rate_n <- 180
       gc_type_n <- "uniform"
     }
   } else {
 
-    grower_chosen_rate_n <- convert_N_unit(
+    gc_rate_n <- convert_N_unit(
       input_data_n[, form], 
       input_data_n[, unit], 
-      grower_chosen_rate_n, 
+      gc_rate_n, 
       reporting_unit
     ) + 
     n_base_rate
@@ -210,7 +214,74 @@ if (process_n) {
 
   n_var <- NA
   gc_type_n <- NA
+  gc_rate_n <- NA
   n_price <- NA
+  use_td_n <- NA
+}
+
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### K
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#--- should we process N data? ---#
+process_k <- "K" %in% input_data[strategy == "trial", form]
+
+if (process_k) {
+
+  input_data_k <- input_data[strategy == "trial" & form == "K", ]
+  use_td_k <- input_data_k[, use_target_rate_instead]
+
+  #++++++++++++++++
+  # grower chosen rate and analysis type 
+  #++++++++++++++++
+  gc_rate_k <- input_data_k[, sq_rate]
+
+  if (!is.numeric(gc_rate_k)) {
+      
+    Rx_file_k <- file.path(
+      here("Data/Growers", ffy, "Raw"), 
+      paste0(gc_rate_k, ".shp")
+    )
+
+    if (file.exists(Rx_file_k)){
+      #--- if the Rx file exists ---#
+      gc_type_k <- "Rx"
+    } else {
+      #--- if the Rx file doe NOT exist ---#
+      # default rate
+      gc_rate_k <- 40
+      gc_type_k <- "uniform"
+    }
+  } else {
+
+    gc_type_k <- "uniform"
+
+  }
+
+  #++++++++++++++++
+  # N price
+  #++++++++++++++++
+  if ("price" %in% names(input_data_k)) {
+    k_price <- input_data_k[, price]
+  } else {
+    k_price <- NA
+  }
+
+  if(!is.numeric(k_price)) {
+    k_price <- 0.4
+  }
+
+  #++++++++++++++++
+  # applicator width
+  #++++++++++++++++
+  applicator_width <- input_data_k[, machine_width]
+
+} else {
+
+  gc_type_k <- NA
+  gc_rate_k <- NA
+  k_price <- NA
+  use_td_k <- NA
+
 }
 
 #/*----------------------------------*/
@@ -219,9 +290,17 @@ if (process_n) {
 trial_type <- case_when(
   process_n & process_s ~ "SN",
   process_n & !process_s ~ "N",
-  !process_n & process_s ~ "S"
+  !process_n & process_s ~ "S",
+  process_k ~ "K" 
 )
 
+trial_info <- tibble(
+  input_type = c("S", "N", "K"),
+  process = c(process_s, process_n, process_k),
+  use_td = c(use_td_s, use_td_n, use_td_k),
+  price = c(s_price, n_price, k_price),
+  gc_rate = c(gc_rate_s, gc_rate_n, gc_rate_k)
+)
 
 #/*=================================================*/
 #' # Dictionary

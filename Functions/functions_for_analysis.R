@@ -31,7 +31,7 @@ get_ttest_text <- function(test_results, zone){
 
 # trial_type <- "S"
 
-predict_yield_pi <- function(data, est, var_name, by = NULL, crop_price) {
+predict_yield_range <- function(data, est, var_name, by = NULL, crop_price) {
 
   data_dt <- data.table(data)
 
@@ -67,14 +67,6 @@ predict_yield_pi <- function(data, est, var_name, by = NULL, crop_price) {
     #--- predict yield ---#
     eval_data[, yield_hat := yield_prediction$fit]
     eval_data[, yield_hat_se := yield_prediction$se.fit]
-
-    if (all(c("seed_rate", "n_rate") %in% c(var_name))) {
-      eval_data[, profit_hat := yield_hat * crop_price - seed_price * seed_rate - n_price * n_rate]
-    } else if ("seed_rate" %in% c(var_name)) {
-      eval_data[, profit_hat := yield_hat * crop_price - seed_price * seed_rate]
-    } else {
-      eval_data[, profit_hat := yield_hat * crop_price - n_price * n_rate]
-    }
 
   } else {
 
@@ -118,23 +110,13 @@ predict_yield_pi <- function(data, est, var_name, by = NULL, crop_price) {
         yield_hat_se = yield_prediction$se.fit
       )] 
 
-    if (all(c("seed_rate", "n_rate") %in% c(var_name))) {
-      eval_data[, profit_hat := yield_hat * crop_price - seed_price * seed_rate - n_price * n_rate]
-    } else if ("seed_rate" %in% c(var_name)) {
-      eval_data[, profit_hat := yield_hat * crop_price - seed_price * seed_rate]
-    } else {
-      eval_data[, profit_hat := yield_hat * crop_price - n_price * n_rate]
-    }
-
   }
-
-  eval_data[, profit_hat_se := crop_price * yield_hat_se] 
 
   return(eval_data)
 
 }
 
-predict_yield_pi_simple <- function(data, est, var_name, crop_price) {
+predict_yield <- function(data, est, var_name, crop_price) {
 
   eval_data <- copy(data)
 
@@ -143,17 +125,7 @@ predict_yield_pi_simple <- function(data, est, var_name, crop_price) {
   #--- predict yield ---#
   eval_data[, yield_hat := yield_prediction$fit]
   eval_data[, yield_hat_se := yield_prediction$se.fit]
-
-  if (all(c("seed_rate", "n_rate") %in% c(var_name))) {
-    eval_data[, profit_hat := yield_hat * crop_price - seed_price * seed_rate - n_price * n_rate]
-  } else if ("seed_rate" %in% c(var_name)) {
-    eval_data[, profit_hat := yield_hat * crop_price - seed_price * seed_rate]
-  } else {
-    eval_data[, profit_hat := yield_hat * crop_price - n_price * n_rate]
-  }
-
-  eval_data[, profit_hat_se := crop_price * yield_hat_se] 
-
+  
   return(eval_data)
 
 }
@@ -185,7 +157,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res){
   yhat_base <- ones %*% Xmat_base %*% gam_res$coefficients
 
   #--- point estimate of profit differential ---#
-  pi_gc <- crop_price * yhat_base - (seed_price * ones %*% base_data$seed_rate)  
+  pi_gc <- crop_price * yhat_base - (input_price * ones %*% base_data$input_rate)  
 
   big_mat_base <- ones %*% Xmat_base
 
@@ -204,7 +176,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res){
   yhat_comp <- ones %*% Xmat_comp %*% gam_res$coefficients
 
   #--- point estimate of profit differential ---#
-  pi_opt <- crop_price * yhat_comp - (seed_price * ones %*% comp_data$seed_rate)  
+  pi_opt <- crop_price * yhat_comp - (input_price * ones %*% comp_data$input_rate)  
 
   big_mat_comp <- ones %*% Xmat_comp
 
@@ -224,7 +196,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res){
   big_mat_dif <- ones %*% X_dif_mat
 
   #--- point estimate of profit differential ---#
-  pi_dif <- ones %*% ((crop_price * X_dif_mat %*% gam_res$coefficients) - seed_price * (comp_data$seed_rate - base_data$seed_rate))  
+  pi_dif <- ones %*% ((crop_price * X_dif_mat %*% gam_res$coefficients) - input_price * (comp_data$input_rate - base_data$input_rate))  
 
   #--- se of the profit differential  ---# 
   pi_dif_se <- crop_price * sqrt(big_mat_dif %*% gam_res$Ve %*% t(big_mat_dif))
@@ -294,10 +266,10 @@ find_opt_u <- function(data, var_name, gam_res) {
   .[rep(1:nrow(.), length(input_ls)), ] %>% 
   .[, input_rate := rep(input_ls, each = nrow(.)/length(input_ls))] %>% 
   .[, yield_hat := predict(gam_res, newdata = .)] %>% 
-  .[, profit_hat := crop_price * yield_hat - seed_price * seed_rate] %>% 
-  .[, .(profit_hat = mean(profit_hat)), by = seed_rate] %>% 
+  .[, profit_hat := crop_price * yield_hat - input_price * input_rate] %>% 
+  .[, .(profit_hat = mean(profit_hat)), by = input_rate] %>% 
   .[order(profit_hat), ] %>% 
-  .[.N, seed_rate]
+  .[.N, input_rate]
 
   return(opt_input_u)
 

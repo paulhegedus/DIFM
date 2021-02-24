@@ -108,84 +108,46 @@ exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
     "\n============================================")
   )
   #--- define field parameters ---#
-  # source(
-  #   here("Codes/Functions/unpack_field_parameters.R"),
-  #   local = TRUE
-  # )
   source(
     get_r_file_name("Functions/unpack_field_parameters.R"), 
     local = TRUE
   )
+ 
+  exp_temp_rmd <- read_rmd(
+    "DataProcessing/data_processing_template.Rmd", 
+    locally_run = locally_run
+  )
 
-  # exp_temp_rmd <- file.path(here(), "Codes/DataProcessing/data_processing_template.Rmd") %>%
-    # readLines() 
-
-  exp_temp_rmd <- read_rmd("DataProcessing/data_processing_template.Rmd", locally_run = locally_run)
-
-  # e01 <- file.path(here(), "Codes/DataProcessing/e01_gen_yield_polygons.Rmd") %>%
-  #   readLines()
-
-  e01 <- read_rmd("DataProcessing/e01_gen_yield_polygons.Rmd", locally_run = locally_run)
+  e01 <- read_rmd(
+    "DataProcessing/e01_gen_yield_polygons.Rmd", 
+    locally_run = locally_run
+  )
 
   exp_rmd_y <- c(exp_temp_rmd, e01)
- 
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### Seed
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #--- check if trial design needs to be used ---#
-  if (process_s) {
-    use_td_s <- input_data_s[, use_target_rate_instead]
-  } else {
-    use_td_s <- FALSE  
-  }
 
-  if (process_s & !use_td_s) {
+  #/*----------------------------------*/
+  #' ## Rmd(s) for input processing
+  #/*----------------------------------*/
+  e02 <- trial_info %>% 
+    rowwise() %>% 
+    mutate(
+      e02_rmd = list(
+        prepare_e02_rmd(
+          input_type, 
+          process, 
+          use_td
+        )
+      )
+    ) %>% 
+    data.table() %>% 
+    .[, e02_rmd] %>% 
+    reduce(c)
 
-    e02s <- read_rmd("DataProcessing/e02s_process_as_applied.Rmd", locally_run = locally_run)
-
-  } else if (process_s & use_td_s){
-
-    e02s <- read_rmd("DataProcessing/e02s_use_td.Rmd", locally_run = locally_run)
-
-  } else {
-
-    e02s <- NULL
-
-  }
-
-  exp_rmd_y_s <- c(exp_rmd_y, e02s)
-
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### Nitrogen
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  if (process_n) {
-    use_td_n <- input_data_n[, use_target_rate_instead]
-  } else {
-    use_td_n <- FALSE  
-  }
- 
-  if (process_n & !use_td_n) {
-
-    e02n <- read_rmd("DataProcessing/e02n_process_as_applied.Rmd", locally_run = locally_run)
-
-  } else if (process_n & use_td_n){
-
-    e02n <- read_rmd("DataProcessing/e02n_use_td.Rmd", locally_run = locally_run)
-
-  } else {
-
-    e02n <- NULL
-
-  }
-
-  exp_rmd_y_sn <- c(exp_rmd_y_s, e02n)
+  exp_rmd_yi <- c(exp_rmd_y, e02)
 
   #/*----------------------------------*/
   #' ## Merge yield and input data
   #/*----------------------------------*/
-  # e03 <- file.path(here(), "Codes/DataProcessing/e03_yield_further_processing.Rmd") %>%
-  #   readLines()
-
   e03 <- read_rmd(
     "DataProcessing/e03_yield_further_processing.Rmd", 
     locally_run = locally_run
@@ -194,7 +156,7 @@ exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
   #/*----------------------------------*/
   #' ## Personalize the report 
   #/*----------------------------------*/
-  exp_rmd_y_sn_m <- c(exp_rmd_y_sn, e03) %>% 
+  exp_rmd_yiy <- c(exp_rmd_yi, e03) %>% 
     gsub("field-year-here", ffy, .) %>% 
     gsub("title-here", "Experiment Data Processing Report", .) %>% 
     gsub("trial-type-here", trial_type, .)
@@ -216,13 +178,21 @@ exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
   #/*=================================================*/
   #' # Write out the rmd and render
   #/*=================================================*/
-  exp_report_rmd_file_name <- paste0(file.path(here(), "Data", "Growers", ffy, "DataProcessingReport/dp_report_exp.Rmd"))
-  exp_report_r_file_name <- paste0(file.path(here(), "Data", "Growers", ffy, "DataProcessingReport/for_debug.R"))
+  exp_report_rmd_file_name <- here(
+    "Data/Growers", 
+    ffy, 
+    "DataProcessingReport/dp_report_exp.Rmd"
+  )
 
-  writeLines(exp_rmd_y_sn_m, con = exp_report_rmd_file_name)
+  exp_report_r_file_name <- here(
+    "Data/Growers", 
+    ffy, 
+    "DataProcessingReport/for_debug.R"
+  )
+
+  writeLines(exp_rmd_yiy, con = exp_report_rmd_file_name)
 
   purl(exp_report_rmd_file_name, output = exp_report_r_file_name)
-
 
   render(exp_report_rmd_file_name)
 
@@ -372,58 +342,35 @@ run_analysis <- function(ffy, rerun = FALSE, locally_run = FALSE){
     local = TRUE
   )
 
-  if (trial_type == "S") {
+  if (trial_type == "SN") {
+
+    temp_rmd <- insert_rmd(
+      temp_rmd, 
+      c(
+        read_rmd(
+          "Analysis/a01_analysis.Rmd", 
+          locally_run = locally_run
+        ) %>% 
+        gsub("input_name_here", "s", .),
+        read_rmd(
+          "Analysis/a01_analysis.Rmd", 
+          locally_run = locally_run
+        ) %>% 
+        gsub("input_name_here", "n", .)
+      ),
+      "_analysis_rmd_here_"
+    )
+
+  } else {
 
     temp_rmd <- insert_rmd(
       temp_rmd, 
       read_rmd(
-        "Analysis/a01_S_analysis.Rmd", 
+        "Analysis/a01_analysis.Rmd", 
         locally_run = locally_run
-      ), 
-      "_S_analysis_rmd_here_"
-    )
-
-    temp_rmd <- gsub(
-      "_N_analysis_rmd_here_", 
-      "", 
-      temp_rmd
-    )
-
-  } else if (trial_type == "N"){
-
-    temp_rmd <- insert_rmd(
-      temp_rmd, 
-      read_rmd(
-        "Analysis/a01_N_analysis.Rmd", 
-        locally_run = locally_run
-      ), 
-      "_N_analysis_rmd_here_"
-    )
-
-    temp_rmd <- gsub(
-      "_S_analysis_rmd_here_", 
-      "", 
-      temp_rmd
-    )
-
-  } else if (trial_type == "SN"){
-
-    temp_rmd <- insert_rmd(
-      temp_rmd, 
-      read_rmd(
-        "Analysis/a01_S_analysis.Rmd", 
-        locally_run = locally_run
-      ), 
-      "_S_analysis_rmd_here_"
-    )
-
-    temp_rmd <- insert_rmd(
-      temp_rmd, 
-      read_rmd(
-        "Analysis/a01_N_analysis.Rmd", 
-        locally_run = locally_run
-      ), 
-      "_N_analysis_rmd_here_"
+      ) %>% 
+      gsub("input_name_here", tolower(trial_type), .),
+      "_analysis_rmd_here_"
     )
 
   }
@@ -1023,3 +970,54 @@ get_td_text <- function(input_type, gc_type, locally_run = FALSE) {
   return(td_rmd)    
 
 }
+
+prepare_e02_rmd <- function(input_type, process, use_td){
+
+  if (process & !use_td) {
+
+    return_rmd <- read_rmd(
+      "DataProcessing/e02_process_as_applied_base.Rmd", 
+      locally_run = locally_run
+    ) %>% 
+    gsub("input_type_here", input_type, .) %>% 
+    gsub(
+      "as-applied-file-name-here", 
+      paste0("as-applied-", tolower(input_type)), 
+      .
+    )
+
+    if (input_type == "N") {
+      return_rmd <- insert_rmd(
+        return_rmd,
+        read_rmd(
+          "DataProcessing/e02_add_base_rate_N.Rmd", 
+          locally_run = locally_run
+        ),
+        "_add_base_rate_here_if_N_"
+      )        
+    } else {
+      return_rmd <- gsub(
+        "_add_base_rate_here_if_N_", 
+        "",
+        return_rmd
+      )
+    }
+
+  } else if (process_n & use_td_n){
+
+    return_rmd <- read_rmd(
+      "DataProcessing/e02n_use_td.Rmd", 
+      locally_run = locally_run
+    )
+
+  } else {
+
+    return_rmd <- NULL
+
+  }
+
+  return(return_rmd)
+}
+
+
+
