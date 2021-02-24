@@ -31,7 +31,7 @@ get_ttest_text <- function(test_results, zone){
 
 # trial_type <- "S"
 
-predict_yield_pi <- function(data, est, var_name, by = NULL) {
+predict_yield_pi <- function(data, est, var_name, by = NULL, crop_price) {
 
   data_dt <- data.table(data)
 
@@ -134,7 +134,7 @@ predict_yield_pi <- function(data, est, var_name, by = NULL) {
 
 }
 
-predict_yield_pi_simple <- function(data, est, var_name) {
+predict_yield_pi_simple <- function(data, est, var_name, crop_price) {
 
   eval_data <- copy(data)
 

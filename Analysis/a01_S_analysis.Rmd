@@ -144,7 +144,8 @@ if (gc_type_s == "uniform") {
   eval_data_gc <- predict_yield_pi_simple(
       data = gc_rate_data, 
       est = gam_res,
-      var_name = "seed_rate"
+      var_name = "seed_rate",
+      crop_price = crop_price 
     ) %>% 
     .[, type := "gc"] %>% 
     .[, .(
@@ -229,7 +230,7 @@ pi_data_opt <- data_sf %>%
   data.table() %>% 
   .[, .(opt_s, X, Y, zone_txt, obs_id)] %>% 
   setnames("opt_s", "seed_rate") %>% 
-  predict_yield_pi_simple(., gam_res, "seed_rate") %>% 
+  predict_yield_pi_simple(., gam_res, "seed_rate", crop_price) %>% 
   .[, .(obs_id, zone_txt, profit_hat)] %>% 
   .[, type := "opt_v"]
   
@@ -237,7 +238,7 @@ pi_data_gc <- data_sf %>%
   data.table() %>% 
   .[, .(gc_rate, X, Y, zone_txt, obs_id)] %>% 
   setnames("gc_rate", "seed_rate") %>% 
-  predict_yield_pi_simple(., gam_res, "seed_rate") %>% 
+  predict_yield_pi_simple(., gam_res, "seed_rate", crop_price) %>% 
   .[, .(obs_id, zone_txt, profit_hat)] %>% 
   .[, type := "gc"]
   

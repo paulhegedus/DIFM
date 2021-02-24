@@ -112,7 +112,8 @@ eval_data <- predict_yield_pi(
     data = data_sf, 
     est = gam_res, 
     var_name = "n_rate", 
-    by = "zone_txt"
+    by = "zone_txt",
+    crop_price = crop_price
   ) %>% 
   .[, type := "opt_v"]%>% 
   .[, .(
@@ -219,7 +220,7 @@ pi_data_opt <- data_sf %>%
   data.table() %>% 
   .[, .(opt_n, X, Y, zone_txt, obs_id)] %>% 
   setnames("opt_n", "n_rate") %>% 
-  predict_yield_pi_simple(., gam_res, "n_rate") %>% 
+  predict_yield_pi_simple(., gam_res, "n_rate", crop_price) %>% 
   .[, .(obs_id, zone_txt, profit_hat)] %>% 
   .[, type := "opt_v"]
   
@@ -227,7 +228,7 @@ pi_data_gc <- data_sf %>%
   data.table() %>% 
   .[, .(gc_rate, X, Y, zone_txt, obs_id)] %>% 
   setnames("gc_rate", "n_rate") %>% 
-  predict_yield_pi_simple(., gam_res, "n_rate") %>% 
+  predict_yield_pi_simple(., gam_res, "n_rate", crop_price) %>% 
   .[, .(obs_id, zone_txt, profit_hat)] %>% 
   .[, type := "gc"]
   
