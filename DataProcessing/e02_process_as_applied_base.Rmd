@@ -344,6 +344,19 @@ tm_layout_to_add
 
 ```
 
+**Check if polygon width is reasonable**
+
+```{r }
+tm_shape(aa_input_sf) +
+  tm_polygons(
+    lwd = 0.05,
+    col = "red",
+    alpha = 0.4
+  ) +
+tm_layout_to_add
+
+```
+
 ## Save the data
 
 ```{r }

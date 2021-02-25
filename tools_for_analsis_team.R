@@ -50,6 +50,12 @@ exp_process_make_report(
   rerun = TRUE
 )
 
+exp_process_make_report(
+  ffy = field_year_ls[14],
+  rerun = TRUE,
+  locally_run = TRUE
+)
+
 # /*----------------------------------*/
 #' ## Final Data Processing (Putting all altogether)
 # /*----------------------------------*/
