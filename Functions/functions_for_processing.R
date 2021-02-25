@@ -1077,7 +1077,7 @@ st_set_4326 <- function(data_sf) {
 #' # Intersect yield and input polygons (overlap test)
 # /*=================================================*/
 
-input_polygons <- input_polygons$input_polygons[[1]]
+# input_polygons <- input_polygons$input_polygons[[1]]
 
 # ggplot() +
 #   geom_sf(data = input_polygons[yield_polygons[5000, ], ], col = "blue") +
@@ -1085,7 +1085,8 @@ input_polygons <- input_polygons$input_polygons[[1]]
 
 intersect_yield_input <- function(yield_polygons, input_polygons) {
   pct_int <- st_intersection(
-    dplyr::select(yield_polygons[50, ], yield_id, yield_area),
+    # dplyr::select(yield_polygons[50, ], yield_id, yield_area),
+    dplyr::select(yield_polygons, yield_id, yield_area),
     dplyr::select(input_polygons, input_rate)
   ) %>%
     #--- percentage overlapped ---#
