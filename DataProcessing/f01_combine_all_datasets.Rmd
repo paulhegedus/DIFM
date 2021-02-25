@@ -4,7 +4,12 @@
 
 ```{r }
 #--- yield ---#
-yield_sf <- readRDS(file = "Intermediate/yield_group_by_obs.rds")
+yield_sf <- readRDS(
+  file = here(
+    "Data/Growers", ffy, 
+    "Intermediate/yield_group_by_obs.rds"
+  )
+)
 ```
 
 ```{r eval = topo_eval_here}
@@ -139,21 +144,24 @@ tm_shape(final_data) +
 tm_layout_to_add
 ```  
 
-## Seed rate
-
-```{r dependson = "map-layout", eval = trial_type %in% c("SN", "S"), echo = trial_type %in% c("SN", "S")}
-tm_shape(final_data) +
-  tm_fill(col = "seed_rate") +
-tm_layout_to_add
-```  
-
-## N rate
-
-```{r dependson = "map-layout", eval = trial_type %in% c("SN", "N"), echo = trial_type %in% c("SN", "N")}
-tm_shape(final_data) +
-  tm_fill(col = "n_rate") +
-tm_layout_to_add
-```  
+```{r }
+trial_info %>% 
+  filter(process = TRUE) %>% 
+  rowwise() %>% 
+  mutate(
+    tm_viz = list(
+      tm_shape(final_data) +
+      tm_fill(
+        col = paste0(
+          tolower(input_type),
+          "_rate"
+        )
+      ) +
+      tm_layout_to_add
+    )
+  ) %>% 
+  pluck("tm_viz")
+```
 
 # Save
 

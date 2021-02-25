@@ -6,7 +6,7 @@
 
 ```{r Reading-as-applied-n-data}
 
-input_type <- input_type_here
+input_type <- "input_type_here"
 
 aa_input <- here("Data/Growers", ffy, "Raw") %>% 
   list.files(recursive = TRUE, full.names = TRUE) %>%
