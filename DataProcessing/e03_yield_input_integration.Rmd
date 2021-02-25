@@ -131,7 +131,7 @@ Red-filled polygons were dropped:
 ```{r dependson = "map-layout"}
 tm_shape(st_as_sf(yield_polygons)) +
   tm_fill(col = "red") +
-tm_shape(st_as_sf(yield_combined)) +
+tm_shape(st_as_sf(yield_input_data)) +
   tm_fill(col = "green") +
 tm_layout_to_add
 
