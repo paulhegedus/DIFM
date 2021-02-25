@@ -200,6 +200,14 @@ yield_grouped %>% filter(flag_bad == 0) %>%
   hist()
 ```
 
+**Supplementary information:**
+
+<br>
+
+Note: `speed` is not currently used for flagging bad data points.
+
+<br> 
+
 `speed` vs `yield_vol`
 
 ```{r }

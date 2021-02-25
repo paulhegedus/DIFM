@@ -76,6 +76,21 @@ if (input_type == "n") {
 
 ```
 
+```{r }
+tm_shape(td) +
+  tm_fill(
+    col = "input_rate",
+    title = toupper(input_type)
+  ) +
+tm_shape(yield_polygons) +
+  tm_dots(
+    col = "blue", 
+    size = 0.05
+  ) +
+tm_layout_to_add
+
+```
+
 ## Save the data
 
 ```{r }

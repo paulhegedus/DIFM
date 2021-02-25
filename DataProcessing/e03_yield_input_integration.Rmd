@@ -264,9 +264,9 @@ yield_sf <- all_data_ls %>%
 ```{r }
 cat(
   paste0(
-    "There are", 
+    "There are ", 
     yield_sf$obs_id %>% unique() %>% length(),
-    "observations."
+    " observations."
   )
 ) 
 ```
