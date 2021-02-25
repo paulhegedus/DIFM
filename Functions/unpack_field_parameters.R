@@ -295,6 +295,7 @@ trial_type <- case_when(
 )
 
 trial_info <- tibble(
+  crop = crop, 
   input_type = c("S", "N", "K"),
   process = c(process_s, process_n, process_k),
   use_td = c(use_td_s, use_td_n, use_td_k),

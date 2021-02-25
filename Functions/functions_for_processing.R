@@ -1,64 +1,58 @@
-#/*=================================================*/
-#' # Vertical reduce (reduce in the direction the machine moves) 
-#/*=================================================*/
+# /*=================================================*/
+#' # Vertical reduce (reduce in the direction the machine moves)
+# /*=================================================*/
 
-reduce_points_v <- function(data_sf, nobs_per_group, var_interest, by_var = NA){
-
+reduce_points_v <- function(data_sf, nobs_per_group, var_interest, by_var = NA) {
   if (!is.na(by_var)) {
-
     data_dt <- data_sf %>%
-    cbind(., st_coordinates(.)) %>% 
-    data.table() %>%
-    setnames(var_interest, "var_i") %>% 
-    setnames(by_var, "group_var") %>% 
-    .[, dummy := 1] %>% 
-    .[, id_in_group := (cumsum(dummy) - 1) %/% nobs_per_group + 1, by = group_var] %>%
-    #--- aggregate, but not using points that are flagged "bad" ---#
-    .[, .(
-      X = mean(X),
-      Y = mean(Y),
-      angle = mean(angle),
-      width = mean(width),
-      var_i = mean(var_i),
-      min_distance = min(distance),
-      max_distance = max(distance),
-      speed = mean(speed),
-      flag_bad = mean(flag_bad)
-    ),
-    by = .(id_in_group, group_var)
-    ] %>% 
-    .[, point_id := 1:nrow(.)] %>% 
-    .[, n_group := .N, group_var] %>% 
-    .[n_group > 1, ] %>% 
-    .[, n_group := NULL] %>% 
-    setnames("group_var", by_var) %>%  
-    setnames("var_i", var_interest)  
-
+      cbind(., st_coordinates(.)) %>%
+      data.table() %>%
+      setnames(var_interest, "var_i") %>%
+      setnames(by_var, "group_var") %>%
+      .[, dummy := 1] %>%
+      .[, id_in_group := (cumsum(dummy) - 1) %/% nobs_per_group + 1, by = group_var] %>%
+      #--- aggregate, but not using points that are flagged "bad" ---#
+      .[, .(
+        X = mean(X),
+        Y = mean(Y),
+        angle = mean(angle),
+        width = mean(width),
+        var_i = mean(var_i),
+        min_distance = min(distance),
+        max_distance = max(distance),
+        speed = mean(speed),
+        flag_bad = mean(flag_bad)
+      ),
+      by = .(id_in_group, group_var)
+      ] %>%
+      .[, point_id := 1:nrow(.)] %>%
+      .[, n_group := .N, group_var] %>%
+      .[n_group > 1, ] %>%
+      .[, n_group := NULL] %>%
+      setnames("group_var", by_var) %>%
+      setnames("var_i", var_interest)
   } else {
-
     data_dt <- data_sf %>%
-    cbind(., st_coordinates(.)) %>% 
-    data.table() %>%
-    setnames(var_interest, "var_i") %>% 
-    .[, dummy := 1] %>% 
-    .[, id_in_group := (cumsum(dummy) - 1) %/% nobs_per_group + 1] %>%
-    .[flag_bad == 0, .(
-    X = mean(X),
-    Y = mean(Y),
-    angle = mean(angle),
-    width = mean(width),
-    var_i = mean(var_i),
-    speed = mean(speed)
-    ),
-    by = .(id_in_group)
-    ] %>% 
-    .[, point_id := 1:nrow(.)] %>%  
-    setnames("var_i", var_interest)
-
+      cbind(., st_coordinates(.)) %>%
+      data.table() %>%
+      setnames(var_interest, "var_i") %>%
+      .[, dummy := 1] %>%
+      .[, id_in_group := (cumsum(dummy) - 1) %/% nobs_per_group + 1] %>%
+      .[flag_bad == 0, .(
+        X = mean(X),
+        Y = mean(Y),
+        angle = mean(angle),
+        width = mean(width),
+        var_i = mean(var_i),
+        speed = mean(speed)
+      ),
+      by = .(id_in_group)
+      ] %>%
+      .[, point_id := 1:nrow(.)] %>%
+      setnames("var_i", var_interest)
   }
 
   return(data_dt)
-  
 }
 
 # /*=================================================*/
@@ -66,115 +60,110 @@ reduce_points_v <- function(data_sf, nobs_per_group, var_interest, by_var = NA){
 # /*=================================================*/
 # angle_vec <- group_dt_y_1$angle
 
-get_angle_break <- function(angle_vec){
+get_angle_break <- function(angle_vec) {
 
   # ggplot(angle_data) +
   #   geom_point(aes(x = angle_id, y = angle))
 
   angle_data <- data.table(
-    angle_id = 1:100, 
+    angle_id = 1:100,
     angle = quantile(angle_vec, prob = seq(0, 1, length = 100))
-  ) %>% 
-  .[, d_angle := c(0, diff(angle))] %>% 
-  .[, med_d_angle := median(d_angle) ] %>% 
-  .[, angle_change := d_angle > 3] %>% 
-  .[, angle_change_lag_1 := data.table::shift(angle_change, type = "lag", fill = FALSE)] %>% 
-  .[, d_angle_change := angle_change - angle_change_lag_1] %>% 
-  .[, angle_group := cumsum(abs(d_angle_change)) + 1] %>% 
-  .[, angle_change_lead_1 := data.table::shift(angle_change, type = "lead", fill = FALSE)] %>% 
-  .[angle_change == TRUE & angle_change_lead_1 == FALSE, angle_group := angle_group + 1] 
+  ) %>%
+    .[, d_angle := c(0, diff(angle))] %>%
+    .[, med_d_angle := median(d_angle)] %>%
+    .[, angle_change := d_angle > 3] %>%
+    .[, angle_change_lag_1 := data.table::shift(angle_change, type = "lag", fill = FALSE)] %>%
+    .[, d_angle_change := angle_change - angle_change_lag_1] %>%
+    .[, angle_group := cumsum(abs(d_angle_change)) + 1] %>%
+    .[, angle_change_lead_1 := data.table::shift(angle_change, type = "lead", fill = FALSE)] %>%
+    .[angle_change == TRUE & angle_change_lead_1 == FALSE, angle_group := angle_group + 1]
 
-  angle_min_max <- angle_data[, .(min_angle = min(angle), max_angle = max(angle)), by = angle_group] %>% 
+  angle_min_max <- angle_data[, .(min_angle = min(angle), max_angle = max(angle)), by = angle_group] %>%
     setorder(min_angle)
 
   angle_breaks <- c(
     angle_min_max[, min(min_angle)],
-    angle_min_max[1:(nrow(angle_min_max)-1), max_angle + 0.1],
+    angle_min_max[1:(nrow(angle_min_max) - 1), max_angle + 0.1],
     angle_min_max[, max(max_angle)]
   )
 
   return(angle_breaks)
-
 }
 
 # data_sf <- asp
 # by_var <- "sectionid"
 
 drop_group_points_sc <- function(data_sf, by_var = NA) {
-
   if (!is.na(by_var)) {
-
     setup_dt <- data_sf %>%
       cbind(., st_coordinates(.)) %>%
       data.table() %>%
-      .[, original_order_id := 1:nrow(.)] %>% 
+      .[, original_order_id := 1:nrow(.)] %>%
       setnames(by_var, "group_var")
-
   } else {
-
     by_var <- "group_var"
     setup_dt <- data_sf %>%
       cbind(., st_coordinates(.)) %>%
       data.table() %>%
-      .[, original_order_id := 1:nrow(.)] %>% 
+      .[, original_order_id := 1:nrow(.)] %>%
       .[, group_var := 1]
   }
-    
 
-  angle_dt <- setup_dt %>% 
-    setorder(group_var, original_order_id) %>% 
+
+  angle_dt <- setup_dt %>%
+    setorder(group_var, original_order_id) %>%
     .[, d_X := c(0, diff(X)), by = group_var] %>%
     .[, d_Y := c(0, diff(Y)), by = group_var] %>%
     .[, distance := sqrt(d_X^2 + d_Y^2)] %>%
     .[, angle := acos(abs(d_X) / distance) / pi * 180]
 
-  #/*----------------------------------*/
+  # /*----------------------------------*/
   #' ## strong when going north-south
-  #/*----------------------------------*/
+  # /*----------------------------------*/
   # update angle based on the direction of Y
 
   group_dt_y_1 <- copy(angle_dt) %>%
     .[d_Y < 0, angle := angle + 180] %>%
     .[, angle := data.table::shift(angle, type = "lead"), by = group_var] %>%
     .[, d_angle := c(NA, diff(angle)), by = group_var] %>%
-    .[, med_d_angle := median(abs(d_angle), na.rm = TRUE) * 5, by = group_var] %>% 
+    .[, med_d_angle := median(abs(d_angle), na.rm = TRUE) * 5, by = group_var] %>%
     #--- flag if angle is too sharp ---#
-    .[, drop_too_sharp_turn := FALSE] %>% 
-    .[abs(d_angle) > med_d_angle * 10, drop_too_sharp_turn := TRUE] 
+    .[, drop_too_sharp_turn := FALSE] %>%
+    .[abs(d_angle) > med_d_angle * 10, drop_too_sharp_turn := TRUE]
 
   #--- create angle groups ---#
   angle_breaks_y <- get_angle_break(group_dt_y_1[!is.na(angle), angle])
 
-  group_dt_y <- group_dt_y_1 %>% 
+  group_dt_y <- group_dt_y_1 %>%
     .[, angle_group := cut(angle, angle_breaks_y)] %>%
-    .[!is.na(angle_group),] %>% 
+    .[!is.na(angle_group), ] %>%
     .[, dif_angle_group := c(1, diff(angle_group)), by = group_var] %>%
     .[, distance_gap := distance > (5 * median(distance)), ] %>%
-    .[, group := cumsum(dif_angle_group != 0 | distance_gap == TRUE) + 1, by = group_var] %>% 
+    .[, group := cumsum(dif_angle_group != 0 | distance_gap == TRUE) + 1, by = group_var] %>%
     setnames("group_var", by_var)
 
-  #/*----------------------------------*/
+  # /*----------------------------------*/
   #' ## strong when going east-west
-  #/*----------------------------------*/
+  # /*----------------------------------*/
   # update angle based on the direction of X
   group_dt_x_1 <- copy(angle_dt) %>%
     .[d_Y < 0, angle := angle + 180] %>%
     .[, angle := data.table::shift(angle, type = "lead"), by = group_var] %>%
     .[, d_angle := c(NA, diff(angle)), by = group_var] %>%
-    .[, med_d_angle := median(abs(d_angle), na.rm = TRUE) * 5, by = group_var] %>% 
+    .[, med_d_angle := median(abs(d_angle), na.rm = TRUE) * 5, by = group_var] %>%
     #--- flag if angle is too sharp ---#
-    .[, drop_too_sharp_turn := FALSE] %>% 
-    .[abs(d_angle) > med_d_angle * 10, drop_too_sharp_turn := TRUE] 
+    .[, drop_too_sharp_turn := FALSE] %>%
+    .[abs(d_angle) > med_d_angle * 10, drop_too_sharp_turn := TRUE]
 
   #--- create angle groups ---#
   angle_breaks_x <- get_angle_break(group_dt_x_1[!is.na(angle), angle])
 
-  group_dt_x <- group_dt_x_1 %>% 
+  group_dt_x <- group_dt_x_1 %>%
     .[, angle_group := cut(angle, angle_breaks_x)] %>%
-    .[!is.na(angle_group),] %>% 
+    .[!is.na(angle_group), ] %>%
     .[, dif_angle_group := c(1, diff(angle_group)), by = group_var] %>%
     .[, distance_gap := distance > (5 * median(distance)), ] %>%
-    .[, group := cumsum(dif_angle_group != 0 | distance_gap == TRUE) + 1, by = group_var] %>% 
+    .[, group := cumsum(dif_angle_group != 0 | distance_gap == TRUE) + 1, by = group_var] %>%
     setnames("group_var", by_var)
 
   #--- pick the better one (smaller number of groups) ---#
@@ -192,7 +181,7 @@ drop_group_points_sc <- function(data_sf, by_var = NA) {
     original_order_id = NULL
   )]
 
-  if (all(group_dt$group_var == 1)){
+  if (all(group_dt$group_var == 1)) {
     group_dt[, group_var := NULL]
   }
   return(st_as_sf(group_dt))
@@ -202,51 +191,47 @@ drop_group_points_sc <- function(data_sf, by_var = NA) {
 # data_sf <- yield
 
 group_points_sc <- function(data_sf, by_var = NA, angle_threshold) {
-
   if (!is.na(by_var)) {
-
     setup_dt <- data_sf %>%
       cbind(., st_coordinates(.)) %>%
       data.table() %>%
-      .[, original_order_id := 1:nrow(.)] %>% 
+      .[, original_order_id := 1:nrow(.)] %>%
       setnames(by_var, "group_var")
-
   } else {
-
     by_var <- "group_var"
     setup_dt <- data_sf %>%
       cbind(., st_coordinates(.)) %>%
       data.table() %>%
-      .[, original_order_id := 1:nrow(.)] %>% 
+      .[, original_order_id := 1:nrow(.)] %>%
       .[, group_var := 1]
   }
-    
-# plot(1:39127, angle_dt[!is.na(angle), angle])
 
-  group_dt <- setup_dt %>% 
-    setorder(group_var, original_order_id) %>% 
+  # plot(1:39127, angle_dt[!is.na(angle), angle])
+
+  group_dt <- setup_dt %>%
+    setorder(group_var, original_order_id) %>%
     .[, d_X := c(0, diff(X)), by = group_var] %>%
     .[, d_Y := c(0, diff(Y)), by = group_var] %>%
     .[, distance := sqrt(d_X^2 + d_Y^2)] %>%
     #--- if distance is 0, then it means the consecutive points are duplicates ---#
-    .[distance != 0, ] %>% 
+    .[distance != 0, ] %>%
     .[, d_X2 := data.table::shift(d_X, type = "lag", fill = NA), by = group_var] %>%
     .[, d_Y2 := data.table::shift(d_Y, type = "lag", fill = NA), by = group_var] %>%
     .[, distance2 := data.table::shift(distance, type = "lag", fill = NA), by = group_var] %>%
-    .[, vec_ip_d := (d_X * d_X2 + d_Y * d_Y2) / (distance * distance2)] %>% 
+    .[, vec_ip_d := (d_X * d_X2 + d_Y * d_Y2) / (distance * distance2)] %>%
     #--- get the angle of three consecutive points ---#
-    .[, angle := acos(vec_ip_d) / pi * 180] %>% 
-    .[0.99 < vec_ip_d, angle := 0] %>% 
+    .[, angle := acos(vec_ip_d) / pi * 180] %>%
+    .[0.99 < vec_ip_d, angle := 0] %>%
     #--- 15 is the magic number (may not work) ---#
-    .[, change_group := angle >= angle_threshold] %>% 
-    .[is.na(change_group), change_group := TRUE] %>% 
-    .[1, change_group := TRUE] %>% 
-    .[, group := cumsum(change_group), by = group_var] %>% 
-    .[, obs_per_group := .N, by = group] %>% 
-    .[obs_per_group > 1, ]  
+    .[, change_group := angle >= angle_threshold] %>%
+    .[is.na(change_group), change_group := TRUE] %>%
+    .[1, change_group := TRUE] %>%
+    .[, group := cumsum(change_group), by = group_var] %>%
+    .[, obs_per_group := .N, by = group] %>%
+    .[obs_per_group > 1, ]
 
 
-  if (all(group_dt$group_var == 1)){
+  if (all(group_dt$group_var == 1)) {
     group_dt[, `:=`(
       group_var = NULL,
       vec_ip_d = NULL,
@@ -255,8 +240,7 @@ group_points_sc <- function(data_sf, by_var = NA, angle_threshold) {
       d_X2 = NULL,
       d_Y2 = NULL,
       distance2 = NULL
-      )
-    ]
+    )]
   } else {
     group_dt[, `:=`(
       vec_ip_d = NULL,
@@ -265,46 +249,41 @@ group_points_sc <- function(data_sf, by_var = NA, angle_threshold) {
       d_X2 = NULL,
       d_Y2 = NULL,
       distance2 = NULL
-      )
-    ] %>% 
-    setnames("group_var", by_var)
+    )] %>%
+      setnames("group_var", by_var)
   }
 
   return(st_as_sf(group_dt))
-
 }
 
 # /*=================================================*/
 #' # Get medium distance between points
 # /*=================================================*/
 get_med_dist <- function(data_sf) {
-
   geom_type <- st_geometry(data_sf)[[1]] %>% class()
 
-  if("POLYGON" %in% geom_type){
+  if ("POLYGON" %in% geom_type) {
     med_distance <- data_sf %>%
-    cbind(., st_coordinates(st_centroid(.))) %>%
-    data.table() %>%
-    .[, dif_X := c(0, diff(X))] %>%
-    .[, dif_Y := c(0, diff(Y))] %>%
-    .[, distance := sqrt(dif_X^2 + dif_Y^2)] %>%
-    .[, median(distance)]
-  } else{
+      cbind(., st_coordinates(st_centroid(.))) %>%
+      data.table() %>%
+      .[, dif_X := c(0, diff(X))] %>%
+      .[, dif_Y := c(0, diff(Y))] %>%
+      .[, distance := sqrt(dif_X^2 + dif_Y^2)] %>%
+      .[, median(distance)]
+  } else {
     med_distance <- data_sf %>%
-    cbind(., st_coordinates(.)) %>%
-    data.table() %>%
-    .[, dif_X := c(0, diff(X))] %>%
-    .[, dif_Y := c(0, diff(Y))] %>%
-    .[, distance := sqrt(dif_X^2 + dif_Y^2)] %>%
-    .[, median(distance)]
+      cbind(., st_coordinates(.)) %>%
+      data.table() %>%
+      .[, dif_X := c(0, diff(X))] %>%
+      .[, dif_Y := c(0, diff(Y))] %>%
+      .[, distance := sqrt(dif_X^2 + dif_Y^2)] %>%
+      .[, median(distance)]
   }
 
   return(med_distance)
-
 }
 
 get_med_dist_sec <- function(data_sf) {
-
   med_distance <- data_sf %>%
     cbind(., st_coordinates(.)) %>%
     data.table() %>%
@@ -348,23 +327,21 @@ flag_bad_points <- function(data, var_name, sd_factor) {
   return(st_as_sf(temp_data))
 }
 
-#/*=================================================*/
+# /*=================================================*/
 #' # Find the non-overlapping parts of polygons
-#/*=================================================*/
+# /*=================================================*/
 get_non_ol_parts <- function(w_id) {
-
   w_ol_polygon <- filter(ol_polygons, asp_id == w_id)
-  w_polygon <- filter(asp_sf, asp_id == w_id) %>% 
-      dplyr::select(asp_id, seed_rate)
+  w_polygon <- filter(asp_sf, asp_id == w_id) %>%
+    dplyr::select(asp_id, seed_rate)
 
-  if (nrow(w_ol_polygon) == 0){
+  if (nrow(w_ol_polygon) == 0) {
     return(w_polygon)
   } else {
-    nol_polygon <- st_union(w_ol_polygon) %>% 
+    nol_polygon <- st_union(w_ol_polygon) %>%
       st_difference(w_polygon, .)
     return(nol_polygon)
   }
-  
 }
 
 # /*=================================================*/
@@ -555,7 +532,6 @@ make_polygons <- function(data_dt) {
 
   # i <- 1
   make_polygon <- function(i) {
-
     temp_poly <- list(
       st_point(f_p90[i, ]),
       st_point(m_p90[i, ]),
@@ -575,7 +551,7 @@ make_polygons <- function(data_dt) {
     return(temp_poly)
   }
 
-  all_polygons <- lapply(1:nrow(temp_data), make_polygon) 
+  all_polygons <- lapply(1:nrow(temp_data), make_polygon)
 
   return(all_polygons)
 }
@@ -1008,41 +984,39 @@ make_var_name_consistent <- function(data, dictionary) {
   return(data)
 }
 
-#/*=================================================*/
+# /*=================================================*/
 #' # Convert nitrogen units to N-equivalent
-#/*=================================================*/
+# /*=================================================*/
 # form <- "NH3"
 # unit <- "lbs"
 # rate <- 130
 
-convert_N_unit <- function(form, unit, rate, reporting_unit){
-
-  conv_table <- fromJSON(file.path(here("Data", "CommonData"),"nitrogen_conversion.json"), flatten = TRUE) %>% 
+convert_N_unit <- function(form, unit, rate, reporting_unit) {
+  conv_table <- fromJSON(file.path(here("Data", "CommonData"), "nitrogen_conversion.json"), flatten = TRUE) %>%
     data.table() %>%
     .[, conv_factor := as.numeric(conv_factor)] %>%
     .[, form_unit := paste(type, unit, sep = "_")] %>%
     as.data.frame()
-  
+
   if (form == "N_equiv") {
     conv_factor_n <- 1
   } else {
-    conv_factor_n <- which(conv_table[, "form_unit"] %in% paste(form, unit, sep="_")) %>% 
+    conv_factor_n <- which(conv_table[, "form_unit"] %in% paste(form, unit, sep = "_")) %>%
       conv_table[., "conv_factor"]
   }
-  
-  if (reporting_unit == "metric"){
-    conv_factor_n <- conv_factor_n*conv_unit(1, "lbs", "kg")*conv_unit(1, "hectare", "acre")
+
+  if (reporting_unit == "metric") {
+    conv_factor_n <- conv_factor_n * conv_unit(1, "lbs", "kg") * conv_unit(1, "hectare", "acre")
   }
 
   converted_rate <- conv_factor_n * rate
 
   return(converted_rate)
-
 }
 
-#/*=================================================*/
+# /*=================================================*/
 #' # Others
-#/*=================================================*/
+# /*=================================================*/
 tm_layout_to_add <- tm_layout(
   legend.outside = "TRUE",
   frame = FALSE,
@@ -1050,70 +1024,109 @@ tm_layout_to_add <- tm_layout(
   legend.text.size = 1.5
 )
 
-#/*=================================================*/
+# /*=================================================*/
 #' # Close the unclosed polygons
-#/*=================================================*/
+# /*=================================================*/
 # Case: Boeckner_134n_2017
 
 # data_sf <- aan
 # i <- 1393
 close_unclosed <- function(data_sf) {
-
   return_closed_polygon <- function(i) {
 
     # print(i)
 
     temp_geom <- st_geometry(data_sf[i, ])[[1]][[1]]
 
-    is_closed <- identical(temp_geom[1, ], temp_geom[nrow(temp_geom), ]) 
+    is_closed <- identical(temp_geom[1, ], temp_geom[nrow(temp_geom), ])
 
     if (!is_closed) {
-      temp_geom <- rbind(temp_geom, temp_geom[1,]) %>% 
-        list(.) %>% 
+      temp_geom <- rbind(temp_geom, temp_geom[1, ]) %>%
+        list(.) %>%
         st_polygon()
     } else {
       temp_geom <- st_polygon(list(temp_geom))
     }
 
     return(temp_geom)
-
   }
-  
-  geoms <- future_lapply(seq_len(nrow(data_sf)), return_closed_polygon) %>% 
-    st_as_sfc() %>% 
+
+  geoms <- future_lapply(seq_len(nrow(data_sf)), return_closed_polygon) %>%
+    st_as_sfc() %>%
     st_set_crs(st_crs(data_sf))
 
   data_sf$geometry <- geoms
 
   return(data_sf)
-
 }
 
-#/*=================================================*/
+# /*=================================================*/
 #' # set crs to 4326
-#/*=================================================*/
+# /*=================================================*/
 
 st_set_4326 <- function(data_sf) {
-
   if (is.na(st_crs(data_sf))) {
     data_sf <- st_set_crs(data_sf, 4326)
     cat("Warning: valid crs was not set for this data. Check carefully if this has caused any problems below.")
   }
 
   return(data_sf)
-   
-} 
+}
 
+# /*=================================================*/
+#' # Intersect yield and input polygons (overlap test)
+# /*=================================================*/
 
+intersect_yield_input <- function(yield_polygons, input_polygons) {
+  pct_int <- st_intersection(
+    dplyr::select(yield_polygons, yield_id, yield_area),
+    dplyr::select(input_polygons, input_rate)
+  ) %>%
+    #--- percentage overlapped ---#
+    mutate(
+      sub_pct = as.numeric(st_area(.)) / yield_area
+    ) %>%
+    data.table() %>%
+    #--- total sub_pct by yield polygon ---#
+    .[, tot_sub_pct := sum(sub_pct), by = yield_id] %>%
+    #--- calculate sub_pct-weighted MEAN of applied rate ---#
+    .[, wm_input_rate := sum(sub_pct * input_rate) / tot_sub_pct, by = yield_id] %>%
+    #--- weighted deviation from the mean ---#
+    .[, dev_input_rate := sum(abs(sub_pct * (input_rate - wm_input_rate) / tot_sub_pct)), by = yield_id] %>%
+    #--- order by yield_id ---#
+    .[order(yield_id), ] %>%
+    .[, .(
+      yield_id,
+      tot_sub_pct,
+      wm_input_rate,
+      dev_input_rate
+    )] %>%
+    setnames("wm_input_rate", "input_rate") %>%
+    unique(by = "yield_id")
 
+  return(pct_int)
+}
 
+#/*=================================================*/
+#' # Table of input rate deviation allowed for a single yield polygon
+#/*=================================================*/
+crop <- c("corn", "soy", "wheat", "cotton") 
+input_type <- c("S", "N", "K")
+max_dev_table <- expand.grid(crop = crop, input_type = input_type) %>% 
+  data.table() %>% 
+  .[, max_dev_allowed := c(
+    2, # corn-seed
+    15, # soy-seed
+    NA, # wheat-seed
+    NA, # cotton-seed
+    20, # corn-seed
+    NA, # soy-seed
+    NA, # wheat-seed
+    NA, # cotton-seed
+    NA, # corn-K
+    NA, # soy-K
+    NA, # wheat-K
+    2 # cotton-K
+  )]
 
-
-
-
-
-
-
-
-
-
+  

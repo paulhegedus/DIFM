@@ -112,13 +112,34 @@ yield_input_data <- input_pct %>%
       copy(input_pct_data) %>% 
       .[tot_sub_pct > 0.9 & tot_sub_pct < 1.1, ] %>% 
       .[dev_input_rate < max_dev_allowed, ] %>% 
-      .[, .(yield_id, input_rate)]   
+      .[, .(yield_id, input_rate)] %>% 
+      setnames(
+        "input_rate",
+        paste0(tolower(input_type), "_rate")
+      )
     )
   ) %>% 
   pull(input_pct_data) %>% 
-  reduce(inner_join, by = "yield_id") 
+  reduce(inner_join, by = "yield_id") %>% 
+  inner_join(yield_polygons, ., by = "yield_id")  
 
 ```
+
+
+Red-filled polygons were dropped:
+
+```{r dependson = "map-layout"}
+tm_shape(st_as_sf(yield_polygons)) +
+  tm_fill(col = "red") +
+tm_shape(st_as_sf(yield_combined)) +
+  tm_fill(col = "green") +
+tm_layout_to_add
+
+```
+
+## Yield grouping
+
+### Assign group id
 
 ```{r }
 yield_id_keep <- yield_input_data %>% 
@@ -155,38 +176,6 @@ group_id <- input_pct %>%
   Reduce("|", .) %>% 
   cumsum()
 
-tibble(
-  group_id
-)
-```
-
-### Combine yield polygons with filtered data 
-
-```{r }
-yield_combined <- inner_join(
-  yield_polygons, 
-  yield_filtered, 
-  by = "yield_id"
-)  
-
-```
-
-Red-filled polygons were dropped:
-
-```{r dependson = "map-layout"}
-tm_shape(st_as_sf(yield_polygons)) +
-  tm_fill(col = "red") +
-tm_shape(st_as_sf(yield_combined)) +
-  tm_fill(col = "green") +
-tm_layout_to_add
-
-```
-
-## Yield grouping
-
-### Assign group id
-
-```{r }
 #/*~~~~~~~~~~~~~~~~~~~~~~*/
 #' ### Approximate minimum length of subplots
 #/*~~~~~~~~~~~~~~~~~~~~~~*/
@@ -196,64 +185,9 @@ med_distance <- get_med_dist(yield_polygons)
 min_obs <- round(12 / med_distance) # 12 meter
 max_obs <- round(20 / med_distance) # 24 meter
 
-#/*~~~~~~~~~~~~~~~~~~~~~~*/
-#' ### Determine the threshold
-#/*~~~~~~~~~~~~~~~~~~~~~~*/
-if (crop == "corn") {
-  max_dev_allowed_s <- 3
-  max_dev_allowed_n <- 20 
-} else {
-  max_dev_allowed_s <- 10
-}
-
-distance_gap_allowed <- 6 # 5 meter
-
-#/*~~~~~~~~~~~~~~~~~~~~~~*/
-#' ### Grouping
-#/*~~~~~~~~~~~~~~~~~~~~~~*/
-yield_dt_temp <- yield_combined %>% 
-  cbind(., st_coordinates(st_centroid(.))) %>% 
-    data.table() %>% 
-  #--- push down X ---#
-  .[, X_lag := data.table::shift(X, type = "lag")] %>% 
-  #--- push down Y ---#
-  .[, Y_lag := data.table::shift(Y, type = "lag")] %>% 
-  #--- calculate the distance between consecutive points ---#
-  .[, distance := sqrt((X_lag - X)^2 + (Y_lag - Y)^2)] %>% 
-  #--- take care of the first ob ---#
-  .[1, distance := 0] %>% 
-  #--- 2 yield point gaps (2+1 multiplier) ---#
-  .[, distance_gap := distance > distance_gap_allowed] 
-
-if (trial_type == "SN"){
-
-  yield_dt_temp_case <- yield_dt_temp %>% 
-    .[, dif_asp := c(0, diff(seed_rate))] %>% 
-    .[, change_asp := abs(dif_asp) >= max_dev_allowed_s] %>% 
-    .[, dif_aan := c(0, diff(n_rate))] %>% 
-    .[, change_aan := abs(dif_aan) >= max_dev_allowed_n] %>% 
-    #--- assign group id  ---#
-    .[, group_id := 1 + cumsum(change_asp | change_aan| distance_gap)]
-
-} else if (trial_type == "S") {
-
-  yield_dt_temp_case <- yield_dt_temp %>% 
-    .[, dif_asp := c(0, diff(seed_rate))] %>% 
-    .[, change_asp := abs(dif_asp) >= max_dev_allowed_s] %>% 
-    #--- assign group id  ---#
-    .[, group_id := 1 + cumsum(change_asp | distance_gap)]
- 
-} else {
-
-  yield_dt_temp_case <- yield_dt_temp %>% 
-    .[, dif_aan := c(0, diff(n_rate))] %>% 
-    .[, change_aan := abs(dif_aan) >= max_dev_allowed_n] %>% 
-    #--- assign group id  ---#
-    .[, group_id := 1 + cumsum(change_aan| distance_gap)]
-}
-
- 
-yield_dt <- yield_dt_temp_case %>% 
+yield_group_data <- yield_input_data %>% 
+  mutate(group_id = group_id + 1) %>% 
+  data.table() %>% 
   #--- get the number of observations per group ---#
   .[, num_obs_group := .N, by = group_id] %>% 
   #--- get the cumulative number of observations ---#
@@ -261,6 +195,7 @@ yield_dt <- yield_dt_temp_case %>%
   .[, cum_num := cumsum(dummy), by = group_id] %>% 
   #--- remove observations that belong to a group with less than mim_obs ---#
   .[num_obs_group >= min_obs, ]
+
 
 ```
 
@@ -273,7 +208,7 @@ for (i in min_obs:max_obs) {
 
   if (i == min_obs){
 
-    temp_sub_id <- data.table::copy(yield_dt) %>% 
+    temp_sub_id <- data.table::copy(yield_group_data) %>% 
       .[, sub_group_id := (cum_num - 1) %/% i  + 1] 
 
     group_ls <- temp_sub_id %>% 
@@ -309,6 +244,10 @@ for (i in min_obs:max_obs) {
      
 }
 
+input_var <- pluck(input_pct, "input_type") %>% 
+  tolower(.) %>% 
+  paste0(., "_rate")
+
 yield_sf <- all_data_ls %>% 
   rbindlist() %>% 
   .[, obs_id := .GRP, by = .(group_id, sub_group_id)] %>% 
@@ -332,7 +271,6 @@ cat(
 ) 
 ```
 
-
 Please note that each of the polygons are not observations units here.
 
 ```{r dependson = "map-layout"}
@@ -342,59 +280,20 @@ tm_shape(yield_sf) +
 tm_layout_to_add
 ```
 
-```{r dependson = "map-layout", eval = trial_type %in% c("SN", "S"), echo = trial_type %in% c("SN", "S")}
-#--- seed rate map ---#
-tm_shape(yield_sf) +
-  tm_fill(col = "seed_rate") +
-tm_layout_to_add
-```
-
-```{r , eval = trial_type %in% c("SN", "N"), echo = trial_type %in% c("SN", "N")}
-#--- nitrogen map ---#
-tm_shape(yield_sf) +
-  tm_fill(col = "n_rate") +
-tm_layout_to_add
+```{r }
+lapply(
+  input_var, 
+  function(x) {
+    tm_shape(yield_sf) +
+      tm_fill(col = x)
+  }
+)  
 ```
 
 ```{r dependson = "map-layout"}
 #--- yield map ---#
 tm_shape(yield_sf) +
   tm_fill(col = "obs_id", style = "cont") +
-tm_layout_to_add
-```
-
-## Clip out the points in the headland
-
-```{r dependson = "map-layout", eval = F}
-td_file <- here("Data/Growers", ffy) %>% 
-  list.files(recursive = TRUE, full.names = TRUE) %>%
-  .[str_detect(., "shp")] %>%
-  .[str_detect(., "trial-design")]
-
-if (file.exists(td_file)) {
-  trial_design <- st_read(td_file) %>%
-    st_transform_utm() %>%
-    setnames(names(.), tolower(names(.))) 
-
-  if("type" %in% names(trial_design)) {
-    # some trial designs are missing headland
-    trial_design <- filter(trial_design, type != "Headland") 
-  } 
-
-  if (st_crs(yield) == st_crs(trial_design)) {
-    yield <- yield[trial_design, ]
-  } else {
-    cat("The CRS of yield and trial design do not match.")
-  }
-
-}
-```
-
-```{r eval = F}
-tm_shape(trial_design) +
-  tm_borders(col = "blue") +
-tm_shape(yield) +
-  tm_dots() +
 tm_layout_to_add
 ```
 

@@ -327,9 +327,9 @@ _add_base_rate_here_if_N_
 ## Save the data
 
 ```{r }
-aa_input_sf <- aa_input_sf %>% 
-  setnames(., "input_rate", tolower("input_type_here_rate"))
-
-here("Data/Growers", ffy, "Intermediate/as_applied_n.rds") %>% 
+here(
+  "Data/Growers", ffy, "Intermediate",
+  tolower("as_applied_input_type_here.rds")
+) %>% 
 saveRDS(aa_input_sf, .)
 ```
