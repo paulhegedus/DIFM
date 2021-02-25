@@ -149,7 +149,7 @@ exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE) {
   #' ## Merge yield and input data
   #/*----------------------------------*/
   e03 <- read_rmd(
-    "DataProcessing/e03_yield_further_processing.Rmd", 
+    "DataProcessing/e03_yield_input_integration.Rmd", 
     locally_run = locally_run
   )
 
