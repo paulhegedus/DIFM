@@ -974,23 +974,6 @@ prepare_e02_rmd <- function(input_type, process, use_td, locally_run = FALSE){
       .
     )
 
-    if (input_type == "N") {
-      return_rmd <- insert_rmd(
-        return_rmd,
-        read_rmd(
-          "DataProcessing/e02_add_base_rate_N.Rmd", 
-          locally_run = locally_run
-        ),
-        "_add_base_rate_here_if_N_"
-      )        
-    } else {
-      return_rmd <- gsub(
-        "_add_base_rate_here_if_N_", 
-        "",
-        return_rmd
-      )
-    }
-
   } else if (process & use_td){
 
     return_rmd <- read_rmd(

@@ -5,7 +5,9 @@
 ### As-applied data
 
 ```{r Reading-as-applied-n-data}
-#--- as-applied-n ---#
+
+input_type <- input_type_here
+
 aa_input <- here("Data/Growers", ffy, "Raw") %>% 
   list.files(recursive = TRUE, full.names = TRUE) %>%
   #--- search for as-applied-s file ---#
@@ -61,7 +63,7 @@ if("time" %in% names(aa_input) & "isotime" %in% names(aa_input)) {
   time_available <- TRUE
 }
 
-dict_aa_input <- dictionary[type == "input_type_here", ]
+dict_aa_input <- dictionary[type == input_type, ]
 col_list <- dict_aa_input[, column]
 
 aa_input <- make_var_name_consistent(
@@ -108,9 +110,29 @@ if (units == "imperial") {
       distance = conv_unit(distance, "ft", "m")
     )
 }
+```
 
-#--- n rate conversion (N-equivalent) ---#
+### Convert input rate unit 
 
+If `N`, then base N rate is added as well.
+
+```{r }
+if (input_type == "N") {
+  aa_input <- mutate(aa_input, 
+    input_rate = convert_N_unit(
+      input_data_n$form, 
+      input_data_n$unit, 
+      input_rate, 
+      field_data$reporting_unit
+    ) + n_base_rate # add base N rate
+  )
+} else if (input_type == "S") {
+  #--- seed rate conversion ---#
+  if (any(aa_input$input_rate > 10000)){
+    #--- convert to K ---#
+    aa_input <- mutate(aa_input, input_rate = input_rate / 1000)
+  }
+}
 ```
 
 ## Drop points in turns and group points by angle
@@ -321,8 +343,6 @@ tm_shape(aa_input_sf) +
 tm_layout_to_add
 
 ```
-
-_add_base_rate_here_if_N_
 
 ## Save the data
 
