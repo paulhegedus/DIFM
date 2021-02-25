@@ -16,7 +16,7 @@ library(here)
 ## Read in datasets
 
 ```{r }
-input_type <- tolower("inpu_type_here")
+input_type <- tolower("input_type_here")
 
 #--- trial design ---#
 td_file_name <- here("Data/Growers", ffy, "TrialDesign") %>% 
