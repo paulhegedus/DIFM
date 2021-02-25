@@ -106,7 +106,7 @@ if (process_s) {
   #++++++++++++++++
   # planter width
   #++++++++++++++++
-  planter_width <- input_data_s[, machine_width]
+  m_width_s <- input_data_s[, machine_width]
   
 } else { # if not seed trial
 
@@ -114,6 +114,8 @@ if (process_s) {
   gc_rate_s <- NA
   s_price <- NA
   use_td_s <- NA
+  planter_width <- NA
+  m_width_s <- NA
 
 }
 
@@ -208,7 +210,7 @@ if (process_n) {
   #++++++++++++++++
   # applicator width
   #++++++++++++++++
-  applicator_width <- input_data_n[, machine_width]
+  m_width_n <- input_data_n[, machine_width]
 
 } else {
 
@@ -217,6 +219,7 @@ if (process_n) {
   gc_rate_n <- NA
   n_price <- NA
   use_td_n <- NA
+  m_width_n <- NA
 }
 
 #/*~~~~~~~~~~~~~~~~~~~~~~*/
@@ -273,7 +276,7 @@ if (process_k) {
   #++++++++++++++++
   # applicator width
   #++++++++++++++++
-  applicator_width <- input_data_k[, machine_width]
+  m_width_k <- input_data_k[, machine_width]
 
 } else {
 
@@ -281,6 +284,7 @@ if (process_k) {
   gc_rate_k <- NA
   k_price <- NA
   use_td_k <- NA
+  m_width_k <- NA
 
 }
 
@@ -300,7 +304,8 @@ trial_info <- tibble(
   process = c(process_s, process_n, process_k),
   use_td = c(use_td_s, use_td_n, use_td_k),
   price = c(s_price, n_price, k_price),
-  gc_rate = c(gc_rate_s, gc_rate_n, gc_rate_k)
+  gc_rate = c(gc_rate_s, gc_rate_n, gc_rate_k),
+  machine_width = c(m_width_s, m_width_n, m_width_k)
 )
 
 #/*=================================================*/

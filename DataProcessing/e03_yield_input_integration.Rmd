@@ -42,11 +42,31 @@ tm_inputs <- input_polygons %>%
   mutate(
     tm_map = list(
       tm_shape(input_polygons) +
-        tm_fill(col = "input_rate", title = input_type)
+        tm_fill(
+          col = "input_rate", 
+          title = input_type
+        )
     )
   )
 
 tm_inputs$tm_map
+```
+
+```{r echo = F, eval = F}
+tm_inputs <- input_polygons %>% 
+  mutate(
+    tm_map = list(
+      tm_shape(input_polygons) +
+        tm_fill(
+          col = "red", 
+          title = input_type,
+          alpha = 0.4
+        )
+    )
+  )
+
+tm_inputs$tm_map
+
 ```
 
 ## Data alignment checks

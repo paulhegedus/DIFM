@@ -183,7 +183,9 @@ if (section_num != 1) {
 } else {
   # if only one observation 
   aa_input <- mutate(aa_input, 
-    width = input_data_n$machine_width %>% 
+    width = trial_info %>% 
+      filter(input_type == "input_type_here") %>% 
+      .$machine_width %>% 
       conv_unit("ft", "m")
   )
 }
