@@ -49,6 +49,23 @@ tm_inputs <- input_polygons %>%
 tm_inputs$tm_map
 ```
 
+## Data alignment checks
+
+```{r }
+tm_alignment <- input_polygons %>% 
+  mutate(
+    tm_map = list(
+      tm_shape(input_polygons) +
+        tm_borders(lwd = 0.2) +
+      tm_shape(st_centroid(yield_polygons)) +
+        tm_dots(col = "blue", title = "Yield Points")
+    )
+  )
+
+tm_alignment$tm_map 
+
+```
+
 ## Filter out unreliable polygons
 
 ### Check the overlap and find area-weighted input rates
