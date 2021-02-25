@@ -267,7 +267,7 @@ if (is_dense) {
 
   num_obs_rg <- ceiling(2 / (med_distance_v))
 
-  aa_input_reduced_v <- reduce_points_v(aa_input_grouped, num_obs_rg, "seed_rate", "new_group") %>% 
+  aa_input_reduced_v <- reduce_points_v(aa_input_grouped, num_obs_rg, "input_rate", "new_group") %>% 
     .[, .SD[.N != 1, ], by = new_group]
 
 } else {
