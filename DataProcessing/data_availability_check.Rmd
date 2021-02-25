@@ -529,7 +529,7 @@ lapply(field_year_ls, check_availability_p) %>%
   .[order(year, field),] %>% 
   flextable() %>%
   color(
-    j = c(4:7, 10),
+    j = c(4:10),
     color = "blue"
   ) %>% 
   color(
@@ -566,7 +566,17 @@ lapply(field_year_ls, check_availability_p) %>%
     i = ~ raw_yield == "not available",
     j = ~ raw_yield,
     color = "red"
-  )%>%
+  ) %>%
+  color(
+    i = ~ ec == "not available",
+    j = ~ ec,
+    color = "red"
+  ) %>%
+  color(
+    i = ~ soil_sampling == "not available",
+    j = ~ soil_sampling,
+    color = "red"
+  ) %>%
   color(
     i = ~ e_processing == "Not ready",
     j = ~ e_processing,
