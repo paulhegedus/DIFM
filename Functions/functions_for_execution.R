@@ -342,39 +342,27 @@ run_analysis <- function(ffy, rerun = FALSE, locally_run = FALSE){
     local = TRUE
   )
 
-  if (trial_type == "SN") {
-
-    temp_rmd <- insert_rmd(
-      temp_rmd, 
-      c(
+  analysis_rmd <- trial_info %>% 
+    rowwise() %>% 
+    filter(process == TRUE) %>% 
+    mutate(
+      analysis_rmd = list(
         read_rmd(
           "Analysis/a01_analysis.Rmd", 
           locally_run = locally_run
         ) %>% 
-        gsub("input_name_here", "s", .),
-        read_rmd(
-          "Analysis/a01_analysis.Rmd", 
-          locally_run = locally_run
-        ) %>% 
-        gsub("input_name_here", "n", .)
-      ),
-      "_analysis_rmd_here_"
-    )
+        gsub("input_name_here", tolower(input_type), .)
+      )
+    ) %>% 
+    pull(analysis_rmd) %>% 
+    reduce(c)
 
-  } else {
-
-    temp_rmd <- insert_rmd(
-      temp_rmd, 
-      read_rmd(
-        "Analysis/a01_analysis.Rmd", 
-        locally_run = locally_run
-      ) %>% 
-      gsub("input_name_here", tolower(trial_type), .),
-      "_analysis_rmd_here_"
-    )
-
-  }
-  
+  temp_rmd <- insert_rmd(
+    temp_rmd, 
+    analysis_rmd, 
+    "_analysis_rmd_here_"
+  )
+ 
   #/*----------------------------------*/
   #' ## Save and run
   #/*----------------------------------*/
@@ -971,7 +959,7 @@ get_td_text <- function(input_type, gc_type, locally_run = FALSE) {
 
 }
 
-prepare_e02_rmd <- function(input_type, process, use_td){
+prepare_e02_rmd <- function(input_type, process, use_td, locally_run = FALSE){
 
   if (process & !use_td) {
 
