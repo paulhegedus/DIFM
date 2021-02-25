@@ -1003,12 +1003,14 @@ prepare_e02_rmd <- function(input_type, process, use_td){
       )
     }
 
-  } else if (process_n & use_td_n){
+  } else if (process_n & use_td){
 
     return_rmd <- read_rmd(
-      "DataProcessing/e02n_use_td.Rmd", 
+      "DataProcessing/e02_use_td.Rmd", 
       locally_run = locally_run
-    )
+    ) %>% 
+    gsub("input_type_here", input_type, .)
+
 
   } else {
 
