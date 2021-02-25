@@ -1003,7 +1003,7 @@ prepare_e02_rmd <- function(input_type, process, use_td){
       )
     }
 
-  } else if (process_n & use_td){
+  } else if (process & use_td){
 
     return_rmd <- read_rmd(
       "DataProcessing/e02_use_td.Rmd", 
