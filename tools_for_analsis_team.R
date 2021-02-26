@@ -46,12 +46,13 @@ make_data_report()
 
 #--- individually ---#
 exp_process_make_report(
-  ffy = field_year_ls[14],
-  rerun = TRUE
+  ffy = field_year_ls[8],
+  rerun = TRUE,
+  locally_run = TRUE
 )
 
 exp_process_make_report(
-  ffy = field_year_ls[14],
+  ffy = field_year_ls[9],
   rerun = TRUE,
   locally_run = TRUE
 )
@@ -64,8 +65,9 @@ exp_process_make_report(
 
 #--- individually ---#
 f_process_make_report(
-  ffy = field_year_ls[14],
-  rerun = TRUE
+  ffy = field_year_ls[8],
+  rerun = TRUE,
+  locally_run = TRUE
 )
 
 # /*=================================================*/
@@ -80,8 +82,9 @@ f_process_make_report(
 
 #--- individually ---#
 run_analysis(
-  ffy = field_year_ls[4],
-  rerun = TRUE
+  ffy = field_year_ls[9],
+  rerun = TRUE,
+  locally_run = TRUE
 )
 
 # /*----------------------------------*/

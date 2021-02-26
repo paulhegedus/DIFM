@@ -136,7 +136,7 @@ predict_yield <- function(data, est, var_name, crop_price) {
 # Notes: test if the profit associated with the optimal and grower-chosen
 # rates are statistically significantly different from zero 
 
-get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res){
+get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, input_price){
     
   
   base_data <- copy(data) %>% 
@@ -220,7 +220,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res){
 
 }
 
-get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var){
+get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var, input_price){
 
   zone_ls <- data[, ..by_var] %>% 
     unique() %>% 
@@ -228,7 +228,7 @@ get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var){
 
   temp_data <- setnames(copy(data), by_var, "by_var")
 
-  # x <- zone_ls[1]
+  # y <- zone_ls[1]
 
   return_data <- lapply(
     zone_ls,
@@ -239,7 +239,8 @@ get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var){
       test_var,
       opt_var,
       gc_var,
-      gam_res
+      gam_res,
+      input_price
     ) %>% 
     mutate(by_var = y)
   ) %>% 
@@ -248,6 +249,39 @@ get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var){
 
   return(return_data)
 
+}
+
+get_pi_dif_test_zone <- function(data, gc_type, gam_res, input_price) {
+
+  if (gc_type == "uniform") {
+
+    data_for_test <- data.table(data) %>% unique(by = "zone_txt")
+
+    pi_dif_test_zone <- get_dif_stat_zone(
+      data = data_for_test, 
+      test_var = "input_rate", 
+      opt_var = "opt_input",
+      gc_var = "gc_rate",
+      gam_res = gam_res,
+      by_var = "zone_txt",
+      input_price = input_price
+    )
+
+  } else {
+
+    pi_dif_test_zone <- get_dif_stat_zone(
+      data = data.table(data), 
+      test_var = "input_rate", 
+      opt_var = "opt_input",
+      gc_var = "gc_rate",
+      gam_res = gam_res,
+      by_var = "zone_txt",
+      input_price = input_price
+    )
+
+  }
+
+  return(pi_dif_test_zone)
 }
 
 find_opt_u <- function(data, var_name, gam_res) {
@@ -348,6 +382,8 @@ define_mz <- function(data_sf, max_num_zones, min_obs) {
   ) %>% 
   mutate(zone_txt = factor(paste0("Zone ", as.numeric(zone))))
 
+  return(data_sf)
+
 }
 
 #/*=================================================*/
@@ -367,14 +403,23 @@ make_ys_by_chars <- function(data_sf){
     .[!str_detect(., "b_int")] %>% 
     .[!str_detect(., "gc_rate")] %>% 
     .[!str_detect(., "zone")] %>% 
+    .[!str_detect(., "input_rate")] %>% 
     .[!str_detect(., "opt_")] %>% 
-    .[. != "seed_rate"] %>% 
+    .[!str_detect(., "x")] %>% 
     .[. != "X"] %>% 
     .[. != "Y"]  
 
-  cor_tab <- data_sf[, vars_all, with = FALSE] %>% 
-    dplyr::select(where(is.numeric)) %>% 
+  drop_vars <- data_sf[, vars_all] %>% 
     st_drop_geometry() %>% 
+    .[, lapply(.SD, function(x) all(is.na(x)))] %>% 
+    as.matrix() %>% 
+    which()
+
+  cor_tab <- data_sf[, vars_all] %>% 
+    st_drop_geometry() %>% 
+    tibble() %>% 
+    .[, - drop_vars] %>% 
+    dplyr::select(where(is.numeric)) %>% 
     cor(use = "complete.obs") %>% 
     .[, "b_slope", drop = FALSE] %>% 
     .[!(rownames(.) %in% c("b_slope")), , drop = FALSE]
@@ -566,4 +611,196 @@ get_t_value <- function(test_data, w_zone){
     round(digits = 2)
 }  
 
- 
+expand_grid_df <- function(data_1, data_2) {
+
+  expanded_data <- expand.grid(
+    index_1 = seq_len(nrow(data_1)),
+    index_2 = seq_len(nrow(data_2))
+  ) %>% 
+  tibble() %>% 
+  rowwise() %>% 
+  mutate(
+    data = list(
+      cbind(
+        slice(data.table(data_1), index_1),
+        slice(data.table(data_2), index_2)
+      )
+    )
+  ) %>% 
+  select(data) %>% 
+  ungroup() %>% 
+  .$data %>% 
+  rbindlist() %>% 
+  tibble()
+
+  return(expanded_data)
+
+}
+
+assign_gc_rate <- function(data, input_type, gc_type, gc_rate) {
+
+  if (gc_type == "uniform") {
+
+    data$gc_rate <- gc_rate 
+
+  } else if (gc_type == "Rx") {
+
+    #--------------------------
+    # Read Rx data
+    #--------------------------
+    Rx <- st_read(gc_rate) %>% 
+      st_set_crs(4326) %>% 
+      st_transform(st_crs(data)) %>%
+      st_make_valid()
+
+    dict_input <- dictionary[type == paste("Rx-", tolower(input_type)), ]
+    col_list <- dict_input[, column]
+
+    Rx <- make_var_name_consistent(
+      Rx, 
+      dict_input 
+    )
+
+    #/*----------------------------------*/
+    #' ## Unit conversion
+    #/*----------------------------------*/
+    if (input_type == "N") {
+      Rx <- mutate(Rx, 
+        input_rate = convert_N_unit(
+          input_data_n$form, 
+          input_data_n$unit, 
+          input_rate, 
+          field_data$reporting_unit
+        ) 
+        # + n_base_rate # add base N rate
+      )
+    } else if (input_type == "S") {
+      #--- seed rate conversion ---#
+      if (any(Rx$input_rate > 10000)){
+        #--- convert to K ---#
+        Rx <- mutate(Rx, input_rate = input_rate / 1000)
+      }
+    }
+
+    #=== map ===#
+    # tm_shape(Rx) +
+    #   tm_fill(col = "tgti")
+
+    #--------------------------
+    # Identify grower-chosen rate by observation
+    #--------------------------
+    obs_tgti <- st_intersection(data, Rx) %>% 
+      mutate(area = as.numeric(st_area(.))) %>% 
+      data.table() %>% 
+      .[, .SD[area == max(area)], by = obs_id] %>% 
+      .[, num_obs_per_zone := .N, tgti] %>% 
+      .[, analyze := FALSE] %>% 
+      .[num_obs_per_zone >= 200, analyze := TRUE] %>% 
+      .[, .(obs_id, tgti, analyze)] 
+
+    data <- left_join(data, obs_tgti, by = "obs_id") %>% 
+      rename(gc_rate = tgti)
+
+  }
+
+  return(data)
+
+}
+
+get_opt_gc_data <- function(data, eval_data, gc_type, input_price) {
+
+  if (gc_type == "uniform") {
+
+    opt_input_data <- eval_data %>% 
+      .[type == "opt_v", ] %>% 
+      .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
+      setnames("input_rate", "opt_input")
+
+    opt_gc_data <- copy(opt_input_data) %>% 
+      setnames("opt_input", "input_rate") %>% 
+      rbind(., eval_data[type == "gc",]) %>% 
+      .[, pi_upper := profit_hat + profit_hat_se * 1.96] %>% 
+      .[, pi_lower := profit_hat - profit_hat_se * 1.96]
+
+  } else if (gc_type == "Rx") {
+
+    mean_gc_rate_by_zone <- data.table(data) %>% 
+      .[, .(input_rate = mean(gc_rate)), by = zone_txt]
+
+    gc_data <- pi_dif_test_zone %>% 
+      .[, .(yhat_est_gc, point_est_gc, point_est_gc_se, zone_txt, input_price)] %>% 
+      mean_gc_rate_by_zone[., on = "zone_txt"] %>% 
+      setnames(
+        c("yhat_est_gc", "point_est_gc", "point_est_gc_se"), 
+        c("yield_hat", "profit_hat", "profit_hat_se")
+      ) %>% 
+      .[, `:=`(
+        pi_upper = profit_hat + 1.96 * profit_hat_se,
+        pi_lower = profit_hat - 1.96 * profit_hat_se
+      )] %>% 
+      .[, type := "gc"]
+
+    opt_data <- pi_dif_test_zone %>% 
+      .[, .(yhat_est_opt, point_est_opt, point_est_opt_inpute, zone_txt, input_price)] %>% 
+      opt_input_data[, .(zone_txt, opt_input)][., on = "zone_txt"] %>% 
+      setnames(
+        c("yhat_est_opt", "point_est_opt", "point_est_opt_inpute", "opt_input"), 
+        c("yield_hat", "profit_hat", "profit_hat_se", "input_rate")
+      ) %>% 
+      .[, `:=`(
+        pi_upper = profit_hat + 1.96 * profit_hat_se,
+        pi_lower = profit_hat - 1.96 * profit_hat_se
+      )] %>% 
+      .[, type := "opt_v"]
+
+    opt_gc_data <- rbind(opt_data, gc_data)
+
+  }
+
+  return(opt_gc_data)
+
+}
+    
+get_whole_pi_test <- function(data, gam_res) {
+
+  test_data <- data.table(data) 
+
+  whole_profits_test <- rbind(
+    #=== opt (V) vs gc ===#
+    get_dif_stat(
+      test_data, 
+      "input_rate", 
+      "opt_input", 
+      "gc_rate",
+      gam_res
+    ) %>% 
+    .[, type := "optimal site-specific rate strategy \n vs \n grower-chosen strategy"] %>% 
+    .[, type_short := "ovg"],
+
+    #=== opt (u) vs gc ===#
+    get_dif_stat(
+      test_data, 
+      "input_rate", 
+      "opt_input", 
+      "opt_input_u",
+      gam_res
+    ) %>% 
+    .[, type := "optimal site-specific rate strategy \n vs \n optimal uniform rate strategy"] %>% 
+    .[, type_short := "ovou"],
+
+    #=== opt (u) vs gc ===#
+    get_dif_stat(
+      test_data, 
+      "input_rate", 
+      "opt_input_u", 
+      "gc_rate",
+      gam_res
+    ) %>% 
+    .[, type := "optimal uniform rate strategy \n vs \n grower-chosen strategy"] %>% 
+    .[, type_short := "oug"]
+  )
+
+  return(whole_profits_test)
+
+}
+

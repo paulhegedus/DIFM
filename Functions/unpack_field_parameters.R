@@ -66,6 +66,8 @@ if (process_s) {
     if (file.exists(Rx_file_s)){
       #--- if the Rx file exists ---#
       gc_type_s <- "Rx"
+      gc_rate_s <- Rx_file_s
+
     } else {
       #--- if the Rx file doe NOT exist ---#
       # default rate
@@ -174,6 +176,8 @@ if (process_n) {
     if (file.exists(Rx_file_n)){
       #--- if the Rx file exists ---#
       gc_type_n <- "Rx"
+      gc_rate_n <- Rx_file_n
+
     } else {
       #--- if the Rx file doe NOT exist ---#
       # default rate
@@ -248,6 +252,8 @@ if (process_k) {
     if (file.exists(Rx_file_k)){
       #--- if the Rx file exists ---#
       gc_type_k <- "Rx"
+      gc_rate_k <- Rx_file_k
+
     } else {
       #--- if the Rx file doe NOT exist ---#
       # default rate
@@ -304,9 +310,11 @@ trial_info <- tibble(
   process = c(process_s, process_n, process_k),
   use_td = c(use_td_s, use_td_n, use_td_k),
   price = c(s_price, n_price, k_price),
-  gc_rate = c(gc_rate_s, gc_rate_n, gc_rate_k),
+  gc_rate = list(gc_rate_s, gc_rate_n, gc_rate_k),
+  gc_type = c(gc_type_s, gc_type_n, gc_type_k),
   machine_width = c(m_width_s, m_width_n, m_width_k)
-)
+) %>% 
+filter(process == TRUE)
 
 #/*=================================================*/
 #' # Dictionary

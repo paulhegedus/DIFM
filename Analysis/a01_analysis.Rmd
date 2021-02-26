@@ -3,17 +3,20 @@
 ## Read the analysis data 
 
 ```{r data-prep-s, cache = F, results = "hide"}
+trial_data <- trial_info[input_type == "input_type_here",]
+
+input_type <- trial_data$input_type
+input_price <- trial_data$price
+gc_rate <- trial_data$gc_rate
+
 data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>% 
   readRDS() %>% 
-  rename(
-    yield = yield_vol,
-    input_rate = input_name_here_rate,
-    # input_rate = seed_rate,
+  setnames(
+    c("yield_vol", paste0(tolower(input_type), "_rate")),
+    c("yield", "input_rate")
   ) %>% 
   filter(!is.na(yield)) %>% 
   cbind(., st_coordinates(st_centroid(.)))  
-
-input_price <- input_name_here_price
 
 ```
 
@@ -72,13 +75,13 @@ data_sf <- data.table(data_sf) %>%
 ```{r }
 if (gc_type_s == "uniform") {
 
-  data_sf <- mutate(data_sf, gc_rate = grower_chosen_rate_s) 
+  data_sf <- mutate(data_sf, gc_rate = gc_rate) 
 } else if (gc_type_s == "Rx") {
 
   #--------------------------
   # Read Rx data
   #--------------------------
-  Rx_s <- st_read(Rx_file_s) %>% 
+  Rx <- st_read(Rx_file) %>% 
     st_set_crs(4326) %>% 
     st_transform(st_crs(data_sf)) %>%
     st_make_valid()
@@ -86,25 +89,25 @@ if (gc_type_s == "uniform") {
   dict_yield <- dictionary[type == "Rx-s", ]
   col_list <- dict_yield[, column]
 
-  Rx_s <- make_var_name_consistent(
-    Rx_s, 
+  Rx <- make_var_name_consistent(
+    Rx, 
     dict_yield 
   )
 
   #=== seed rate conversion ===#
-  if (any(Rx_s$tgts > 10000)){
+  if (any(Rx$tgts > 10000)){
     #=== convert to K ===#
-    Rx_s <- mutate(Rx_s, tgts = tgts / 1000)
+    Rx <- mutate(Rx, tgts = tgts / 1000)
   }
 
   #=== map ===#
-  tm_shape(Rx_s) +
+  tm_shape(Rx) +
     tm_fill(col = "tgts")
 
   #--------------------------
   # Identify grower-chosen rate by observation
   #--------------------------
-  obs_tgts <- st_intersection(data_sf, Rx_s) %>% 
+  obs_tgts <- st_intersection(data_sf, Rx) %>% 
     mutate(area = as.numeric(st_area(.))) %>% 
     data.table() %>% 
     .[, .SD[area == max(area)], by = obs_id] %>% 
@@ -146,7 +149,7 @@ if (gc_type_s == "uniform") {
 
   gc_rate_data <- data.table(data_sf) %>% 
     unique(by = "zone") %>% 
-    .[, input_rate := grower_chosen_rate_s] 
+    .[, input_rate := gc_rate] 
 
   eval_data_gc <- predict_yield(
       data = gc_rate_data, 
@@ -387,7 +390,11 @@ results <- tibble(
 file_name <- here(
   "Reports/Growers", 
   ffy, 
-  paste0("analysis_results_", input_name_here, ".rds")
+  paste0(
+    "analysis_results_", 
+    tolower(input_type), 
+    ".rds"
+  )
 )
 
 saveRDS(results, file_name)

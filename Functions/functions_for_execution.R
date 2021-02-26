@@ -351,7 +351,7 @@ run_analysis <- function(ffy, rerun = FALSE, locally_run = FALSE){
           "Analysis/a01_analysis.Rmd", 
           locally_run = locally_run
         ) %>% 
-        gsub("input_name_here", tolower(input_type), .)
+        gsub("input_type_here", input_type, .)
       )
     ) %>% 
     pull(analysis_rmd) %>% 
