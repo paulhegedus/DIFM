@@ -284,7 +284,7 @@ get_pi_dif_test_zone <- function(data, gc_type, gam_res, input_price) {
   return(pi_dif_test_zone)
 }
 
-find_opt_u <- function(data, var_name, gam_res) {
+find_opt_u <- function(data, var_name, gam_res, input_price) {
 
   data_dt <- data.table(data)
 
@@ -403,7 +403,7 @@ make_ys_by_chars <- function(data_sf){
     .[!str_detect(., "b_int")] %>% 
     .[!str_detect(., "gc_rate")] %>% 
     .[!str_detect(., "zone")] %>% 
-    .[!str_detect(., "input_rate")] %>% 
+    .[!str_detect(., "_rate")] %>% 
     .[!str_detect(., "opt_")] %>% 
     .[!str_detect(., "x")] %>% 
     .[. != "X"] %>% 
@@ -415,7 +415,7 @@ make_ys_by_chars <- function(data_sf){
     as.matrix() %>% 
     which()
 
-  cor_tab <- data_sf[, vars_all] %>% 
+  cor_tab <- data_sf[, c(vars_all, "input_rate")] %>% 
     st_drop_geometry() %>% 
     tibble() %>% 
     .[, - drop_vars] %>% 
@@ -452,7 +452,7 @@ make_ys_by_chars <- function(data_sf){
 
     for (var_p in vars_plot_ls){
 
-      temp_data <- data_sf[, c("yield", "seed_rate", var_p)] %>% 
+      temp_data <- data_sf[, c("yield", "input_rate", var_p)] %>% 
         setnames(var_p, "var_temp") %>% 
         filter(!is.na(var_temp))
 
@@ -498,11 +498,11 @@ make_ys_by_chars <- function(data_sf){
       }
 
       plot_ls[[var_p]] <- ggplot(data = temp_data) +
-        geom_point(aes(y = yield, x = seed_rate, color = factor(temp_cat)), size = 0.3) +
+        geom_point(aes(y = yield, x = input_rate, color = factor(temp_cat)), size = 0.3) +
         geom_smooth(
           aes(
             y = yield, 
-            x = seed_rate, 
+            x = input_rate, 
             color = factor(temp_cat)
           ),
           method = "gam",
@@ -761,7 +761,7 @@ get_opt_gc_data <- function(data, eval_data, gc_type, input_price) {
 
 }
     
-get_whole_pi_test <- function(data, gam_res) {
+get_whole_pi_test <- function(data, gam_res, input_price) {
 
   test_data <- data.table(data) 
 
@@ -772,7 +772,8 @@ get_whole_pi_test <- function(data, gam_res) {
       "input_rate", 
       "opt_input", 
       "gc_rate",
-      gam_res
+      gam_res,
+      input_price = input_price 
     ) %>% 
     .[, type := "optimal site-specific rate strategy \n vs \n grower-chosen strategy"] %>% 
     .[, type_short := "ovg"],
@@ -783,7 +784,8 @@ get_whole_pi_test <- function(data, gam_res) {
       "input_rate", 
       "opt_input", 
       "opt_input_u",
-      gam_res
+      gam_res,
+      input_price = input_price 
     ) %>% 
     .[, type := "optimal site-specific rate strategy \n vs \n optimal uniform rate strategy"] %>% 
     .[, type_short := "ovou"],
@@ -794,7 +796,8 @@ get_whole_pi_test <- function(data, gam_res) {
       "input_rate", 
       "opt_input_u", 
       "gc_rate",
-      gam_res
+      gam_res,
+      input_price = input_price 
     ) %>% 
     .[, type := "optimal uniform rate strategy \n vs \n grower-chosen strategy"] %>% 
     .[, type_short := "oug"]

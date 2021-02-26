@@ -82,7 +82,7 @@ f_process_make_report(
 
 #--- individually ---#
 run_analysis(
-  ffy = field_year_ls[9],
+  ffy = field_year_ls[8],
   rerun = TRUE,
   locally_run = TRUE
 )
