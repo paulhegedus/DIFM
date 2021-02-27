@@ -1,0 +1,85 @@
+
+If the grower had not participated in the experiment, the chosen strategy would have been to apply seed according to the commericial variable-rate prescription displayed in Figure \@ref(fig:rx-s-map).
+
+```{r results = "hide"}
+  
+if (gc_type == "Rx") {
+
+#/*----------------------------------*/
+#' ## Read Rx data
+#/*----------------------------------*/
+  Rx <- st_read(Rx_file) %>% 
+    st_set_crs(4326) %>% 
+    st_transform(st_crs(data_sf)) %>%
+    st_make_valid()
+
+  dict_yield <- dictionary[type == "Rx-s", ]
+  col_list <- dict_yield[, column]
+
+  Rx <- make_var_name_consistent(
+    Rx, 
+    dict_yield 
+  )
+
+  #--- seed rate conversion ---#
+  if (any(Rx$tgts > 10000)){
+    #--- convert to K ---#
+    Rx <- mutate(Rx, tgts = tgts / 1000)
+  }
+
+  #--- map ---#
+  
+}
+  
+```
+
+```{r rx-s-map, fig.cap = "Seed Rx map"}
+ggplot(Rx) +
+  geom_sf(
+    aes(fill = factor(tgts)),
+    size = 0.1
+  ) +
+  scale_fill_brewer(
+    palette = "Greens",
+    direction = 1,
+    name = "Rx Seed Rate (1000 seeds)",
+    guide = guide_legend(
+      ncol = 3
+    )
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "bottom",
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 20),
+    legend.key.width =  unit(0.5, "cm"),
+    legend.key.height =  unit(0.2, "cm"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    plot.margin = unit(c(0, 2, 0, 0), "cm") 
+  ) 
+
+```
+```{r profit-dif-map, fig.cap = "Map of the difference in profits between the optimal and Rx"}
+ggplot(pi_data_indiv_sf) +
+  geom_sf(
+    aes(fill = pi_dif),
+    size = 0.1
+  ) +
+  scale_fill_viridis_c(
+    name = "Difference in Profit ($/acre)"
+  ) +
+  theme_void() +
+  theme(
+    legend.position = "bottom",
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 20),
+    legend.key.width =  unit(1, "cm"),
+    legend.key.height =  unit(0.5, "cm"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    plot.margin = unit(c(0, 2, 0, 0), "cm") 
+  ) 
+  
+```
+
+Figure \@ref(fig:profit-dif-map) shows the estimate of the gain in per-acre net revenues that would have resulted in each of the observation units from following the estimated economically optimal Rx rather than the commercial Rx.  (Net revenues equal revenues from soybean sales minus seed costs.) The estimated average per-acre gain from managing the observation units optimally instead of following the commerical Rx was  `r whole_profits_test[type_short == "ovg", point_est_dif] %>% round(digits = 2)`. Of course, as with any statistical data analysis, there cannot be 100% certainty that the actual net revenues from the two management plans would end up being exactly `r whole_profits_test[type_short == "ovg", point_est_dif] %>% round(digits = 2)` The black bracket centered over the red circle in Figure \@ref(fig:whole-field-profit-comp) shows the range of net revenues that the data and model predict are “95% certain” to contain the true net revenues that would come about if the strategies we to be implemented again, given the growing season's actual weather conditions. A formal statistical test (called a t-test) established with a _stat_confidence_here_ level of statistical confidence that net revenues would indeed be greater from following the estimated optimal Rx rather than the commercial Rx.
+
