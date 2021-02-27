@@ -315,19 +315,92 @@ find_opt_u <- function(data, var_name, gam_res, input_price) {
 } 
 
 #/*=================================================*/
+#' # filter data 
+#/*=================================================*/
+
+find_field_vars <- function(data_sf) {
+
+  #/*----------------------------------*/
+  #' ## pick field vars
+  #/*----------------------------------*/
+  #=== keep only the ones that are available ===#
+  field_var_ls <- c(
+    #=== topography ===#
+    "TWI", "elevation", "Slope", 
+    #=== ssurgo ===#
+    "clay", "sand", "water_storage",
+    #=== ec ===#
+    "ecs"
+  ) %>% 
+  .[. %in% names(data_sf)]
+
+  #=== find variables to keep ===#
+  keep_vars <- data_sf[, field_var_ls] %>% 
+    st_drop_geometry() %>% 
+    #=== if missing for more than 10%, then drop ===#
+    data.table() %>% 
+    .[, lapply(
+      .SD, 
+      function(x) {
+        (sum(is.na(x))/nrow(data_sf)) < 0.1
+      }
+    )] %>% 
+    as.matrix() %>% 
+    as.vector()
+
+  field_var_ls <- field_var_ls[keep_vars]
+
+  return(field_var_ls)
+}
+
+# data_sf <- analysis_res$data[[1]]
+# field_var_ls <- analysis_res$field_vars[[1]]
+
+gen_y_res <- function (data_sf, field_var_ls){
+
+  if (length(field_var_ls) == 0) {
+    data_sf <- mutate(data_sf, res_y = yield)
+    return(data_sf)
+  } else {
+    #/*----------------------------------*/
+    #' ## Regress yield on characteristics 
+    #/*----------------------------------*/
+    field_vars_f <- field_var_ls %>% 
+    .[. %in% names(data_sf)] %>% 
+    paste(., collapse = " + ")
+
+    #--- regression formula ---#
+    y_field_formula <- formula(
+      paste(
+        #=== main ===#
+        "yield ~ ",
+        #=== field/soil char ===#
+        field_vars_f
+      )
+    )
+
+    data_sf <- data_sf %>% 
+      .[, c("obs_id", "yield", "input_rate", field_var_ls, "X", "Y")] %>% 
+      .[complete.cases(st_drop_geometry(.)), ] %>% 
+      mutate(
+        res_y = lm(y_field_formula, data = data_sf)$res
+      )
+
+    return(data_sf)
+  }
+}
+
+#/*=================================================*/
 #' # GWR-analysis
 #/*=================================================*/
 
 # var_name <- "seed_rate"
-# data_sf <- data
+# data_sf <- rename(data_sf, input_rate = s_rate)
 
 run_gwr <- function(data_sf, var_name) {
 
   reg_data_sp <- data_sf %>%
     as("Spatial")
-
-  #--- regression formula ---#
-  reg_formula <- formula(paste("yield ~ log(", var_name,")"))
 
   # library(matrixcalc)
   # is.singular.matrix(dMat)
@@ -339,20 +412,22 @@ run_gwr <- function(data_sf, var_name) {
     as.matrix() %>% 
     gw.dist()
 
-  obw <- bw.gwr(
-    reg_formula,
-    data = reg_data_sp,
-    approach = "AICc",
-    kernel = "gaussian",
-    adaptive = T,
-    dMat = dMat
-  )
+  reg_formula <- formula("res_y ~ log(input_rate)")
+
+  # obw <- bw.gwr(
+  #   reg_formula,
+  #   data = reg_data_sp,
+  #   approach = "AICc",
+  #   kernel = "gaussian",
+  #   adaptive = T,
+  #   dMat = dMat
+  # )
 
   #--- gwr estimation with optimal bw ---#
   gwr_est <- gwr.basic(
     reg_formula,
     data = reg_data_sp,
-    bw = 200,
+    bw = 100,
     # bw = obw,
     kernel = "gaussian",
     adaptive = T
@@ -364,11 +439,15 @@ run_gwr <- function(data_sf, var_name) {
     b_int = gwr_est$SDF$Intercept,
     b_slope = gwr_est$SDF@data[, paste0("log(", var_name, ")")]
   ) %>%
-    left_join(data_sf, ., by = "obs_id") 
+  left_join(data_sf, ., by = "obs_id") 
+
+  # ggplot(data = data_sf) +
+  #   geom_histogram(aes(x = b_slope))
 
   return(data_sf)
 
 }
+
 
 
 define_mz <- function(data_sf, max_num_zones, min_obs) {
