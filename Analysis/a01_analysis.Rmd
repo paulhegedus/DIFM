@@ -353,6 +353,58 @@ analysis_res <- analysis_res %>%
 
 ```
 
+### Optimal vs GC (profit difference for individual observations)
+
+```{r }
+
+analysis_res <- analysis_res %>% 
+  mutate(
+    pi_indiv_opt = 
+    list(
+      predict_yield(
+        data = data, 
+        est = gam_res, 
+        var_name = "opt_input"
+      ) %>% 
+      data.table() %>% 
+      .[, .(yield_hat, obs_id, input_rate)] %>% 
+      .[, pi_hat_opt := crop_price * yield_hat - price * input_rate]
+    ),
+    pi_indiv_gc = 
+    list(
+      predict_yield(
+        data = data, 
+        est = gam_res, 
+        var_name = "gc_rate"
+      ) %>% 
+      data.table() %>% 
+      .[, .(yield_hat, obs_id, input_rate)] %>% 
+      .[, pi_hat_gc := crop_price * yield_hat - price * input_rate]
+    ),
+    pi_dif = 
+    list(
+      left_join(
+        pi_indiv_opt, 
+        pi_indiv_gc,
+        by = "obs_id"
+      ) %>% 
+      mutate(
+        pi_dif = pi_hat_opt - pi_hat_gc
+      )
+    ),
+    data = 
+    list(
+      left_join(
+        data,
+        pi_dif,
+        by = "obs_id"
+      )
+    )
+  ) %>% 
+  select(- pi_indiv_opt, - pi_indiv_gc, - pi_dif)
+
+```
+
 ## Statistical testing
 
 ### Profit by zone

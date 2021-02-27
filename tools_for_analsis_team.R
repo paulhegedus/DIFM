@@ -103,4 +103,9 @@ make_grower_report(
 
 # render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")
 
+here(
+  "Reports/Growers", ffy, 
+  paste0("grower-report-s.Rmd")
+) %>% 
+render()
 

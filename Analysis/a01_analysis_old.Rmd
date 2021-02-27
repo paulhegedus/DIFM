@@ -3,7 +3,9 @@
 ## Read the analysis data 
 
 ```{r data-prep-s, cache = F, results = "hide"}
-trial_data <- trial_info[input_type == "input_type_here",]
+input_type <- "S"
+
+trial_data <- trial_info[input_type == "S",]
 
 input_type <- trial_data$input_type
 input_price <- trial_data$price
@@ -81,7 +83,7 @@ if (gc_type_s == "uniform") {
   #--------------------------
   # Read Rx data
   #--------------------------
-  Rx <- st_read(Rx_file) %>% 
+  Rx <- st_read(gc_rate) %>% 
     st_set_crs(4326) %>% 
     st_transform(st_crs(data_sf)) %>%
     st_make_valid()

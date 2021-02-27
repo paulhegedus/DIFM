@@ -1,21 +1,26 @@
+
+
 # Field Management Information
 
 + Baseline _input_full_name_l_ rate: _base_rate_statement_here_.
-+ Seed target rates: `r paste0(tgti_ls, "K", collapse = ",")` 
+
++ Seed target rates: `r paste0(tgti_ls, "K", collapse = ", ")`
+
 + Planter width: `r w_trial_info$machine_width` feet (variable-rate controlled by 15-foot quarter-sections?)
+
 + Harvester width: `r harvester_width` feet
 
 # Summary  
 
-A soybean _input_full_name_l_ rate trial was conducted on the _field_year_here_ field in crop year 2020. The trial was <!--NEED to determine and assign: "was" or "was not". If the trial was not implemented accurately, for now we can write explanations by hand.  But eventually, we could probably write up a list of common reasons why implementation wasn't accurate, and choose one from that list to put in the text.--> implemented with a high level of accuracy. The data and model provide an estimate that, under growing conditions identical to those of the field in 2020, implementing the recommended site-specific seeding rate strategy would have increased profits by \$`r round(whole_profits_test[type_short == "ovg", point_est_dif], digits = 0)` per acre, and its 95% level confidence interval of this profit gain was between \$`r round(whole_profits_test[type_short == "ovg", point_est_dif - point_est_dif_se * 1.96], digits = 0)` and \$`r round(whole_profits_test[type_short == "ovg", point_est_dif + point_est_dif_se * 1.96], digits = 0)` per acre.
+A soybean _input_full_name_l_ rate trial was conducted on the _field-year-here_ field in crop year 2020. The trial was <!--NEED to determine and assign: "was" or "was not". If the trial was not implemented accurately, for now we can write explanations by hand.  But eventually, we could probably write up a list of common reasons why implementation wasn't accurate, and choose one from that list to put in the text.--> implemented with a high level of accuracy. The data and model provide an estimate that, under growing conditions identical to those of the field in 2020, implementing the recommended site-specific seeding rate strategy would have increased profits by \$`r round(whole_profits_test[type_short == "ovg", point_est_dif], digits = 0)` per acre, and its 95% level confidence interval of this profit gain was between \$`r round(whole_profits_test[type_short == "ovg", point_est_dif - point_est_dif_se * 1.96], digits = 0)` and \$`r round(whole_profits_test[type_short == "ovg", point_est_dif + point_est_dif_se * 1.96], digits = 0)` per acre.
 
 
 # Economic Results and Implications 
 
 Figure \@ref(fig:optimal-variable-s) shows the analysis's recommended site-specific _input_full_name_l_ rate map. The figure was calculated using data from each management zone separately. (Details about how management zones were determined are provided later in this report.)  A generalized additive model (GAM) regression was used to model yield as a function of _input_full_name_l_ rate in each zone, and then given that model estimation, the profit-maximizing _input_full_name_l_ rate was found for each zone. Table \@ref(tab:yield-summary-table) lists for each zone the estimated per-acre yields that would have resulted, given the year's growing conditions, from applying the grower-chosen planting strategy and the estimated optimal _input_full_name_l_ rate derived from the data and model. 
 
-```{r optimal-variable-s, fig.cap = "Estimated Optimal site-specific _input_full_name_l_ rate Rx", fig.height = 5}
-g_opt
+```{r optimal-variable-s, fig.cap = "Estimated Optimal site-specific _input_full_name_l_ rate Rx", fig.height = 4}
+g_opt_input
 
 ```
 
@@ -69,9 +74,9 @@ The $\beta$ parameter is an estimate of the percentage change in yield give a 1%
 ```{r map-response, echo = F, fig.cap = "Map of the estimated values of the yield response parameter, $\\beta$ the derived management zone" , dependson = "gen-map-response", fig.height = ifelse(sn_ew_ratio > 1.1, 5, 8)}
 
 if (sn_ew_ratio > 1.1) {
-  tmap_arrange(tm_beta, tm_zone, ncol = 2)
+  tmap_arrange(tm_beta_input, tm_zone_input, ncol = 2)
 } else {
-  tmap_arrange(tm_beta, tm_zone, ncol = 1)
+  tmap_arrange(tm_beta_input, tm_zone_input, ncol = 1)
 }
 
 ```
@@ -95,5 +100,5 @@ g_int
 
 ```
 
-In terms of the model used in this analysis, correlation between the estimated parameter $\beta$ and a field characteristic offers evidence of interaction.  For the _field_year_here_ field, the absolute values of the correlation coefficients were highest for the variables TWI, elevation, and ss_Mp.  TWI stands for topographical wetness index, which describes the tendency of an area of land to accumulate water.  ss_Mp is a variable that indicates whether the data point comes from a location in which the soil is classified as Mobridge-Plankington silt loam.  (All such areas are shaded in figure \@ref(fig:explore-map).)  Figure \@ref(fig:explore-plot) shows how yield response curves differed given different levels of these three interaction terms.  The northeast panel of figure 13 shows that yield is noticeably less responsive to _input_full_name_l_ rate on the Belmore loam soil than on the rest of the field.  The southwest panel shows the same for the Eakin-Rabin soil.  The northwest panel illustrates that yield tended to respond poorly to _input_full_name_l_ rates in low-elevation areas.  Interpretation of the northwest panel is a little more complicated;  It seems to show that at on flat soils, when beginning at low rates, an increase in seed reduced yield, but at higher _input_full_name_l_ rates on flat land, increasing the rate had a strong positive affect on yields.  This difficult-to-interpret result is a reminder that data analysis carries with it inherent uncertainty, and that treating uncertain occurrences as if they were determinate can lead to misleading conclusions 
+In terms of the model used in this analysis, correlation between the estimated parameter $\beta$ and a field characteristic offers evidence of interaction.  For the _field-year-here_ field, the absolute values of the correlation coefficients were highest for the variables TWI, elevation, and ss_Mp.  TWI stands for topographical wetness index, which describes the tendency of an area of land to accumulate water.  ss_Mp is a variable that indicates whether the data point comes from a location in which the soil is classified as Mobridge-Plankington silt loam.  (All such areas are shaded in figure \@ref(fig:explore-map).)  Figure \@ref(fig:explore-plot) shows how yield response curves differed given different levels of these three interaction terms.  The northeast panel of figure 13 shows that yield is noticeably less responsive to _input_full_name_l_ rate on the Belmore loam soil than on the rest of the field.  The southwest panel shows the same for the Eakin-Rabin soil.  The northwest panel illustrates that yield tended to respond poorly to _input_full_name_l_ rates in low-elevation areas.  Interpretation of the northwest panel is a little more complicated;  It seems to show that at on flat soils, when beginning at low rates, an increase in seed reduced yield, but at higher _input_full_name_l_ rates on flat land, increasing the rate had a strong positive affect on yields.  This difficult-to-interpret result is a reminder that data analysis carries with it inherent uncertainty, and that treating uncertain occurrences as if they were determinate can lead to misleading conclusions 
 

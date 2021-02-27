@@ -4,7 +4,8 @@ output:
   bookdown::word_document2:
     toc: false
     number_sections: false
-    reference_docx: here("Reports/Growers/word_template.doc")
+    reference_docx: "/Users/tmieno2/Box/DIFM_DevTeam/Reports/Growers/word_template.docx"
+    # reference_docx: "`r here::here("Reports/Growers/word_template.docx")`"
   bookdown::html_document2:
     toc: true
     toc_depth: 2
@@ -40,7 +41,6 @@ code.r{ /* Code block */
 
 ```{r, cache = F, echo = F, results = "hide"}
 library(knitr)
-library(here)
 knitr::opts_chunk$set(
   cache = TRUE,
   echo = FALSE,
@@ -57,6 +57,7 @@ options(knitr.duplicate.label = "allow")
 ```
 
 ```{r a02-pacakages, cache = FALSE}
+library(here)
 library(sf)
 library(ggplot2)
 library(tmap)
@@ -75,8 +76,6 @@ library(GWmodel)
 ```{r results = "hide"}
 #--- working field-year ---#
 ffy <- "_field-year-here_"
-
-input_type <- "_input_type_here_"
 
 #--- root directory ---#
 opts_knit$set(root.dir = here("Data", "Growers", ffy))
@@ -107,6 +106,7 @@ dictionary <- fromJSON(
 ) %>% 
 data.table()
 
+plot_width <- 60
 ```
 
 ```{r map-layout, cache = TRUE}

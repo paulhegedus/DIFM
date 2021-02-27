@@ -1,48 +1,61 @@
 
-If the grower had not participated in the experiment, the chosen strategy would have been to apply seed according to the commericial variable-rate prescription displayed in Figure \@ref(fig:rx-s-map).
+If the grower had not participated in the experiment, the chosen strategy would have been to apply seed according to the commericial variable-rate prescription displayed in Figure \@ref(fig:rx-input-map).
 
-```{r results = "hide"}
+```{r rx-results-map, results = "hide"}
   
-if (gc_type == "Rx") {
+if (w_trial_info$gc_type == "Rx") {
 
 #/*----------------------------------*/
 #' ## Read Rx data
 #/*----------------------------------*/
-  Rx <- st_read(Rx_file) %>% 
+  Rx <- st_read(w_trial_info$gc_rate) %>% 
     st_set_crs(4326) %>% 
     st_transform(st_crs(data_sf)) %>%
     st_make_valid()
 
-  dict_yield <- dictionary[type == "Rx-s", ]
-  col_list <- dict_yield[, column]
+  dict_input <- dictionary[type == paste0("Rx-", tolower(input_type)), ]
+  col_list <- dict_input[, column]
 
   Rx <- make_var_name_consistent(
     Rx, 
-    dict_yield 
+    dict_input 
   )
 
-  #--- seed rate conversion ---#
-  if (any(Rx$tgts > 10000)){
-    #--- convert to K ---#
-    Rx <- mutate(Rx, tgts = tgts / 1000)
+  #/*----------------------------------*/
+  #' ## Unit conversion
+  #/*----------------------------------*/
+  if (input_type == "N") {
+    Rx <- mutate(Rx, 
+      tgti = convert_N_unit(
+        input_data_n$form, 
+        input_data_n$unit, 
+        tgti, 
+        field_data$reporting_unit
+      ) 
+      # + n_base_rate # add base N rate
+    )
+  } else if (input_type == "S") {
+    #--- seed rate conversion ---#
+    if (any(Rx$tgti > 10000)){
+      #--- convert to K ---#
+      Rx <- mutate(Rx, tgti = tgti / 1000)
+    }
   }
 
-  #--- map ---#
-  
 }
   
 ```
 
-```{r rx-s-map, fig.cap = "Seed Rx map"}
+```{r rx-input-map, fig.cap = "_input_full_name_c_ Rx map", fig.height = 3.5}
 ggplot(Rx) +
   geom_sf(
-    aes(fill = factor(tgts)),
+    aes(fill = factor(tgti)),
     size = 0.1
   ) +
   scale_fill_brewer(
     palette = "Greens",
     direction = 1,
-    name = "Rx Seed Rate (1000 seeds)",
+    name = "Rx _input_full_name_l_ Rate (_unit_here_)",
     guide = guide_legend(
       ncol = 3
     )
@@ -59,8 +72,8 @@ ggplot(Rx) +
   ) 
 
 ```
-```{r profit-dif-map, fig.cap = "Map of the difference in profits between the optimal and Rx"}
-ggplot(pi_data_indiv_sf) +
+```{r profit-dif-map, fig.cap = "Map of the difference in profits between the optimal and Rx", fig.height = 3.5}
+ggplot(data_sf) +
   geom_sf(
     aes(fill = pi_dif),
     size = 0.1

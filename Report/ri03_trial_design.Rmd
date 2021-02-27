@@ -8,8 +8,8 @@ Plots were all `r plot_width` feet wide.  Plot were all between <!--shortest_plo
 
 tmap_arrange(
   tm_tgti,
-  tm_aan,
-  tm_ry
+  tm_input_aa,
+  tm_ry,
     ncol = 2
 )  
 

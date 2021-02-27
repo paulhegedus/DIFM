@@ -1,10 +1,16 @@
 
-```{r results = "hide"}
+```{r read-data-sets, results = "hide"}
+input_type <- "_input_type_here_"
+
 #/*----------------------------------*/
 #' ## Read in datasets for visualization 
 #/*----------------------------------*/
 analysis_data <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>% 
-  readRDS()
+  readRDS() %>% 
+  setnames(
+    paste0(tolower(input_type), "_rate"),
+    "input_rate"
+  )
 
 trial_design <- here("Data/Growers", ffy, "TrialDesign/trial-design.shp") %>% 
   st_read() %>% 
@@ -29,7 +35,7 @@ w_trial_info <- filter(
 ```
 
 
-```{r echo = F, results = "hide"}
+```{r generate-results, echo = F, results = "hide"}
 #/*=================================================*/
 #' # Define functions
 #/*=================================================*/
