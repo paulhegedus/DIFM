@@ -417,222 +417,76 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
         read_rmd(
           "Report/r01_make_report.Rmd",
           locally_run = locally_run
+        ) %>% 
+        gsub(
+          "_input_full_name_l_", 
+         tolower(input_full_name),
+         .
+        ) 
+      )
+    ) %>% 
+    mutate(
+      res_disc_rmd = list(
+        get_ERI_texts(
+          input_type = input_type, 
+          grower_chosen_rate = gc_rate,
+          results = results, 
+          gc_type = gc_type, 
+          locally_run = locally_run
         )
+      ),
+      td_txt = list(
+        get_td_text(
+          input_type = input_type, 
+          gc_type = gc_type, 
+          locally_run = locally_run
+        )
+      ) 
+    ) %>% 
+    mutate(
+      report_body = list(
+        insert_rmd(
+          target_rmd = report_body, 
+          inserting_rmd = res_disc_rmd,
+          target_text = "_results-and-discussions-here_"
+        ) %>% 
+        insert_rmd(
+          target_rmd = ., 
+          inserting_rmd = td_txt,
+          target_text = "_trial_design_information_here_"
+        )
+      )
+    ) %>% 
+    mutate(
+      report_rmd = list(
+        c(report_rmd, report_body)
+      )
+    ) %>% 
+    mutate(
+      write_file_name = list(
+        here(
+          "Reports/Growers", ffy, 
+          paste0("grower-report-", tolower(input_type), ".Rmd")
+        )
+      )
+    ) 
+
+  #/*----------------------------------*/
+  #' ## Write to Rmd file(s)
+  #/*----------------------------------*/
+  report_rmd_ls %>% 
+    summarise(
+      list(
+        writeLines(report_rmd, write_file_name)
       )
     )
 
-       
- res_disc_rmd_s <- get_ERI_texts(
-      input_type = input_type, 
-      grower_chosen_rate = grower_chosen_rate_s,
-      results = results_s, 
-      gc_type = gc_type_s, 
-      locally_run = locally_run
-    ) 
-
- td_s_txt <- get_td_text(
-      input_type = "S", 
-      gc_type = gc_type_s, 
-      locally_run = locally_run
-    )
-
   #/*----------------------------------*/
-  #' ## Insert appropriate texts  
+  #' ## Knit
   #/*----------------------------------*/
-  # case 1: variable grower-chosen rates (Rx available)
-  # case 2: uniform grower-chosen rate
-
-  #=== analysis data file names ===#
-  AD_fiel_s <- here("Reports/Growers", ffy, "analysis_results_s.rds")
-  AD_fiel_n <- here("Reports/Growers", ffy, "analysis_results_n.rds")
-
-  if (trial_type == "SN") {
-
-    if (!file.exists(AD_fiel_s) | !file.exists(AD_fiel_n)) {
-      return(print("No analysis results exist. Run analysis first."))
-    }
-
-    results_s <- readRDS(AD_fiel_s)
-
-    opt_gc_data_s <- results_s$opt_gc_data[[1]]
-    whole_profits_test_s <- results_s$whole_profits_test[[1]]
-    pi_dif_test_zone_s <- results_s$pi_dif_test_zone[[1]]
-
-    results_n <- readRDS(AD_fiel_s)
-
-    opt_gc_data_n <- results_n$opt_gc_data[[1]]
-    whole_profits_test_n <- results_n$whole_profits_test[[1]]
-    pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
-
-    temp_rmd <- read_rmd(
-      "Report/r01_SN_make_report.Rmd",
-      locally_run = locally_run
-    ) %>% 
-    gsub("field-year-here", ffy, .)
-
-    res_disc_rmd_s <- get_ERI_texts(
-      input_type = "S", 
-      grower_chosen_rate = grower_chosen_rate_s,
-      results = results_s, 
-      gc_type = gc_type_s, 
-      locally_run = locally_run
-    )
-    res_disc_rmd_n <- get_ERI_texts(
-      input_type = "N", 
-      grower_chosen_rate = grower_chosen_rate_n,
-      results = results_n, 
-      gc_type = gc_type_n, 
-      locally_run = locally_run
-    )
-    res_disc_rmd <- c(res_disc_rmd_s, res_disc_rmd_n)
-
-    #++++++++++++++++
-    # whole pi summary statement
-    #++++++++++++++++
-    # temp_rmd <- gsub(
-    #   "_statement-whole-field-pi-s-here_", 
-    #   get_whole_pi_txt(results_s), 
-    #   temp_rmd
-    # )
-
-    # temp_rmd <- gsub(
-    #   "_statement-whole-field-pi-n-here_", 
-    #   get_whole_pi_txt(results_n), 
-    #   temp_rmd
-    # )
-
-    #++++++++++++++++
-    # Trial design and implementation
-    #++++++++++++++++
-    td_s_txt <- get_td_text(
-      input_type = "S", 
-      gc_type = gc_type_s, 
-      locally_run = locally_run
-    )
-
-    td_n_txt <- get_td_text(
-      input_type = "N", 
-      gc_type = gc_type_n, 
-      locally_run = locally_run
-    )
-
-    td_txt <- c(td_s_txt, td_n_txt)
-
-  } else if (trial_type == "S") {
-
-    if (!file.exists(AD_fiel_s)) {
-      return(print("No analysis results exist. Run analysis first."))
-    }
-    
-    results_s <- readRDS(AD_fiel_s)
-
-    opt_gc_data_s <- results_s$opt_gc_data[[1]]
-    whole_profits_test_s <- results_s$whole_profits_test[[1]]
-    pi_dif_test_zone_s <- results_s$pi_dif_test_zone[[1]]
-
-    temp_rmd <- read_rmd(
-      "Report/r01_S_make_report.Rmd",
-      locally_run = locally_run
-    ) %>% 
-    gsub("field-year-here", ffy, .)
-
-    res_disc_rmd <- get_ERI_texts(
-      input_type = "S", 
-      grower_chosen_rate = grower_chosen_rate_s,
-      results = results_s, 
-      gc_type = gc_type_s, 
-      locally_run = locally_run
-    )
-
-    #++++++++++++++++
-    # whole pi summary statement
-    #++++++++++++++++
-    # temp_rmd <- gsub(
-    #   "_statement-whole-field-pi-here_", 
-    #   get_whole_pi_txt(results_s), 
-    #   temp_rmd
-    # )
-
-    #++++++++++++++++
-    # Trial design and implementation
-    #++++++++++++++++
-    td_txt <- get_td_text(
-      input_type = "S", 
-      gc_type = gc_type_s, 
-      locally_run = locally_run
-    )
-
-
-  } else if (trial_type == "N") {
-
-    if (!file.exists(AD_fiel_n)) {
-      return(print("No analysis results exist. Run analysis first."))
-    }
-    
-    results_n <- readRDS(AD_fiel_n)
-
-    opt_gc_data_n <- results_n$opt_gc_data[[1]]
-    whole_profits_test_n <- results_n$whole_profits_test[[1]]
-    pi_dif_test_zone_n <- results_n$pi_dif_test_zone[[1]]
-
-    temp_rmd <- read_rmd(
-      "Report/r01_N_make_report.Rmd",
-      locally_run = locally_run
-    ) %>% 
-    gsub("field-year-here", ffy, .)
-
-    res_disc_rmd <- get_ERI_texts(
-      input_type = "N", 
-      grower_chosen_rate = grower_chosen_rate_n,
-      results = results_n, 
-      gc_type = gc_type_n, 
-      locally_run = locally_run
-    )
-
-    #++++++++++++++++
-    # whole pi summary statement
-    #++++++++++++++++
-    # temp_rmd <- gsub(
-    #   "_statement-whole-field-pi-here_", 
-    #   get_whole_pi_txt(results_n), 
-    #   temp_rmd
-    # )
-
-    #++++++++++++++++
-    # Trial design and implementation
-    #++++++++++++++++
-    td_txt <- get_td_text(
-      input_type = "N", 
-      gc_type = gc_type_n, 
-      locally_run = locally_run
-    )
-
-  }
-
-  temp_rmd <- insert_rmd(
-    target_rmd = temp_rmd, 
-    inserting_rmd = res_disc_rmd,
-    target_text = "_results-and-discussions-here_"
-  )
-
-  temp_rmd <- insert_rmd(
-    target_rmd = temp_rmd, 
-    inserting_rmd = td_txt,
-    target_text = "_trial_design_information_here_"
-  )
-
-  temp_rmd <- c(base_rmd, temp_rmd) %>% 
-    gsub("field-year-here", ffy, .)
-
-  #/*----------------------------------*/
-  #' ## Write the rmd file and run
-  #/*----------------------------------*/
-  analysis_rmd_file_name <- here() %>% 
-    paste0(., "/Reports/Growers/", ffy, "/grower-report.Rmd")
-
-  writeLines(temp_rmd, con = analysis_rmd_file_name)
-
-  render(analysis_rmd_file_name)
+  report_rmd_ls %>% 
+    pluck("write_file_name") %>% 
+    lapply(., render)
 
 }
 

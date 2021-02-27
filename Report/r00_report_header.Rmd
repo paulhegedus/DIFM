@@ -95,9 +95,6 @@ source(
   local = TRUE
 )
 
-#--- currently we do not have this as part of the field parameter data ---#
-plot_width <- 60
-
 ```
 
 ```{r map-layout, cache = TRUE}
