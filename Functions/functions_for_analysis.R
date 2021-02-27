@@ -390,6 +390,8 @@ define_mz <- function(data_sf, max_num_zones, min_obs) {
 #' # Create yield response functions by characteristic
 #/*=================================================*/
 
+# data_sf <- analysis_res$data[[1]]
+
 make_ys_by_chars <- function(data_sf){
 
   #/*----------------------------------*/
@@ -415,11 +417,17 @@ make_ys_by_chars <- function(data_sf){
     as.matrix() %>% 
     which()
 
-  cor_tab <- data_sf[, c(vars_all, "input_rate")] %>% 
+  cor_data <- data_sf[, c(vars_all, "input_rate")] %>% 
     st_drop_geometry() %>% 
     tibble() %>% 
     .[, - drop_vars] %>% 
-    dplyr::select(where(is.numeric)) %>% 
+    dplyr::select(where(is.numeric)) 
+
+  if(ncol(cor_data) <= 1) {
+    return(NULL)
+  }
+
+  cor_tab <- cor_data %>% 
     cor(use = "complete.obs") %>% 
     .[, "b_slope", drop = FALSE] %>% 
     .[!(rownames(.) %in% c("b_slope")), , drop = FALSE]
@@ -637,6 +645,14 @@ expand_grid_df <- function(data_1, data_2) {
 
 }
 
+#/*=================================================*/
+#' # Assign grower-chosen rate
+#/*=================================================*/ 
+# data <-  analysis_res$data[[1]]
+# input_type <-  analysis_res$input_type[[1]]
+# gc_type <-  analysis_res$gc_type[[1]]
+# gc_rate <-  analysis_res$gc_rate[[1]]
+
 assign_gc_rate <- function(data, input_type, gc_type, gc_rate) {
 
   if (gc_type == "uniform") {
@@ -653,7 +669,7 @@ assign_gc_rate <- function(data, input_type, gc_type, gc_rate) {
       st_transform(st_crs(data)) %>%
       st_make_valid()
 
-    dict_input <- dictionary[type == paste("Rx-", tolower(input_type)), ]
+    dict_input <- dictionary[type == paste0("Rx-", tolower(input_type)), ]
     col_list <- dict_input[, column]
 
     Rx <- make_var_name_consistent(
@@ -666,19 +682,19 @@ assign_gc_rate <- function(data, input_type, gc_type, gc_rate) {
     #/*----------------------------------*/
     if (input_type == "N") {
       Rx <- mutate(Rx, 
-        input_rate = convert_N_unit(
+        tgti = convert_N_unit(
           input_data_n$form, 
           input_data_n$unit, 
-          input_rate, 
+          tgti, 
           field_data$reporting_unit
         ) 
         # + n_base_rate # add base N rate
       )
     } else if (input_type == "S") {
       #--- seed rate conversion ---#
-      if (any(Rx$input_rate > 10000)){
+      if (any(Rx$tgti > 10000)){
         #--- convert to K ---#
-        Rx <- mutate(Rx, input_rate = input_rate / 1000)
+        Rx <- mutate(Rx, tgti = tgti / 1000)
       }
     }
 
@@ -707,14 +723,22 @@ assign_gc_rate <- function(data, input_type, gc_type, gc_rate) {
 
 }
 
+#/*=================================================*/
+#' # optimal-grower-chosen data
+#/*=================================================*/ 
+# data <-  analysis_res$data[[1]]
+# eval_data <-  analysis_res$eval_data[[1]]
+# gc_type <-  analysis_res$gc_type[[1]]
+# input_price <-  analysis_res$price[[1]]
+
 get_opt_gc_data <- function(data, eval_data, gc_type, input_price) {
 
-  if (gc_type == "uniform") {
+  opt_input_data <- eval_data %>% 
+    .[type == "opt_v", ] %>% 
+    .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
+    setnames("input_rate", "opt_input")
 
-    opt_input_data <- eval_data %>% 
-      .[type == "opt_v", ] %>% 
-      .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
-      setnames("input_rate", "opt_input")
+  if (gc_type == "uniform") {
 
     opt_gc_data <- copy(opt_input_data) %>% 
       setnames("opt_input", "input_rate") %>% 
@@ -741,10 +765,10 @@ get_opt_gc_data <- function(data, eval_data, gc_type, input_price) {
       .[, type := "gc"]
 
     opt_data <- pi_dif_test_zone %>% 
-      .[, .(yhat_est_opt, point_est_opt, point_est_opt_inpute, zone_txt, input_price)] %>% 
+      .[, .(yhat_est_opt, point_est_opt, point_est_opt_se, zone_txt, input_price)] %>% 
       opt_input_data[, .(zone_txt, opt_input)][., on = "zone_txt"] %>% 
       setnames(
-        c("yhat_est_opt", "point_est_opt", "point_est_opt_inpute", "opt_input"), 
+        c("yhat_est_opt", "point_est_opt", "point_est_opt_se", "opt_input"), 
         c("yield_hat", "profit_hat", "profit_hat_se", "input_rate")
       ) %>% 
       .[, `:=`(
