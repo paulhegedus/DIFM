@@ -392,9 +392,9 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     rowwise() %>% 
     mutate(
       unit_txt = case_when(
-        input_type == "S" ~ "K seeds/acre",
-        input_type == "N" ~ "lbs/acre",
-        input_type == "K" ~ "lbs/acre"
+        input_type == "S" ~ "K seeds",
+        input_type == "N" ~ "lbs",
+        input_type == "K" ~ "lbs"
       )
     ) %>% 
     mutate(
@@ -405,24 +405,11 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
       )
     ) %>% 
     mutate(
-      report_rmd = list(
-        report_rmd %>% 
-          gsub("_unit_here_", unit_txt, .) %>% 
-          gsub("_input_full_name_here_c_", input_full_name, .) %>% 
-          gsub("_input_type_here_", input_type, .)
-      )
-    ) %>% 
-    mutate(
       report_body = list(
         read_rmd(
           "Report/r01_make_report.Rmd",
           locally_run = locally_run
-        ) %>% 
-        gsub(
-          "_input_full_name_l_", 
-         tolower(input_full_name),
-         .
-        ) 
+        )
       )
     ) %>% 
     mutate(
@@ -454,6 +441,11 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
           target_rmd = ., 
           inserting_rmd = td_txt,
           target_text = "_trial_design_information_here_"
+        ) %>% 
+        gsub(
+          "_input_full_name_l_", 
+         tolower(input_full_name),
+         .
         )
       )
     ) %>% 
@@ -469,7 +461,15 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
           paste0("grower-report-", tolower(input_type), ".Rmd")
         )
       )
-    ) 
+    ) %>% 
+    mutate(
+      report_rmd = list(
+        report_rmd %>% 
+          gsub("_unit_here_", unit_txt, .) %>% 
+          gsub("_input_full_name_here_c_", input_full_name, .) %>% 
+          gsub("_input_type_here_", input_type, .)
+      )
+    )
 
   #/*----------------------------------*/
   #' ## Write to Rmd file(s)

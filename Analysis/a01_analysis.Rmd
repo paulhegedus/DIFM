@@ -108,7 +108,7 @@ analysis_res <- trial_info %>%
   mutate(
     data = list(
       setnames(
-        copy(data),
+        data.table::copy(data),
         paste0(tolower(input_type), "_rate"),
         "input_rate"
       )

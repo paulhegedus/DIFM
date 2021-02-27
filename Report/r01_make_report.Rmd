@@ -7,7 +7,7 @@
 
 # Summary  
 
-A soybean _input_full_name_l_ rate trial was conducted on the _field_year_here_ field in crop year 2020. The trial was <!--NEED to determine and assign: "was" or "was not". If the trial was not implemented accurately, for now we can write explanations by hand.  But eventually, we could probably write up a list of common reasons why implementation wasn't accurate, and choose one from that list to put in the text.--> implemented with a high level of accuracy. The data and model provide an estimate that, under growing conditions identical to those of the field in 2020, implementing the recommended site-specific seeding rate strategy would have increased profits by \$`r round(whole_profits_test_s[type_short == "ovg", point_est_dif], digits = 0)` per acre, and its 95% level confidence interval of this profit gain was between \$`r round(whole_profits_test_s[type_short == "ovg", point_est_dif - point_est_dif_se * 1.96], digits = 0)` and \$`r round(whole_profits_test_s[type_short == "ovg", point_est_dif + point_est_dif_se * 1.96], digits = 0)` per acre.
+A soybean _input_full_name_l_ rate trial was conducted on the _field_year_here_ field in crop year 2020. The trial was <!--NEED to determine and assign: "was" or "was not". If the trial was not implemented accurately, for now we can write explanations by hand.  But eventually, we could probably write up a list of common reasons why implementation wasn't accurate, and choose one from that list to put in the text.--> implemented with a high level of accuracy. The data and model provide an estimate that, under growing conditions identical to those of the field in 2020, implementing the recommended site-specific seeding rate strategy would have increased profits by \$`r round(whole_profits_test[type_short == "ovg", point_est_dif], digits = 0)` per acre, and its 95% level confidence interval of this profit gain was between \$`r round(whole_profits_test[type_short == "ovg", point_est_dif - point_est_dif_se * 1.96], digits = 0)` and \$`r round(whole_profits_test[type_short == "ovg", point_est_dif + point_est_dif_se * 1.96], digits = 0)` per acre.
 
 
 # Economic Results and Implications 
@@ -81,7 +81,7 @@ g_ys_zone
 
 ```
 
-The values of $\beta$ in all of the field's observation points were partitioned into `r num_zones` “zones,” with Zone 1 consisting of the observation points in the lowest third of estimated values of $\beta$, and Zones 2, and 3, containing the observations points from second and third thirds.  The bottom panel of Figure \@ref(fig:map-response) displays those zones.  Figure \@ref(fig:ys-by-mz) shows the zones' (_input_full_name_l_ rate, yield) scatterplots and estimated yield response curves, which we produced using General Additive Model regression techniques. 
+The values of $\beta$ in all of the field's observation points were partitioned into `r num_zones` "zones," with Zone 1 consisting of the observation points in the lowest fourth of estimated values of $\beta$, and Zones 2, 3, and 4, containing the observations points from second, third and fourth fourths.  The bottom panel of Figure \@ref(fig:map-response) displays those zones.  Figure \@ref(fig:ys-by-mz) shows the zones' (_input_full_name_l_ rate, yield) scatterplots and estimated yield response curves, which we produced using General Additive Model regression techniques. 
 
 # Exploring Interactions between Seed Rate and Field Characteristics in the Yield Response Function
 

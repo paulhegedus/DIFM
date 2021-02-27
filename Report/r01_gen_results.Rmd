@@ -28,7 +28,9 @@ opt_gc_data <- results$opt_gc_data[[1]]
 whole_profits_test <- results$whole_profits_test[[1]]
 pi_dif_test_zone <- results$pi_dif_test_zone[[1]]
 
-num_zones <- data_sf$zone_txt
+num_zones <- data_sf$zone_txt %>% 
+  unique() %>% 
+  length()
 
 #/*----------------------------------*/
 #' ## Get the aspect ratio of the field
