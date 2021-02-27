@@ -260,6 +260,7 @@ analysis_res <- analysis_res %>%
         est = gam_res,
         var_name = "input_rate"
       ) %>% 
+      data.table() %>% 
       .[, type := "gc"] %>% 
       .[, .(
         input_rate, zone_txt, type, yield_hat, yield_hat_se
