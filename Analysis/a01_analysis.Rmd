@@ -258,7 +258,7 @@ analysis_res <- analysis_res %>%
       predict_yield(
         data = gc_rate_data, 
         est = gam_res,
-        var_name = "input_rate"
+        var_name = "gc_rate"
       ) %>% 
       data.table() %>% 
       .[, type := "gc"] %>% 

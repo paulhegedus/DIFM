@@ -116,7 +116,7 @@ predict_yield_range <- function(data, est, var_name, by = NULL, crop_price) {
 
 }
 
-predict_yield <- function(data, est, var_name, crop_price) {
+predict_yield <- function(data, est, var_name) {
 
   eval_data <- data.table::copy(data) %>% 
     select(-input_rate) %>% 
