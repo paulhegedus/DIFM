@@ -1,5 +1,5 @@
 ---
-title: "Report on DIFM Field Trial \n field-year-here"
+title: "Report on DIFM Field Trial \n _field-year-here_"
 output:
   bookdown::word_document2:
     toc: false
@@ -74,7 +74,7 @@ library(GWmodel)
 
 ```{r results = "hide"}
 #--- working field-year ---#
-ffy <- "field-year-here"
+ffy <- "_field-year-here_"
 
 input_type <- "_input_type_here_"
 

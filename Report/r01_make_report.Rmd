@@ -1,8 +1,8 @@
 # Field Management Information
 
-+ Baseline _input_full_name_l_ rate of `r gc_rate` K.
++ Baseline _input_full_name_l_ rate: _base_rate_statement_here_.
 + Seed target rates: `r paste0(tgti_ls, "K", collapse = ",")` 
-+ Planter width: `r machine_width` feet, variable-rate controlled by 15-foot quarter-sections
++ Planter width: `r w_trial_info$machine_width` feet (variable-rate controlled by 15-foot quarter-sections?)
 + Harvester width: `r harvester_width` feet
 
 # Summary  

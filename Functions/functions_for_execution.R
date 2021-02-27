@@ -374,6 +374,8 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     unlink(recursive = TRUE)
   }
 
+  results <- readRDS(here("Reports", "Growers", ffy, "analysis_results.rds"))
+
   base_rmd <- read_rmd(
     "Report/r00_report_header.Rmd",
     locally_run = locally_run
@@ -384,7 +386,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     locally_run = locally_run
   )  
 
-  report_rmd_ls <- trial_info %>% 
+  report_rmd_ls <- results %>% 
     mutate(
       report_rmd = list(c(base_rmd, results_gen_rmd))  
     ) %>% 
@@ -464,11 +466,18 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
     mutate(
       report_rmd = list(
         report_rmd %>% 
+          gsub(
+            "_base_rate_statement_here_", 
+            case_when(
+              gc_type == "uniform"~ "`r _gc_rate_here_` _unit_here_",
+              gc_type == "Rx"~ "Rx (see the map below)"
+            ), 
+            .
+          ) %>% 
           gsub("_unit_here_", unit_txt, .) %>% 
           gsub("_input_full_name_here_c_", input_full_name, .) %>% 
           gsub("_input_type_here_", input_type, .) %>% 
-          gsub("_gc_rate_here_", gc_rate, .)  %>% 
-          gsub("field-year-here", ffy, .) 
+          gsub("_field-year-here_", ffy, .)   
       )
     )
 
