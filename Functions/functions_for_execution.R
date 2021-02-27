@@ -328,48 +328,19 @@ run_analysis <- function(ffy, rerun = FALSE, locally_run = FALSE){
     unlink(recursive = TRUE)
   }
   
-  temp_rmd <- read_rmd(
-    "Analysis/a00_analysis.Rmd", 
+  analysis_rmd <- read_rmd(
+    "Analysis/a01_analysis.Rmd", 
     locally_run = locally_run
   ) %>% 
   gsub("field-year-here", ffy, .)
 
-  #/*----------------------------------*/
-  #' ## Cases
-  #/*----------------------------------*/
-  source(
-    get_r_file_name("Functions/unpack_field_parameters.R"), 
-    local = TRUE
-  )
-
-  analysis_rmd <- trial_info %>% 
-    rowwise() %>% 
-    filter(process == TRUE) %>% 
-    mutate(
-      analysis_rmd = list(
-        read_rmd(
-          "Analysis/a01_analysis.Rmd", 
-          locally_run = locally_run
-        ) %>% 
-        gsub("input_type_here", input_type, .)
-      )
-    ) %>% 
-    pull(analysis_rmd) %>% 
-    reduce(c)
-
-  temp_rmd <- insert_rmd(
-    temp_rmd, 
-    analysis_rmd, 
-    "_analysis_rmd_here_"
-  )
- 
   #/*----------------------------------*/
   #' ## Save and run
   #/*----------------------------------*/
   analysis_rmd_file_name <- here() %>% 
     paste0(., "/Reports/Growers/", ffy, "/analysis.Rmd")
 
-  writeLines(temp_rmd, con = analysis_rmd_file_name)
+  writeLines(analysis_rmd, con = analysis_rmd_file_name)
 
   render(analysis_rmd_file_name)
 
@@ -404,9 +375,66 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
   }
 
   base_rmd <- read_rmd(
-    "Report/r0_report_header.Rmd",
+    "Report/r00_report_header.Rmd",
     locally_run = locally_run
-  ) 
+  ) %>% 
+  gsub("field-year-here", ffy, .) 
+
+  results_gen_rmd <- read_rmd(
+    "Report/r01_gen_results.Rmd",
+    locally_run = locally_run
+  )  
+
+  report_rmd_ls <- trial_info %>% 
+    mutate(
+      report_rmd = list(c(base_rmd, results_gen_rmd))  
+    ) %>% 
+    rowwise() %>% 
+    mutate(
+      unit_txt = case_when(
+        input_type == "S" ~ "K seeds/acre",
+        input_type == "N" ~ "lbs/acre",
+        input_type == "K" ~ "lbs/acre"
+      )
+    ) %>% 
+    mutate(
+      input_full_name = case_when(
+        input_type == "S" ~ "Seed",
+        input_type == "N" ~ "Nitrogen",
+        input_type == "K" ~ "Potassium"
+      )
+    ) %>% 
+    mutate(
+      report_rmd = list(
+        report_rmd %>% 
+          gsub("_unit_here_", unit_txt, .) %>% 
+          gsub("_input_full_name_here_c_", input_full_name, .) %>% 
+          gsub("_input_type_here_", input_type, .)
+      )
+    ) %>% 
+    mutate(
+      report_body = list(
+        read_rmd(
+          "Report/r01_make_report.Rmd",
+          locally_run = locally_run
+        )
+      )
+    )
+
+       
+ res_disc_rmd_s <- get_ERI_texts(
+      input_type = input_type, 
+      grower_chosen_rate = grower_chosen_rate_s,
+      results = results_s, 
+      gc_type = gc_type_s, 
+      locally_run = locally_run
+    ) 
+
+ td_s_txt <- get_td_text(
+      input_type = "S", 
+      gc_type = gc_type_s, 
+      locally_run = locally_run
+    )
 
   #/*----------------------------------*/
   #' ## Insert appropriate texts  
@@ -578,7 +606,6 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
       gc_type = gc_type_n, 
       locally_run = locally_run
     )
-
 
   }
 

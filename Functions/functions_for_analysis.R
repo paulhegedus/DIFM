@@ -347,8 +347,8 @@ run_gwr <- function(data_sf, var_name) {
   gwr_est <- gwr.basic(
     reg_formula,
     data = reg_data_sp,
-    # bw = 100,
-    bw = obw * 3,
+    bw = 200,
+    # bw = obw,
     kernel = "gaussian",
     adaptive = T
   )

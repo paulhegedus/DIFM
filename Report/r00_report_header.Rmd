@@ -125,40 +125,12 @@ trial_design <- here("Data/Growers", ffy, "TrialDesign/trial-design.shp") %>%
 
 yield_polygons <- readRDS(here("Data/Growers", ffy, "Intermediate/yield_polygons.rds"))
 
-if (trial_type == "SN"){
-  as_applied_s <- readRDS(here("Data/Growers", ffy, "Intermediate/as_applied_s.rds"))
-
-  as_applied_n <- readRDS(here("Data/Growers", ffy, "Intermediate/as_applied_n.rds"))
-
-  source(
-    get_r_file_name("Report/r01_N_report.R"),
-    local = TRUE
+input_data <- readRDS(
+  here(
+    "Data/Growers", ffy, "Intermediate",
+    paste0("as_applied_", tolower(_input_type_here_), ".rds")
   )
-
-  source(
-    get_r_file_name("Report/r01_S_report.R"),
-    local = TRUE
-  )
-
-} else if (trial_type == "S") {
-
-  as_applied_s <- readRDS(here("Data/Growers", ffy, "Intermediate/as_applied_s.rds"))
-
-  source(
-    get_r_file_name("Report/r01_S_report.R"),
-    local = TRUE
-  )
-
-} else if (trial_type == "N") {
-
-  as_applied_n <- readRDS(here("Data/Growers", ffy, "Intermediate/as_applied_n.rds"))
-
-  source(
-    get_r_file_name("Report/r01_N_report.R"),
-    local = TRUE
-  )
-
-}
+)
 
 ```
 
