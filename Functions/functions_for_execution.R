@@ -644,33 +644,22 @@ insert_rmd <- function(target_rmd, inserting_rmd, target_text) {
 
 }   
 
-get_ttest_text <- function(input_type, pi_dif_test_zone, zone){
+get_ttest_text <- function(pi_dif_test_zone, zone){
 
   t <- pi_dif_test_zone[zone_txt == paste0("Zone ", zone), t]
 
-  if (input_type == "S") {
-    if (t < 1.30){
-      temp_text <- "The data and model provide negligible evidence that the estimated optimal rate of `r get_seed(opt_gc_data_s, \"opt_v\", zone)`K does not provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(pi_dif_test_zone_s, zone)`)"
-    } else if (1.30 <= t & t < 1.64){
-      temp_text <- "The data and model provide only limited evidence that the estimated optimal rate of `r get_seed(opt_gc_data_s, \"opt_v\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(pi_dif_test_zone_s, zone)`)"
-    } else if (1.64 <= t & t < 1.96){
-      temp_text <- "The data and model provide moderate evidence that the estimated optimal rate of `r get_seed(opt_gc_data_s, \"opt_v\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(pi_dif_test_zone_s, zone)`)"
-    } else {
-      temp_text <- "The data and model provide strong evidence that the estimated optimal rate of `r get_seed(opt_gc_data_s, \"opt_v\", zone)`K did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_hereK (t-value of `r get_t_value(pi_dif_test_zone_s, zone)`)" 
-    }
-  } else if (input_type == "N") {
-    if (t < 1.30){
-      temp_text <- "The data and model provide negligible evidence that the estimated optimal rate of `r get_n(opt_gc_data, \"opt_v\", zone)` does not provide greater profits than the grower-chosen rate of grower_chosen_rate_here (t-value of `r get_t_value(pi_dif_test_zone_n, zone)`)"
-    } else if (1.30 <= t & t < 1.64){
-      temp_text <- "The data and model provide only limited evidence that the estimated optimal rate of `r get_n(opt_gc_data, \"opt_v\", zone)` did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_here (t-value of `r get_t_value(pi_dif_test_zone_n, zone)`)"
-    } else if (1.64 <= t & t < 1.96){
-      temp_text <- "The data and model provide moderate evidence that the estimated optimal rate of `r get_n(opt_gc_data, \"opt_v\", zone)` did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_here (t-value of `r get_t_value(pi_dif_test_zone_n, zone)`)"
-    } else {
-      temp_text <- "The data and model provide strong evidence that the estimated optimal rate of `r get_n(opt_gc_data, \"opt_v\", zone)` did indeed provide greater profits than the grower-chosen rate of grower_chosen_rate_here (t-value of `r get_t_value(pi_dif_test_zone_n, zone)`)" 
-    }
+  if (t < 1.30){
+    temp_text <- "The data and model provide negligible evidence that the estimated optimal rate of `r get_input(opt_gc_data, \"opt_v\", zone)` _unit_here_ does not provide greater profits than the grower-chosen rate of _gc_rate_here_ _unit_here_ per acre (t-value of `r get_t_value(pi_dif_test_zone, zone)`)"
+  } else if (1.30 <= t & t < 1.64){
+    temp_text <- "The data and model provide only limited evidence that the estimated optimal rate of `r get_input(opt_gc_data, \"opt_v\", zone)` _unit_here_ did indeed provide greater profits than the grower-chosen rate of _gc_rate_here_ _unit_here_ per acre (t-value of `r get_t_value(pi_dif_test_zone, zone)`)"
+  } else if (1.64 <= t & t < 1.96){
+    temp_text <- "The data and model provide moderate evidence that the estimated optimal rate of `r get_input(opt_gc_data, \"opt_v\", zone)` _unit_here_ did indeed provide greater profits than the grower-chosen rate of _gc_rate_here_ _unit_here_ per acre (t-value of `r get_t_value(pi_dif_test_zone, zone)`)"
+  } else {
+    temp_text <- "The data and model provide strong evidence that the estimated optimal rate of `r get_input(opt_gc_data, \"opt_v\", zone)` _unit_here_ did indeed provide greater profits than the grower-chosen rate of _gc_rate_here_ _unit_here_ per acre (t-value of `r get_t_value(pi_dif_test_zone, zone)`)" 
   }
 
   return(gsub(", zone", paste0(", ", zone), temp_text))
+
 }
 
 
@@ -680,33 +669,13 @@ get_ERI_texts <- function(input_type, grower_chosen_rate, results, gc_type, loca
   pi_dif_test_zone <- results$pi_dif_test_zone[[1]]
   opt_gc_data <- results$opt_gc_data[[1]]
 
-  res_disc_rmd_file <- case_when(
-    input_type == "N" & gc_type == "Rx" ~ 
-      "Report/ri01_results_by_zone_Rx_N.Rmd", 
-    input_type == "S" & gc_type == "Rx" ~ 
-      "Report/ri01_results_by_zone_Rx_S.Rmd",  
-    input_type == "N" & gc_type == "uniform" ~ 
-      "Report/ri01_results_by_zone_non_Rx_N.Rmd",
-    input_type == "S" & gc_type == "uniform" ~ 
-      "Report/ri01_results_by_zone_non_Rx_S.Rmd"
-  )
-
-  pi_rmd_file <- case_when(
-    input_type == "N" ~ "Report/ri02_profit_dif_statement_N.Rmd",
-    input_type == "S" ~ "Report/ri02_profit_dif_statement_S.Rmd"
-  )
-
-  if (input_type == "S") {
-    pi_rmd_file <- "Report/ri02_profit_dif_statement_S.Rmd"
-  } else if (input_type == "N") {
-    pi_rmd_file <- "Report/ri02_profit_dif_statement_N.Rmd"
-  }
+  pi_rmd_file <- "Report/ri02_profit_dif_statement.Rmd"
 
   if (gc_type == "Rx") {
 
     t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
 
-    res_disc_rmd <- read_rmd(res_disc_rmd_file, locally_run = locally_run) %>% 
+    res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_Rx.Rmd", locally_run = locally_run) %>% 
     gsub(
       "_stat_confidence_here_", 
       case_when(
@@ -719,7 +688,7 @@ get_ERI_texts <- function(input_type, grower_chosen_rate, results, gc_type, loca
 
   } else {
 
-    res_disc_rmd <- read_rmd(res_disc_rmd_file, locally_run = locally_run)
+    res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_non_Rx.Rmd", locally_run = locally_run)
     
     #/*----------------------------------*/
     #' ## Profit differential narrative
@@ -753,7 +722,7 @@ get_ERI_texts <- function(input_type, grower_chosen_rate, results, gc_type, loca
       inserting_rmd = pi_dif_rmd,
       target_text = "_rest-of-the-zones-here_"
     ) %>% 
-    gsub("grower_chosen_rate_here", grower_chosen_rate, .)
+    gsub("_gc_rate_here_", grower_chosen_rate, .)
 
     #/*----------------------------------*/
     #' ## Difference between optimal vs grower-chosen rates
@@ -763,14 +732,14 @@ get_ERI_texts <- function(input_type, grower_chosen_rate, results, gc_type, loca
     gc_opt_comp_txt_ls <- c()
     
     for (i in 1:num_zones) {
-      temp_dif <- get_seed(opt_gc_data, "gc", i) - get_seed(opt_gc_data, "opt_v", i)
+      temp_dif <- get_input(opt_gc_data, "gc", i) - get_input(opt_gc_data, "opt_v", i)
       gc_opt_comp_txt_ls <- c(gc_opt_comp_txt_ls,
         paste0(
-          "`r get_seed(opt_gc_data, \"gc\", ", 
+          "`r get_input(opt_gc_data, \"gc\", ", 
           i, 
-          ") - get_seed(opt_gc_data, \"opt_v\", ", 
+          ") - get_input(opt_gc_data, \"opt_v\", ", 
           i,
-          ")`K seeds ", 
+          ")`_unit_here_ per acre", 
           ifelse(temp_dif > 0, "too high", "too low"),
           " in Zone ", i
         ) %>% 
@@ -816,10 +785,7 @@ get_whole_pi_txt <- function(results) {
 
 get_td_text <- function(input_type, gc_type, locally_run = FALSE) {
 
-  td_rmd_file <- case_when(
-    input_type == "N" ~ "Report/ri03_trial_design_N.Rmd",
-    input_type == "S" ~ "Report/ri03_trial_design_S.Rmd"
-  )
+  td_rmd_file <- "Report/ri03_trial_design.Rmd"
 
   td_rmd <- read_rmd(td_rmd_file, locally_run = locally_run)
 
@@ -828,9 +794,9 @@ get_td_text <- function(input_type, gc_type, locally_run = FALSE) {
       in figure \\\\@ref(fig:rx-input-map)" %>% 
       gsub("input", input_type)
   } else if (gc_type == "uniform") {
-    grower_plan_text <- "apply grower_chosen_rate_hereK seeds per acre 
-      uniformly across the field. numb_seed_rates_here 
-      experimental seed rates were assigned randomly and in 
+    grower_plan_text <- "apply _gc_rate_here_ _unit_here_ per acre 
+      uniformly across the field. _num_exp_rates_here_ 
+      experimental _input_full_name_l_ rates were assigned randomly and in 
       roughly equal number to plots" 
   }
 
