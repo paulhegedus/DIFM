@@ -118,7 +118,7 @@ predict_yield_range <- function(data, est, var_name, by = NULL, crop_price) {
 
 predict_yield <- function(data, est, var_name, crop_price) {
 
-  eval_data <- copy(data)
+  eval_data <- data.table::copy(data)
 
   yield_prediction <- predict(est, newdata = eval_data, se = TRUE)
 
@@ -139,10 +139,10 @@ predict_yield <- function(data, est, var_name, crop_price) {
 get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, input_price){
     
   
-  base_data <- copy(data) %>% 
+  base_data <- data.table::copy(data) %>% 
     .[, (test_var) := get(gc_var)]
 
-  comp_data <- copy(data) %>% 
+  comp_data <- data.table::copy(data) %>% 
     .[, (test_var) := get(opt_var)]
 
   #/*----------------------------------*/
@@ -226,7 +226,7 @@ get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var, 
     unique() %>% 
     unlist()
 
-  temp_data <- setnames(copy(data), by_var, "by_var")
+  temp_data <- setnames(data.table::copy(data), by_var, "by_var")
 
   # y <- zone_ls[1]
 
@@ -740,7 +740,7 @@ get_opt_gc_data <- function(data, eval_data, gc_type, input_price) {
 
   if (gc_type == "uniform") {
 
-    opt_gc_data <- copy(opt_input_data) %>% 
+    opt_gc_data <- data.table::copy(opt_input_data) %>% 
       setnames("opt_input", "input_rate") %>% 
       rbind(., eval_data[type == "gc",]) %>% 
       .[, pi_upper := profit_hat + profit_hat_se * 1.96] %>% 

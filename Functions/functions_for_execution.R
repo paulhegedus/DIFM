@@ -377,8 +377,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
   base_rmd <- read_rmd(
     "Report/r00_report_header.Rmd",
     locally_run = locally_run
-  ) %>% 
-  gsub("field-year-here", ffy, .) 
+  )
 
   results_gen_rmd <- read_rmd(
     "Report/r01_gen_results.Rmd",
@@ -467,7 +466,9 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
         report_rmd %>% 
           gsub("_unit_here_", unit_txt, .) %>% 
           gsub("_input_full_name_here_c_", input_full_name, .) %>% 
-          gsub("_input_type_here_", input_type, .)
+          gsub("_input_type_here_", input_type, .) %>% 
+          gsub("_gc_rate_here_", gc_rate, .)  %>% 
+          gsub("field-year-here", ffy, .) 
       )
     )
 

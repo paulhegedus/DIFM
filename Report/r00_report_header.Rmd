@@ -76,6 +76,8 @@ library(GWmodel)
 #--- working field-year ---#
 ffy <- "field-year-here"
 
+input_type <- "_input_type_here_"
+
 #--- root directory ---#
 opts_knit$set(root.dir = here("Data", "Growers", ffy))
 # setwd(here("Data", ffy))
@@ -95,6 +97,16 @@ source(
   local = TRUE
 )
 
+#--- read the variable name dictionary ---#
+dictionary <- fromJSON(
+  file.path(
+    here("Data", "CommonData"),
+    "variable_name_dictionary.json"
+  ),
+  flatten = TRUE
+) %>% 
+data.table()
+
 ```
 
 ```{r map-layout, cache = TRUE}
@@ -104,29 +116,6 @@ tm_layout_to_add <- tm_layout(
   legend.title.size = 1,
   legend.text.size = 0.8,
   fontfamily = "Times"
-)
-
-```
-
-```{r results = "hide"}
-#/*----------------------------------*/
-#' ## Read in datasets for visualization 
-#/*----------------------------------*/
-analysis_data <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>% 
-  readRDS()
-
-trial_design <- here("Data/Growers", ffy, "TrialDesign/trial-design.shp") %>% 
-  st_read() %>% 
-  setnames(names(.), tolower(names(.))) %>% 
-  st_transform_utm()
-
-yield_polygons <- readRDS(here("Data/Growers", ffy, "Intermediate/yield_polygons.rds"))
-
-input_data <- readRDS(
-  here(
-    "Data/Growers", ffy, "Intermediate",
-    paste0("as_applied_", tolower(_input_type_here_), ".rds")
-  )
 )
 
 ```

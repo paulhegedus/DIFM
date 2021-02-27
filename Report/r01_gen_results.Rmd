@@ -1,3 +1,28 @@
+```{r results = "hide"}
+#/*----------------------------------*/
+#' ## Read in datasets for visualization 
+#/*----------------------------------*/
+analysis_data <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>% 
+  readRDS()
+
+trial_design <- here("Data/Growers", ffy, "TrialDesign/trial-design.shp") %>% 
+  st_read() %>% 
+  setnames(names(.), tolower(names(.))) %>% 
+  st_transform_utm() %>% 
+  mutate(type = tolower(type))
+
+yield_polygons <- readRDS(here("Data/Growers", ffy, "Intermediate/yield_polygons.rds"))
+
+input_data <- readRDS(
+  here(
+    "Data/Growers", ffy, "Intermediate",
+    paste0("as_applied_", tolower(input_type), ".rds")
+  )
+)
+
+```
+
+
 ```{r echo = F, results = "hide"}
 #/*=================================================*/
 #' # Define functions
@@ -51,21 +76,31 @@ col_list <- dict_td[, column]
 trial_design <- make_var_name_consistent(
   trial_design, 
   dict_td 
-)  
-
-#--- nitrogen rate conversion ---#
-trial_design <- mutate(
-  trial_design, 
-  tgti = convert_N_unit(
-    input_data_n$form, 
-    input_data_n$unit, 
-    tgti, 
-    field_data$reporting_unit
-  )
+) %>% 
+setnames(
+  paste0("tgt_", tolower(input_type)), 
+  "tgti"
 )
 
-tgtn_ls <- unique(trial_design$tgti) 
-tgtn_ls <- tgtn_ls[order(tgtn_ls)]
+if (input_type == "N") {
+  trial_design <- mutate(trial_design, 
+    tgti = convert_N_unit(
+      input_data_n$form, 
+      input_data_n$unit, 
+      tgti, 
+      field_data$reporting_unit
+    )
+  )
+} else if (input_type == "S") {
+  #--- seed rate conversion ---#
+  if (any(trial_design$tgti > 10000)){
+    #--- convert to K ---#
+    trial_design <- mutate(trial_design, tgti = tgti / 1000)
+  }
+}
+
+tgti_ls <- unique(trial_design$tgti) 
+tgti_ls <- tgti_ls[order(tgti_ls)]
 
 #/*=================================================*/
 #' # Figures and Tables
@@ -199,7 +234,7 @@ if (sn_ew_ratio > 1.1) {
 #/*----------------------------------*/
 
 input_plot_data <- trial_design %>% 
-  filter(type != "Headland") %>% 
+  filter(type != "headland") %>% 
   input_data[., ]
 
 if (sn_ew_ratio > 1.1) {
