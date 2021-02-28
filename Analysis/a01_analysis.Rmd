@@ -68,7 +68,7 @@ tm_layout_to_add <- tm_layout(
 
 ```{r echo = F, results = "hide"}
 #/*----------------------------------*/
-#' ## Trial parameters
+#' ### Trial parameters
 #/*----------------------------------*/
 # source(here("Codes/Functions/unpack_field_parameters.R"))
 source(
@@ -82,8 +82,20 @@ crop_price_table <- fread(here("Data/CommonData/CropPrice.csv")) %>%
 input_price_table <- fread(here("Data/CommonData/InputPrice.csv")) %>% 
   setnames(names(.), tolower(names(.)))
 
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### variable name dictionary
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+dictionary <- fromJSON(
+  file.path(
+    here("Data", "CommonData"),
+    "variable_name_dictionary.json"
+  ),
+  flatten = TRUE
+) %>% 
+data.table()
+
 #/*----------------------------------*/
-#' ## Source functions
+#' ### Source functions
 #/*----------------------------------*/
 source(
   "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
