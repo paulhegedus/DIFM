@@ -357,6 +357,29 @@ analysis_res %>%
   
 ```
 
+### Profit by zone (testing)
+
+```{r }
+
+analysis_res <- analysis_res %>% 
+  mutate(pi_dif_test_zone =
+    list(
+      get_pi_dif_test_zone(
+        data, 
+        gc_type,
+        gam_res,
+        price 
+      )
+    )
+  )
+
+# data <- analysis_res$data[[1]]
+# gc_type <- analysis_res$gc_type[[1]]
+# gam_res <- analysis_res$gam_res[[1]]
+# input_price <- analysis_res$price[[1]]
+
+```
+
 ### Optimal Variable and Uniform Seed Rate
 
 ```{r gen-opt-S-v-data-map}
@@ -444,31 +467,6 @@ analysis_res <- analysis_res %>%
     )
   ) %>% 
   dplyr::select(- pi_indiv_opt, - pi_indiv_gc, - pi_dif)
-
-```
-
-## Statistical testing
-
-### Profit by zone
-
-```{r }
-
-analysis_res <- analysis_res %>% 
-  mutate(pi_dif_test_zone =
-    list(
-      get_pi_dif_test_zone(
-        data, 
-        gc_type,
-        gam_res,
-        price 
-      )
-    )
-  )
-
-# data <- analysis_res$data[[1]]
-# gc_type <- analysis_res$gc_type[[1]]
-# gam_res <- analysis_res$gam_res[[1]]
-# input_price <- analysis_res$price[[1]]
 
 ```
 
