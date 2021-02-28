@@ -125,7 +125,7 @@ data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>%
 
 ```{r gwr, results = "hide"}
 
-analysis_res <- trial_info %>% 
+analysis_res_g <- trial_info %>% 
   mutate(data = rep(list(data_sf), nrow(.))) %>% 
   rowwise() %>% 
   mutate(
@@ -158,7 +158,7 @@ analysis_res <- trial_info %>%
 ### GWR estimates histogram
 
 ```{r }
-pluck(analysis_res, "data") %>% 
+pluck(analysis_res_g, "data") %>% 
   map(., ~ 
     ggplot(.) +
       geom_histogram(
@@ -167,6 +167,7 @@ pluck(analysis_res, "data") %>%
         fill = "white"
       )
   )
+
 ```
 
 ### Define management zones based on GWR
@@ -175,7 +176,7 @@ pluck(analysis_res, "data") %>%
 
 # data.table(analysis_res$data[[1]])[, sum(is.na(clay))]
 
-analysis_res <- analysis_res %>% 
+analysis_res_m <- analysis_res_g %>% 
   mutate(
     data = list(
       define_mz(
@@ -190,7 +191,7 @@ analysis_res <- analysis_res %>%
 
 ```{r }
 
-pluck(analysis_res, "data") %>% 
+pluck(analysis_res_m, "data") %>% 
   map(., ~ 
     tm_shape(.) +
     tm_fill(col = "zone_txt", palette = "Set1") +
@@ -203,7 +204,7 @@ pluck(analysis_res, "data") %>%
 
 ```{r gam-estimate}
 
-analysis_res <- analysis_res %>% 
+analysis_res_g <- analysis_res_m %>% 
   mutate(
     gam_formula = list(
       paste0(
@@ -239,7 +240,7 @@ analysis_res <- analysis_res %>%
 
 ```{r }
 
-analysis_res <- analysis_res %>% 
+analysis_res_gcr <- analysis_res_g %>% 
   mutate(data = 
     list(
       assign_gc_rate(data, input_type, gc_type, gc_rate)
@@ -255,7 +256,7 @@ analysis_res <- analysis_res %>%
 
 ```{r }
 
-analysis_res <- analysis_res %>% 
+analysis_res_p <- analysis_res_gcr %>% 
   mutate(eval_data = 
     list(
       predict_yield_range(
@@ -327,7 +328,7 @@ analysis_res <- analysis_res %>%
 
 ```{r }
 
-analysis_res %>% 
+analysis_res_p %>% 
   mutate(
     ymin = eval_data[, min(yield_hat - 1.96 * yield_hat_se)] - 10
   ) %>% 
@@ -357,11 +358,30 @@ analysis_res %>%
   
 ```
 
-### Profit by zone (testing)
 
-```{r }
+### Optimal Variable and Uniform Seed Rate
 
-analysis_res <- analysis_res %>% 
+```{r gen-opt-S-v-data-map}
+
+analysis_res_o <- analysis_res_p %>% 
+  mutate(
+    opt_input_data = list(
+     opt_input_data <- eval_data %>% 
+      .[type == "opt_v", ] %>% 
+      .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
+      setnames("input_rate", "opt_input") 
+    )
+  ) %>% 
+  #=== assign optimal variable input rate ===#
+  mutate(data = 
+    list(
+      left_join(
+        data, 
+        opt_input_data,
+        by = "zone_txt"
+      )
+    )
+  ) %>% 
   mutate(pi_dif_test_zone =
     list(
       get_pi_dif_test_zone(
@@ -371,33 +391,14 @@ analysis_res <- analysis_res %>%
         price 
       )
     )
-  )
-
-# data <- analysis_res$data[[1]]
-# gc_type <- analysis_res$gc_type[[1]]
-# gam_res <- analysis_res$gam_res[[1]]
-# input_price <- analysis_res$price[[1]]
-
-```
-
-### Optimal Variable and Uniform Seed Rate
-
-```{r gen-opt-S-v-data-map}
-
-analysis_res <- analysis_res %>% 
+  ) %>% 
   mutate(
     opt_gc_data = list(
-      get_opt_gc_data(data, eval_data, gc_type, input_price)
-    )
-  ) %>% 
-  #=== assign optimal variable input rate ===#
-  mutate(data = 
-    list(
-      left_join(
+      get_opt_gc_data(
         data, 
-        opt_gc_data[type == "opt_v", .(zone_txt, input_rate)] %>% 
-          setnames("input_rate", "opt_input"),
-        by = "zone_txt"
+        eval_data, 
+        gc_type,
+        pi_dif_test_zone
       )
     )
   ) %>% 
@@ -422,7 +423,7 @@ analysis_res <- analysis_res %>%
 
 ```{r }
 
-analysis_res <- analysis_res %>% 
+analysis_res_og <- analysis_res_o %>% 
   mutate(
     pi_indiv_opt = 
     list(
@@ -474,7 +475,7 @@ analysis_res <- analysis_res %>%
 
 ```{r }
 
-analysis_res <- analysis_res %>% 
+analysis_res_w <- analysis_res_og %>% 
   mutate(whole_profits_test = 
     list(
       get_whole_pi_test(data, gam_res, price)
@@ -488,7 +489,7 @@ analysis_res <- analysis_res %>%
 ```{r }
 # data_sf <- analysis_res$data[[1]]
 
-analysis_res <- analysis_res %>% 
+analysis_res_ch <- analysis_res_w %>% 
   mutate(ys_by_char = 
     list(
       make_ys_by_chars(data)
@@ -500,7 +501,7 @@ analysis_res <- analysis_res %>%
 ## Save the results
 
 ```{r }
-analysis_res <- analysis_res %>% 
+analysis_res_f <- analysis_res_ch %>% 
   dplyr::select(
     - gam_res
   )
@@ -511,6 +512,6 @@ file_name <- here(
   "analysis_results.rds" 
 )
 
-saveRDS(analysis_res, file_name)
+saveRDS(analysis_res_f, file_name)
 ```
 

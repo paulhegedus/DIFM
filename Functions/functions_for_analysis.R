@@ -815,7 +815,7 @@ assign_gc_rate <- function(data, input_type, gc_type, gc_rate) {
 # gc_type <-  analysis_res$gc_type[[1]]
 # input_price <-  analysis_res$price[[1]]
 
-get_opt_gc_data <- function(data, eval_data, gc_type, input_price) {
+get_opt_gc_data <- function(data, eval_data, gc_type, pi_dif_test_zone) {
 
   opt_input_data <- eval_data %>% 
     .[type == "opt_v", ] %>% 
@@ -836,7 +836,7 @@ get_opt_gc_data <- function(data, eval_data, gc_type, input_price) {
       .[, .(input_rate = mean(gc_rate)), by = zone_txt]
 
     gc_data <- pi_dif_test_zone %>% 
-      .[, .(yhat_est_gc, point_est_gc, point_est_gc_se, zone_txt, input_price)] %>% 
+      .[, .(yhat_est_gc, point_est_gc, point_est_gc_se, zone_txt)] %>% 
       mean_gc_rate_by_zone[., on = "zone_txt"] %>% 
       setnames(
         c("yhat_est_gc", "point_est_gc", "point_est_gc_se"), 
@@ -849,7 +849,7 @@ get_opt_gc_data <- function(data, eval_data, gc_type, input_price) {
       .[, type := "gc"]
 
     opt_data <- pi_dif_test_zone %>% 
-      .[, .(yhat_est_opt, point_est_opt, point_est_opt_se, zone_txt, input_price)] %>% 
+      .[, .(yhat_est_opt, point_est_opt, point_est_opt_se, zone_txt)] %>% 
       opt_input_data[, .(zone_txt, opt_input)][., on = "zone_txt"] %>% 
       setnames(
         c("yhat_est_opt", "point_est_opt", "point_est_opt_se", "opt_input"), 
