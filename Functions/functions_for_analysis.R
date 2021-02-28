@@ -119,7 +119,7 @@ predict_yield_range <- function(data, est, var_name, by = NULL, crop_price) {
 predict_yield <- function(data, est, var_name) {
 
   eval_data <- data.table::copy(data) %>% 
-    select(-input_rate) %>% 
+    dplyr::select(-input_rate) %>% 
     setnames(var_name, "input_rate")
 
   yield_prediction <- predict(est, newdata = eval_data, se = TRUE)

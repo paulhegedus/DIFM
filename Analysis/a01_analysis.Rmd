@@ -161,6 +161,8 @@ pluck(analysis_res, "data") %>%
 
 ```{r yield-response-functions-by-group}
 
+# data.table(analysis_res$data[[1]])[, sum(is.na(clay))]
+
 analysis_res <- analysis_res %>% 
   mutate(
     data = list(
@@ -189,14 +191,11 @@ pluck(analysis_res, "data") %>%
 
 ```{r gam-estimate}
 
-
 analysis_res <- analysis_res %>% 
   mutate(
     gam_formula = list(
       paste0(
-        "yield ~ s(input_rate, k = 5, by = zone_txt) 
-            + s(X, k = 5) + s(Y, k = 5) 
-            + te(X, Y, k = c(5, 5))",
+        "yield ~ s(input_rate, k = 5, by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5))",
         ifelse(
           length(field_vars) > 0,
           paste0(" + ", field_vars, collapse = " + "),
@@ -432,7 +431,7 @@ analysis_res <- analysis_res %>%
       )
     )
   ) %>% 
-  select(- pi_indiv_opt, - pi_indiv_gc, - pi_dif)
+  dplyr::select(- pi_indiv_opt, - pi_indiv_gc, - pi_dif)
 
 ```
 
@@ -441,6 +440,7 @@ analysis_res <- analysis_res %>%
 ### Profit by zone
 
 ```{r }
+
 analysis_res <- analysis_res %>% 
   mutate(pi_dif_test_zone =
     list(
@@ -491,7 +491,7 @@ analysis_res <- analysis_res %>%
 
 ```{r }
 analysis_res <- analysis_res %>% 
-  select(
+  dplyr::select(
     - gam_res
   )
 
