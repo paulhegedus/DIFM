@@ -64,17 +64,27 @@ tm_layout_to_add <- tm_layout(
 
 ```
 
-## Field parameters
+## Parameters and functions
 
 ```{r echo = F, results = "hide"}
-#--- define field parameters ---#
+#/*----------------------------------*/
+#' ## Trial parameters
+#/*----------------------------------*/
 # source(here("Codes/Functions/unpack_field_parameters.R"))
 source(
   get_r_file_name("Functions/unpack_field_parameters.R"), 
   local = TRUE
 )
 
-#--- source functions ---#
+crop_price_table <- fread(here("Data/CommonData/CropPrice.csv")) %>% 
+  setnames(names(.), tolower(names(.)))
+
+input_price_table <- fread(here("Data/CommonData/InputPrice.csv")) %>% 
+  setnames(names(.), tolower(names(.)))
+
+#/*----------------------------------*/
+#' ## Source functions
+#/*----------------------------------*/
 source(
   "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
   local = TRUE

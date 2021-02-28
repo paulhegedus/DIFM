@@ -29,8 +29,8 @@ crop_unit <- w_field_data[, crop_unit]
 crop_price <- w_field_data[, crop_price] 
 if(!is.numeric(crop_price)) {
   crop_price <- case_when(
-    crop == "soy" ~ 8.89, # $/bu
-    crop == "corn" ~ 4 # $/bu
+    crop == "soy" ~ 14, # $/bu
+    crop == "corn" ~ 5.5 # $/bu
   )
 }
 land_unit <- w_field_data[, land_unit] 
@@ -95,9 +95,9 @@ if (process_s) {
   if(!is.numeric(s_price)) {
     #=== default price ===#
     if (crop == "corn") {
-      s_price <- 0.00275 * 1000 # (thousand seed)
+      s_price <- 0.00381 * 1000 # (thousand seed)
     } else if(crop == "soy") {
-      s_price <- 0.000375 * 1000 # (thousand seed)
+      s_price <- 0.000321 * 1000 # (thousand seed)
     }
   } else { # if price is numeric
     if (s_price < 0.01) {
@@ -315,6 +315,7 @@ trial_info <- tibble(
   machine_width = c(m_width_s, m_width_n, m_width_k)
 ) %>% 
 filter(process == TRUE)
+
 
 #/*=================================================*/
 #' # Dictionary
