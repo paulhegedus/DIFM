@@ -90,6 +90,7 @@ source(
   local = TRUE
 )
 
+
 ```
 
 # Title-here analysis
@@ -124,6 +125,16 @@ analysis_res <- trial_info %>%
       )
     )
   ) %>%  
+  mutate(
+    field_vars = list(
+      find_field_vars(data)
+    )
+  ) %>% 
+  mutate(
+    data = list(
+      gen_y_res(data, field_vars)
+    )
+  ) %>% 
   mutate(
     data = list(
       run_gwr(data, "input_rate") 
@@ -178,16 +189,25 @@ pluck(analysis_res, "data") %>%
 
 ```{r gam-estimate}
 
+
 analysis_res <- analysis_res %>% 
   mutate(
+    gam_formula = list(
+      paste0(
+        "yield ~ s(input_rate, k = 5, by = zone_txt) 
+            + s(X, k = 5) + s(Y, k = 5) 
+            + te(X, Y, k = c(5, 5))",
+        ifelse(
+          length(field_vars) > 0,
+          paste0(" + ", field_vars, collapse = " + "),
+          ""
+        )
+      ) %>% formula()
+    )
+  ) %>% 
+  mutate(
     gam_res = list(
-      gam(
-        yield ~ s(input_rate, k = 5, by = zone_txt) 
-          + s(X, k = 5) + s(Y, k = 5) 
-          + te(X, Y, k = c(5, 5))
-        , 
-        data = data
-      )
+      gam(gam_formula, data = data)
     ) 
   ) %>% 
   #=== make the same observations have the same X and Y ===#
