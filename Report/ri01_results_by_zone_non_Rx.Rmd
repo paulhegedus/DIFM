@@ -1,6 +1,5 @@
-## Nitrogen Results  
 
-If the grower had not participated in the experiment, the chosen strategy would have been to apply seed uniformly across the field at `r grower_chosen_rate_s` per acre.
+If the grower had not participated in the experiment, the chosen strategy would have been to apply seed uniformly across the field at _gc_rate_here_ _unit_here_ per acre.
 
 The model predicts that this strategy was approximately _gc-opt-comp-txt-comes-here_.
 
