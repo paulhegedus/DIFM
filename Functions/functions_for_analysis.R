@@ -884,6 +884,7 @@ get_whole_pi_test <- function(data, gam_res, input_price) {
       "opt_input", 
       "gc_rate",
       gam_res,
+      crop_price,
       input_price = input_price 
     ) %>% 
     .[, type := "optimal site-specific rate strategy \n vs \n grower-chosen strategy"] %>% 
@@ -896,6 +897,7 @@ get_whole_pi_test <- function(data, gam_res, input_price) {
       "opt_input", 
       "opt_input_u",
       gam_res,
+      crop_price,
       input_price = input_price 
     ) %>% 
     .[, type := "optimal site-specific rate strategy \n vs \n optimal uniform rate strategy"] %>% 
@@ -908,6 +910,7 @@ get_whole_pi_test <- function(data, gam_res, input_price) {
       "opt_input_u", 
       "gc_rate",
       gam_res,
+      crop_price,
       input_price = input_price 
     ) %>% 
     .[, type := "optimal uniform rate strategy \n vs \n grower-chosen strategy"] %>% 
