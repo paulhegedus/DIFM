@@ -388,6 +388,7 @@ analysis_res_o <- analysis_res_p %>%
         data, 
         gc_type,
         gam_res,
+        crop_price
         price 
       )
     )
