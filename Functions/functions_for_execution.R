@@ -749,10 +749,9 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
           ") - get_input(opt_gc_data, \"opt_v\", ", 
           i,
           ")`_unit_here_ per acre", 
-          ifelse(temp_dif > 0, "too high", "too low"),
+          ifelse(temp_dif > 0, " too high", " too low"),
           " in Zone ", i
-        ) %>% 
-        gsub("opt_gc_data", paste0("opt_gc_data_", tolower(input_type)), .)
+        ) 
       )
     }
     gc_opt_comp_txt <- paste0(gc_opt_comp_txt_ls, collapse = ", ")
