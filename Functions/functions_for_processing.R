@@ -1135,5 +1135,31 @@ max_dev_table <- expand.grid(crop = crop, input_type = input_type) %>%
     NA, # wheat-K
     2 # cotton-K
   )]
-
+ 
+#/*=================================================*/
+#' # twi function
+#/*=================================================*/                            
+  upslope.area <- function(dem, log=TRUE, atb=TRUE, deg=0.1, fill.sinks=T)
+{
+  # check
+  if(fill.sinks)
+  {
+    # use capture.output to supress the function console output
+    capture.output(dem <- invisible(raster::setValues(dem, topmodel::sinkfill(raster::as.matrix(dem), res=xres(dem), degree=deg))))
+  }
+  topidx <- topmodel::topidx(raster::as.matrix(dem), res=xres(dem))
   
+  a <- raster::setValues(dem, topidx$area)
+  if(log)
+  {
+    a <- log(a)
+  }
+  if(atb)
+  {
+    atb <- raster::setValues(dem, topidx$atb)
+    # add the topographic index ln(a/tanB)
+    a <- addLayer(a, atb)
+    names(a)<-c("a", "atb")
+  }
+  return(a)
+}
