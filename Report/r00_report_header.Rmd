@@ -42,7 +42,7 @@ code.r{ /* Code block */
 ```{r, cache = F, echo = F, results = "hide"}
 library(knitr)
 knitr::opts_chunk$set(
-  cache = TRUE,
+  cache = FALSE,
   echo = FALSE,
   warning = FALSE,
   cache.lazy = FALSE,
