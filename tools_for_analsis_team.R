@@ -48,14 +48,12 @@ make_data_report()
 #--- individually ---#
 exp_process_make_report(
   ffy = field_year_ls[8],
-  rerun = TRUE,
-  locally_run = TRUE
+  rerun = TRUE
 )
 
 exp_process_make_report(
   ffy = field_year_ls[9],
-  rerun = TRUE,
-  locally_run = TRUE
+  rerun = TRUE
 )
 
 # /*----------------------------------*/
@@ -66,9 +64,8 @@ exp_process_make_report(
 
 #--- individually ---#
 f_process_make_report(
-  ffy = field_year_ls[10],
-  rerun = TRUE,
-  locally_run = TRUE
+  ffy = field_year_ls[17],
+  rerun = TRUE
 )
 
 # /*=================================================*/
@@ -83,7 +80,7 @@ f_process_make_report(
 
 #--- individually ---#
 run_analysis(
-  ffy = field_year_ls[10],
+  ffy = field_year_ls[17],
   rerun = TRUE,
   locally_run = TRUE
 )
@@ -96,7 +93,7 @@ run_analysis(
 
 #--- individually ---#
 make_grower_report(
-  ffy = field_year_ls[10],
+  ffy = field_year_ls[17],
   rerun = TRUE,
   locally_run = TRUE
 )

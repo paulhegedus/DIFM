@@ -417,8 +417,10 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
       res_disc_rmd = list(
         get_ERI_texts(
           input_type = input_type, 
-          grower_chosen_rate = gc_rate,
-          results = results, 
+          gc_rate = gc_rate,
+          whole_profits_test = whole_profits_test, 
+          pi_dif_test_zone = pi_dif_test_zone, 
+          opt_gc_data = opt_gc_data, 
           gc_type = gc_type, 
           locally_run = locally_run
         )
@@ -673,11 +675,7 @@ get_ttest_text <- function(pi_dif_test_zone, zone){
 }
 
 
-get_ERI_texts <- function(input_type, grower_chosen_rate, results, gc_type, locally_run = FALSE){
-
-  whole_profits_test <- results$whole_profits_test[[1]]
-  pi_dif_test_zone <- results$pi_dif_test_zone[[1]]
-  opt_gc_data <- results$opt_gc_data[[1]]
+get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_zone, opt_gc_data, gc_type, locally_run = FALSE){
 
   pi_rmd_file <- "Report/ri02_profit_dif_statement.Rmd"
 
@@ -714,13 +712,13 @@ get_ERI_texts <- function(input_type, grower_chosen_rate, results, gc_type, loca
 
         pi_dif_rmd <- read_rmd(pi_rmd_file, locally_run = locally_run) %>% 
         gsub("_insert-zone-here_", i, .) %>% 
-        gsub("_t-test-statement-here_", get_ttest_text(input_type, pi_dif_test_zone, i), .)
+        gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
 
       } else {
 
         temp_pi_dif_rmd <- read_rmd(pi_rmd_file, locally_run = locally_run) %>% 
         gsub("_insert-zone-here_", i, .) %>% 
-        gsub("_t-test-statement-here_", get_ttest_text(input_type, pi_dif_test_zone, i), .)
+        gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
 
         pi_dif_rmd <- c(pi_dif_rmd, temp_pi_dif_rmd) 
 
@@ -732,7 +730,7 @@ get_ERI_texts <- function(input_type, grower_chosen_rate, results, gc_type, loca
       inserting_rmd = pi_dif_rmd,
       target_text = "_rest-of-the-zones-here_"
     ) %>% 
-    gsub("_gc_rate_here_", grower_chosen_rate, .)
+    gsub("_gc_rate_here_", gc_rate, .)
 
     #/*----------------------------------*/
     #' ## Difference between optimal vs grower-chosen rates
@@ -849,5 +847,8 @@ prepare_e02_rmd <- function(input_type, process, use_td, locally_run = FALSE){
   return(return_rmd)
 }
 
+get_input <- function(opt_gc_data, c_type, w_zone){
+  opt_gc_data[type == c_type & zone_txt == paste0("Zone ", w_zone), input_rate] %>% round(digits = 0)
+}
 
 
