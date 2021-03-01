@@ -141,7 +141,7 @@ predict_yield <- function(data, est, var_name) {
 # Notes: test if the profit associated with the optimal and grower-chosen
 # rates are statistically significantly different from zero 
 
-get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, input_price){
+get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, input_price){
     
   
   base_data <- data.table::copy(data) %>% 
@@ -225,7 +225,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, input_price){
 
 }
 
-get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var, input_price){
+get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var, crop_price, input_price){
 
   zone_ls <- data[, ..by_var] %>% 
     unique() %>% 
@@ -245,6 +245,7 @@ get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var, 
       opt_var,
       gc_var,
       gam_res,
+      crop_price,
       input_price
     ) %>% 
     mutate(by_var = y)
@@ -256,7 +257,7 @@ get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var, 
 
 }
 
-get_pi_dif_test_zone <- function(data, gc_type, gam_res, input_price) {
+get_pi_dif_test_zone <- function(data, gc_type, gam_res, crop_price, input_price) {
 
   if (gc_type == "uniform") {
 
@@ -269,6 +270,7 @@ get_pi_dif_test_zone <- function(data, gc_type, gam_res, input_price) {
       gc_var = "gc_rate",
       gam_res = gam_res,
       by_var = "zone_txt",
+      crop_price = crop_price,
       input_price = input_price
     )
 
@@ -281,6 +283,7 @@ get_pi_dif_test_zone <- function(data, gc_type, gam_res, input_price) {
       gc_var = "gc_rate",
       gam_res = gam_res,
       by_var = "zone_txt",
+      crop_price = crop_price,
       input_price = input_price
     )
 

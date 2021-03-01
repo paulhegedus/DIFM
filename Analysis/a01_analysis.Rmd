@@ -504,6 +504,9 @@ analysis_res_ch <- analysis_res_w %>%
 analysis_res_f <- analysis_res_ch %>% 
   dplyr::select(
     - gam_res
+  ) %>% 
+  mutate(
+    crop_price = crop_price
   )
 
 file_name <- here(

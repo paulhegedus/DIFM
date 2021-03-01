@@ -28,7 +28,7 @@ g_pi <- ggplot(data = fig_data) +
     aes(
       y = max(fig_data$pi_upper) + 20, 
       x = type_txt,
-      label = paste0("seed rate \n = ", round(seed_rate)) 
+      label = paste0("_input_full_name_here_c_ rate \n = ", round(input_rate)) 
     ), 
     size = 4, 
     family = "Times",
