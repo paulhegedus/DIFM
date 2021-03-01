@@ -28,6 +28,7 @@ make_grower_folders <- function(field_data) {
 
     #--- Data  ---#
     dir.create(paste0(root_dir, "/Raw"))
+    dir.create(paste0(root_dir, "/OriginalRawData"))
     dir.create(paste0(root_dir, "/Intermediate"))
     dir.create(paste0(root_dir, "/TrialDesign"))
     dir.create(paste0(root_dir, "/Analysis-Ready"))
