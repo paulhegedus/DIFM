@@ -575,7 +575,8 @@ field_plots <- tibble(
         palette = "YlOrRd",
         direction = -1,
         guide = guide_colorbar(
-          title.position = "top"
+          title.position = "top",
+          title.hjust = unit(1, "cm")
         )
       ) + 
       theme(
