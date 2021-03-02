@@ -109,7 +109,7 @@ In terms of the model used in this analysis, correlation between the estimated p
 
 `r results$field_vars[[1]]` were tested to see if they are correlated with the management zones. Among these variables, `r field_plots$ch_var` seem to affect how yield responds to _input_full_name_l_. 
 
-```{r }
+```{r fig.height = 4}
 
 for (i in seq_len(nrow(field_plots))) {
   print(field_plots$g_map[[i]] | field_plots$g_ys_char[[i]])

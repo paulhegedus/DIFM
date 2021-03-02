@@ -573,7 +573,10 @@ field_plots <- tibble(
       theme_void() +
       scale_fill_distiller(
         palette = "YlOrRd",
-        direction = -1
+        direction = -1,
+        guide = guide_colorbar(
+          title.position = "top"
+        )
       ) + 
       theme(
         legend.position = "bottom",
