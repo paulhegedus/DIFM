@@ -444,11 +444,6 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
           target_rmd = ., 
           inserting_rmd = td_txt,
           target_text = "_trial_design_information_here_"
-        ) %>% 
-        gsub(
-          "_input_full_name_l_", 
-         tolower(input_full_name),
-         .
         )
       )
     ) %>% 
@@ -480,7 +475,8 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
           gsub("_input_full_name_here_c_", input_full_name, .) %>% 
           gsub("_input_type_here_", input_type, .) %>% 
           gsub("_field-year-here_", ffy, .) %>%  
-          gsub("_gc_rate_here_", gc_rate, .)   
+          gsub("_gc_rate_here_", gc_rate, .) %>% 
+          gsub("_input_full_name_l_", tolower(input_full_name), .)   
       )
     )
 

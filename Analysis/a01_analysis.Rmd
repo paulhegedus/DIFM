@@ -222,7 +222,7 @@ analysis_res_g <- analysis_res_m %>%
       gam(gam_formula, data = data)
     ) 
   ) %>% 
-  #=== make the same observations have the same X and Y ===#
+  #=== make the observations in the same zone have the same X and Y ===#
   mutate(
     data = list(
       data.table(data) %>% 
@@ -363,6 +363,9 @@ analysis_res_p %>%
 
 ```{r gen-opt-S-v-data-map}
 
+# gam_res <- analysis_res_p$gam_res[[1]]
+# input_price <- analysis_res_p$price[[1]]
+
 analysis_res_o <- analysis_res_p %>% 
   mutate(
     opt_input_data = list(
@@ -410,7 +413,6 @@ analysis_res_o <- analysis_res_p %>%
         data, 
         opt_input_u = find_opt_u(
           data = data, 
-          var_name = "input_rate", 
           gam_res = gam_res,
           input_price = price
         )
@@ -476,10 +478,17 @@ analysis_res_og <- analysis_res_o %>%
 
 ```{r }
 
+# analysis_res_w$whole_profits_test
+
 analysis_res_w <- analysis_res_og %>% 
   mutate(whole_profits_test = 
     list(
-      get_whole_pi_test(data, gam_res, price)
+      get_whole_pi_test(
+        data = data, 
+        gam_res = gam_res, 
+        crop_price = crop_price,
+        input_price = price
+      )
     )
   ) 
 

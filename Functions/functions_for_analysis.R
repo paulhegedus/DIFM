@@ -292,19 +292,20 @@ get_pi_dif_test_zone <- function(data, gc_type, gam_res, crop_price, input_price
   return(pi_dif_test_zone)
 }
 
-find_opt_u <- function(data, var_name, gam_res, input_price) {
+find_opt_u <- function(data, gam_res, input_price) {
 
   data_dt <- data.table(data)
 
-  input_rates <- data_dt[, ..var_name] %>% unlist()
-
   input_ls <- seq(
-    quantile(input_rates, prob = 0.025), 
-    quantile(input_rates, prob = 0.975), 
+    quantile(data_dt$input_rate, prob = 0.025), 
+    quantile(data_dt$input_rate, prob = 0.975), 
     length = 100
   )
 
   opt_input_u <- data_dt %>% 
+  # this is okay because each zone has the same
+  # number of observations
+  unique(by = "zone_txt") %>% 
   .[rep(1:nrow(.), length(input_ls)), ] %>% 
   .[, input_rate := rep(input_ls, each = nrow(.)/length(input_ls))] %>% 
   .[, yield_hat := predict(gam_res, newdata = .)] %>% 
@@ -874,7 +875,7 @@ get_opt_gc_data <- function(data, eval_data, gc_type, pi_dif_test_zone) {
 
 }
     
-get_whole_pi_test <- function(data, gam_res, input_price) {
+get_whole_pi_test <- function(data, gam_res, crop_price, input_price) {
 
   test_data <- data.table(data) 
 
@@ -948,5 +949,6 @@ get_field_int <- function(data_sf, field_vars) {
   ))
 
 }
+
 
   

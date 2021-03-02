@@ -112,7 +112,7 @@ In terms of the model used in this analysis, correlation between the estimated p
 ```{r }
 
 for (i in seq_len(nrow(field_plots))) {
-  field_plots$g_map[[i]] | field_plots$g_ys_char[[i]]
+  print(field_plots$g_map[[i]] | field_plots$g_ys_char[[i]])
 }
 
 ```
