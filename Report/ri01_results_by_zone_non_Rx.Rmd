@@ -7,56 +7,38 @@ For each zone, Figure \@ref(fig:status-quo-optimal-v) compares the per-acre net 
 
 _rest-of-the-zones-here_
 
-```{r status-quo-optimal-v, fig.cap = "Confidence intervals of net revenues under grower-chosen (_gc_rate_here_ _unit_here_) vs. optimal site-specific seeding strategies", fig.height = 4}
+```{r status-quo-optimal-v, fig.cap = "Confidence intervals of the difference in net revenues under grower-chosen (_gc_rate_here_ _unit_here_) vs. optimal site-specific seeding strategies by zone", fig.height = 4}
 
-fig_data <- copy(opt_gc_data) %>% 
-  .[, type_txt := case_when(
-    type == "opt_v" ~ "optimal\nsite-specific\nrates",
-    type == "gc" ~ "grower-\nchosen\n rate"
-  )]
+fig_data <- data.table::copy(pi_dif_test_zone) %>% 
+  mutate(
+    pi_dif_upper = point_est_dif + 1.96 * point_est_dif_se,
+    pi_dif_lower = point_est_dif - 1.96 * point_est_dif_se
+  )
 
-g_pi <- ggplot(data = fig_data) +
+g_pi_dif_zone <- ggplot(data = fig_data) +
   geom_point(
     aes(
-      y = profit_hat, 
-      x = type_txt
+      y = point_est_dif,
+      x = zone_txt
     ), 
     size = 3, 
     color = "red"
   ) +
-  geom_text(
-    aes(
-      y = max(fig_data$pi_upper) + 20, 
-      x = type_txt,
-      label = paste0("_input_full_name_here_c_ rate \n = ", round(input_rate)) 
-    ), 
-    size = 4, 
-    family = "Times",
-    color = "blue"
-  ) +
-  # geom_text(
-  #   data = pi_dif_test_zone_n,
-  #   aes(
-  #     y = max(fig_data$pi_upper) + 25, 
-  #     x = "Optimal",
-  #     label = paste0("(t = ", round(t, digits = 2), ")") 
-  #   ), 
-  #   size = 3, 
-  #   color = "blue"
-  # ) +
   geom_errorbar(
     aes(
-    ymin = pi_lower, 
-    ymax = pi_upper, 
-    x = type_txt
+    ymin = pi_dif_lower, 
+    ymax = pi_dif_upper, 
+    x = zone_txt
     ),
     size = 1
   ) +
-  facet_grid(. ~ zone_txt) +
+  geom_hline(
+    yintercept = 0, 
+    color = "red", 
+    size = 1.5
+  ) +
   theme_bw() +
-  ylim(NA, max(fig_data$pi_upper) + 30) +
-  ylab("Net Revenue ($/acre)") +
-  xlab("") +
+  ylab("Difference in Net Revenue ($/acre)") +
   theme(
     axis.title.x = element_text(size = 12, vjust = -1),
     axis.title.y = element_text(size = 12),
@@ -66,7 +48,7 @@ g_pi <- ggplot(data = fig_data) +
   ) +
   fig_theme_nonsp
 
-g_pi
+g_pi_dif_zone
 
 ```
 
