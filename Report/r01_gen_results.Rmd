@@ -1,5 +1,5 @@
 
-```{r read-data-sets, results = "hide"}
+```{r read-data-sets, results = "hide", include = TRUE}
 input_type <- "_input_type_here_"
 
 #/*----------------------------------*/

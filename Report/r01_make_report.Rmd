@@ -12,7 +12,7 @@
 
 # Summary  
 
-A soybean _input_full_name_l_ rate trial was conducted on the `r w_farm_field` field in crop year `r w_year`. The trial was implemented with a high level of accuracy. The best estimate provided by the data and model is that, under growing conditions identical to those of the field in 2020, implementing the recommended site-specific seeding rate strategy would have increased profits by approximately \$`r round(whole_profits_test[type_short == "ovg", point_est_dif], digits = 0)` per acre. The data and model placed a 95% level statistical confidence that this profit gain would have been  between approximately \$`r round(whole_profits_test[type_short == "ovg", point_est_dif - point_est_dif_se * 1.96], digits = 0)` and \$`r round(whole_profits_test[type_short == "ovg", point_est_dif + point_est_dif_se * 1.96], digits = 0)` per acre.
+A soybean _input_full_name_l_ rate trial was conducted on the `r w_farm_field` field in crop year `r w_year`. The trial was implemented with a high level of accuracy. The best estimate provided by the data and model is that, under growing conditions identical to those of the field in `r w_year`, implementing the recommended site-specific seeding rate strategy would have increased profits by approximately \$`r round(whole_profits_test[type_short == "ovg", point_est_dif], digits = 0)` per acre. The data and model placed a 95% level statistical confidence that this profit gain would have been  between approximately \$`r round(whole_profits_test[type_short == "ovg", point_est_dif - point_est_dif_se * 1.96], digits = 0)` and \$`r round(whole_profits_test[type_short == "ovg", point_est_dif + point_est_dif_se * 1.96], digits = 0)` per acre.
 
 
 # Economic Results and Implications 
