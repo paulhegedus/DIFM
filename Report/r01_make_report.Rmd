@@ -104,9 +104,17 @@ Figure \@ref(fig:interaction) illustrates.In figure \@ref(fig:interaction), incr
 g_int
 
 ```
+<!-- 
+In terms of the model used in this analysis, correlation between the estimated parameter $\beta$ and a field characteristic offers evidence of interaction.  For the _field-year-here_ field, the absolute values of the correlation coefficients were highest for the variables TWI, elevation, and ss_Mp.  TWI stands for topographical wetness index, which describes the tendency of an area of land to accumulate water.  ss_Mp is a variable that indicates whether the data point comes from a location in which the soil is classified as Mobridge-Plankington silt loam.  (All such areas are shaded in figure \@ref(fig:explore-map).)  Figure \@ref(fig:explore-plot) shows how yield response curves differed given different levels of these three interaction terms.  The northeast panel of figure 13 shows that yield is noticeably less responsive to _input_full_name_l_ rate on the Belmore loam soil than on the rest of the field.  The southwest panel shows the same for the Eakin-Rabin soil.  The northwest panel illustrates that yield tended to respond poorly to _input_full_name_l_ rates in low-elevation areas.  Interpretation of the northwest panel is a little more complicated;  It seems to show that at on flat soils, when beginning at low rates, an increase in seed reduced yield, but at higher _input_full_name_l_ rates on flat land, increasing the rate had a strong positive affect on yields.  This difficult-to-interpret result is a reminder that data analysis carries with it inherent uncertainty, and that treating uncertain occurrences as if they were determinate can lead to misleading conclusions  -->
 
-In terms of the model used in this analysis, correlation between the estimated parameter $\beta$ and a field characteristic offers evidence of interaction.  For the _field-year-here_ field, the absolute values of the correlation coefficients were highest for the variables TWI, elevation, and ss_Mp.  TWI stands for topographical wetness index, which describes the tendency of an area of land to accumulate water.  ss_Mp is a variable that indicates whether the data point comes from a location in which the soil is classified as Mobridge-Plankington silt loam.  (All such areas are shaded in figure \@ref(fig:explore-map).)  Figure \@ref(fig:explore-plot) shows how yield response curves differed given different levels of these three interaction terms.  The northeast panel of figure 13 shows that yield is noticeably less responsive to _input_full_name_l_ rate on the Belmore loam soil than on the rest of the field.  The southwest panel shows the same for the Eakin-Rabin soil.  The northwest panel illustrates that yield tended to respond poorly to _input_full_name_l_ rates in low-elevation areas.  Interpretation of the northwest panel is a little more complicated;  It seems to show that at on flat soils, when beginning at low rates, an increase in seed reduced yield, but at higher _input_full_name_l_ rates on flat land, increasing the rate had a strong positive affect on yields.  This difficult-to-interpret result is a reminder that data analysis carries with it inherent uncertainty, and that treating uncertain occurrences as if they were determinate can lead to misleading conclusions 
+`r results$field_vars[[1]]` were tested to see if they are correlated with the management zones. Among these variables, `r field_plots$ch_var` seem to affect how yield responds to _input_full_name_l_. 
 
-`r results$field_vars` were tested to see if they are correlated with the management zones.
+```{r }
 
+lapply(
+  seq_len(nrow(field_plots)), 
+  function(i)
+  field_plots$g_map[[i]] | field_plots$g_ys_char[[i]]
+)
 
+```

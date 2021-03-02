@@ -478,6 +478,8 @@ define_mz <- function(data_sf, max_num_zones, min_obs) {
 #/*=================================================*/
 
 # data_sf <- analysis_res$data[[1]]
+# field_vars <- analysis_res$data[[1]]
+
 
 make_ys_by_chars <- function(data_sf){
 
@@ -543,7 +545,7 @@ make_ys_by_chars <- function(data_sf){
     plot_ls <- list()
     map_ls <- list()
 
-    # var_p <- "ecd"
+    # var_p <- "elevation"
 
     for (var_p in vars_plot_ls){
 
