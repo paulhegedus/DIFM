@@ -628,7 +628,7 @@ field_plots <- tibble(
       formula = y ~ s(x, k = 3)
     ) +
     theme_bw() +
-    scale_color_discrete(name = var_p) +
+    scale_color_discrete(name = ch_var) +
     ylab("Yield (bu/acre)") +
     xlab("_input_full_name_c_ Rate (_unit_here_)") +
     theme_bw() +
