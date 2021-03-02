@@ -572,12 +572,9 @@ field_plots <- tibble(
       geom_sf(aes_string(fill = ch_var), color = NA) +
       theme_void() +
       scale_fill_distiller(
-        palette = "YlOrRd",
+        palette = "YlGn",
         direction = -1,
-        guide = guide_colorbar(
-          title.position = "top",
-          title.hjust = unit(1, "cm")
-        )
+        name = ""
       ) + 
       theme(
         legend.position = "bottom",
@@ -586,7 +583,8 @@ field_plots <- tibble(
         legend.key.width =  unit(1, "cm"),
         plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
         plot.margin = unit(c(0, 2, 0, 0), "cm") 
-      )
+      ) +
+      ggtitle(ch_var)
     )
   ) %>% 
   mutate(data_plot_dt = 
