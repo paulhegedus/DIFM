@@ -561,7 +561,11 @@ field_interactions <- results$field_interactions[[1]]
 cor_tab <- field_interactions$cor_tab
 interacting_vars <- field_interactions$interacting_vars
 
-field_plots <- tibble(
+if (length(interacting_vars) == 0) {
+  field_plots <- NULL
+} else {
+
+  field_plots <- tibble(
     ch_var = interacting_vars,
     data_plot = list(data_sf)
   ) %>% 
@@ -643,4 +647,5 @@ field_plots <- tibble(
     )
   ))
 
+}
 ```
