@@ -556,20 +556,13 @@ g_int <- ggplot(plot_data) +
 #/*=================================================*/
 #=== find correlation coefs of b_slope and field vars ===#
 
-cor_tab <- data_sf[, c("b_slope", results$field_vars[[1]])] %>% 
-  st_drop_geometry() %>% 
-  cor(use = "complete.obs") %>% 
-  .[, "b_slope", drop = FALSE] %>% 
-  .[!(rownames(.) %in% c("b_slope")), , drop = FALSE] %>% 
-  data.frame() %>% 
-  arrange(desc(abs(b_slope)))
+field_interactions <- results$field_interactions[[1]]
 
-#=== find variables that are correlated with b_slope higher than 0.2 ===#
-vars_plot_ls <- rownames(cor_tab)[abs(cor_tab) >= 0.2] %>% 
-  .[!str_detect(., "yield")]
+cor_tab <- field_interactions$cor_tab
+interacting_vars <- field_interactions$interacting_vars
 
 field_plots <- tibble(
-    ch_var = vars_plot_ls,
+    ch_var = interacting_vars,
     data_plot = list(data_sf)
   ) %>% 
   rowwise() %>% 
@@ -630,7 +623,12 @@ field_plots <- tibble(
     theme_bw() +
     scale_color_discrete(name = ch_var) +
     ylab("Yield (bu/acre)") +
-    xlab("_input_full_name_c_ Rate (_unit_here_)") +
+    xlab(
+      paste0(
+        str_to_title("_input_full_name_l_"), 
+        " Rate (_unit_here_)"
+      )
+    ) +
     theme_bw() +
     theme(
       legend.position = c(0.3, 0.2),

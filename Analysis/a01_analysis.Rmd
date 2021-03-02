@@ -485,15 +485,15 @@ analysis_res_w <- analysis_res_og %>%
 
 ```
 
-## Create figures of yield response functions by character
+## Get correlations between b_slope and soil/field characteristics
 
 ```{r }
 # data_sf <- analysis_res$data[[1]]
 
 analysis_res_ch <- analysis_res_w %>% 
-  mutate(ys_by_char = 
+  mutate(field_interactions = 
     list(
-      make_ys_by_chars(data)
+      get_field_int(data, field_vars)
     )
   ) 
 

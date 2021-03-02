@@ -923,3 +923,30 @@ get_whole_pi_test <- function(data, gam_res, input_price) {
 
 }
 
+#/*=================================================*/
+#' # Interactions
+#/*=================================================*/
+
+get_field_int <- function(data_sf, field_vars) {
+
+  #=== find correlation coefs of b_slope and field vars ===#
+  cor_tab <- data_sf[, c("b_slope", field_vars)] %>% 
+    st_drop_geometry() %>% 
+    cor(use = "complete.obs") %>% 
+    .[, "b_slope", drop = FALSE] %>% 
+    .[!(rownames(.) %in% c("b_slope")), , drop = FALSE] %>% 
+    data.frame() %>% 
+    arrange(desc(abs(b_slope)))
+
+  #=== find variables that are correlated with b_slope higher than 0.2 ===#
+  interacting_vars <- rownames(cor_tab)[abs(cor_tab) >= 0.2] %>% 
+    .[!str_detect(., "yield")]
+
+  return(list(
+    cor_tab = cor_tab, 
+    interacting_vars = interacting_vars
+  ))
+
+}
+
+  
