@@ -237,6 +237,12 @@ analysis_res_g <- analysis_res_m %>%
 
 ```
 
+Here is the `gam` model formula:
+
+```{r }
+analysis_res_g$gam_formula
+```
+
 ## Define grower-chose rate
 
 ```{r }
@@ -508,6 +514,10 @@ analysis_res_ch <- analysis_res_w %>%
   ) 
 
 ```
+
+```{r }
+analysis_res_ch$field_interactions
+``` 
 
 ## Save the results
 
