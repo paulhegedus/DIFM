@@ -471,12 +471,43 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
             ), 
             .
           ) %>% 
-          gsub("_unit_here_", unit_txt, .) %>% 
-          gsub("_input_full_name_here_c_", input_full_name, .) %>% 
-          gsub("_input_type_here_", input_type, .) %>% 
-          gsub("_field-year-here_", ffy, .) %>%  
-          gsub("_gc_rate_here_", gc_rate, .) %>% 
-          gsub("_input_full_name_l_", tolower(input_full_name), .)   
+          str_replace_all("_unit_here_", unit_txt) %>% 
+          str_replace_all("_input_full_name_here_c_", input_full_name) %>% 
+          str_replace_all("_input_type_here_", input_type) %>% 
+          str_replace_all("_field-year-here_", ffy) %>%  
+          str_replace_all("_gc_rate_here_", as.character(gc_rate)) %>% 
+          str_replace_all(
+            "_planter-applicator-here_",
+            case_when(
+              input_type == "S" ~ "planter",
+              input_type != "S" ~ "applicator"
+            )
+          ) %>% 
+          str_replace_all(
+            "_asa-or-asp_",
+            case_when(
+              input_type == "S" ~ "as-planted",
+              input_type != "S" ~ "as-applied"
+            )
+          ) %>% 
+          str_replace_all(
+            "_seeding-or-application_",
+            case_when(
+              input_type == "S" ~ "seeding",
+              input_type != "S" ~ "_input_full_name_l_ application"
+            )
+          ) %>% 
+          str_replace_all(
+            "_input_full_name_l_", 
+            tolower(input_full_name)
+          ) %>% 
+          str_replace_all(
+            "_crop_type_here_", 
+            case_when(
+              crop == "soy" ~ "soybean",
+              crop != "soy" ~ crop
+            )
+          )
       )
     )
 
@@ -653,28 +684,8 @@ insert_rmd <- function(target_rmd, inserting_rmd, target_text) {
 
 }   
 
-get_ttest_text <- function(pi_dif_test_zone, zone){
-
-  t <- pi_dif_test_zone[zone_txt == paste0("Zone ", zone), t]
-
-  if (t < 1.30){
-    temp_text <- "The data and model provide negligible evidence that the estimated optimal rate of `r get_input(opt_gc_data, \"opt_v\", zone)` _unit_here_ does not provide greater profits than the grower-chosen rate of _gc_rate_here_ _unit_here_ per acre (t-value of `r get_t_value(pi_dif_test_zone, zone)`)"
-  } else if (1.30 <= t & t < 1.64){
-    temp_text <- "The data and model provide only limited evidence that the estimated optimal rate of `r get_input(opt_gc_data, \"opt_v\", zone)` _unit_here_ did indeed provide greater profits than the grower-chosen rate of _gc_rate_here_ _unit_here_ per acre (t-value of `r get_t_value(pi_dif_test_zone, zone)`)"
-  } else if (1.64 <= t & t < 1.96){
-    temp_text <- "The data and model provide moderate evidence that the estimated optimal rate of `r get_input(opt_gc_data, \"opt_v\", zone)` _unit_here_ did indeed provide greater profits than the grower-chosen rate of _gc_rate_here_ _unit_here_ per acre (t-value of `r get_t_value(pi_dif_test_zone, zone)`)"
-  } else {
-    temp_text <- "The data and model provide strong evidence that the estimated optimal rate of `r get_input(opt_gc_data, \"opt_v\", zone)` _unit_here_ did indeed provide greater profits than the grower-chosen rate of _gc_rate_here_ _unit_here_ per acre (t-value of `r get_t_value(pi_dif_test_zone, zone)`)" 
-  }
-
-  return(gsub(", zone", paste0(", ", zone), temp_text))
-
-}
-
 
 get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_zone, opt_gc_data, gc_type, locally_run = FALSE){
-
-  pi_rmd_file <- "Report/ri02_profit_dif_statement.Rmd"
 
   if (gc_type == "Rx") {
 
@@ -701,33 +712,42 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
     # Statements about the difference between 
     # optimal vs grower-chosen rates
 
-    num_zones <- nrow(pi_dif_test_zone)
-
-    for (i in 2:num_zones) {
-    # note: zone 1 has a longer version already in res_disc_rmd 
-      if (i == 2) {
-
-        pi_dif_rmd <- read_rmd(pi_rmd_file, locally_run = locally_run) %>% 
-        gsub("_insert-zone-here_", i, .) %>% 
-        gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
-
-      } else {
-
-        temp_pi_dif_rmd <- read_rmd(pi_rmd_file, locally_run = locally_run) %>% 
-        gsub("_insert-zone-here_", i, .) %>% 
-        gsub("_t-test-statement-here_", get_ttest_text(pi_dif_test_zone, i), .)
-
-        pi_dif_rmd <- c(pi_dif_rmd, temp_pi_dif_rmd) 
-
-      }
-    }
+    pi_dif_zone_rmd <- tibble(
+      w_zone = 2:nrow(pi_dif_test_zone)
+    ) %>% 
+    rowwise() %>% 
+    mutate(t_value = list(
+      pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), t]
+    )) %>% 
+    mutate(pi_dif_rmd_indiv = list(
+        read_rmd(
+          "Report/ri02_profit_dif_statement.Rmd",
+          locally_run = locally_run
+        ) %>%
+        gsub("_insert-zone-here_", w_zone, .) %>% 
+        gsub(
+          "_t-confidence-statement_", 
+          get_t_confidence_statement(t_value), 
+          .
+        )
+    )) %>% 
+    pluck("pi_dif_rmd_indiv") %>% 
+    reduce(c)
 
     res_disc_rmd <- insert_rmd(
       target_rmd = res_disc_rmd, 
-      inserting_rmd = pi_dif_rmd,
+      inserting_rmd = pi_dif_zone_rmd,
       target_text = "_rest-of-the-zones-here_"
     ) %>% 
-    gsub("_gc_rate_here_", gc_rate, .)
+    gsub("_gc_rate_here_", gc_rate, .) %>% 
+    #=== t-test statement for zone 1 (exception) ===#
+    gsub(
+      "_t-confidence-statement_1_", 
+      get_t_confidence_statement(
+        pi_dif_test_zone[zone_txt == paste0("Zone ", 1), t]
+      ), 
+      .
+    )
 
     #/*----------------------------------*/
     #' ## Difference between optimal vs grower-chosen rates
@@ -740,11 +760,8 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
       temp_dif <- get_input(opt_gc_data, "gc", i) - get_input(opt_gc_data, "opt_v", i)
       gc_opt_comp_txt_ls <- c(gc_opt_comp_txt_ls,
         paste0(
-          "`r get_input(opt_gc_data, \"gc\", ", 
-          i, 
-          ") - get_input(opt_gc_data, \"opt_v\", ", 
-          i,
-          ")`_unit_here_ per acre", 
+          abs(temp_dif),
+          " _unit_here_ per acre", 
           ifelse(temp_dif > 0, " too high", " too low"),
           " in Zone ", i
         ) 
@@ -762,6 +779,16 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
 
   return(res_disc_rmd) 
 
+}
+
+
+get_t_confidence_statement <- function(t_value) {
+  case_when(
+    t_value < 1.30 ~ "negligible",
+    1.30 <= t_value & t_value < 1.64 ~ "only limited",
+    1.64 <= t_value & t_value < 1.96 ~ "moderate", 
+    t_value >= 1.96  ~ "strong"  
+  )
 }
 
 get_whole_pi_txt <- function(results) {
