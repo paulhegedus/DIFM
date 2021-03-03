@@ -39,6 +39,12 @@ make_grower_folders <- function(field_data) {
     #--- Reports ---#
     dir.create(paste0(here(), "/Reports/Growers/", ffy))
 
+    #=== copy the word template for reports ===#
+    file.copy(
+      here("Data/CommonData/word_template.docx"),
+      paste0(here(), "/Reports/Growers/", ffy)
+    ) 
+
   }
 
   lapply(field_year_ls, make_indiv_growers_folder)
