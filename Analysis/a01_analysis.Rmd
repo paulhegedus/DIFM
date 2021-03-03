@@ -114,6 +114,7 @@ source(
 data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>% 
   readRDS() %>% 
   rename(yield = yield_vol) %>% 
+  setnames(names(.), tolower(names(.))) %>% 
   filter(!is.na(yield)) %>% 
   cbind(., st_coordinates(st_centroid(.))) 
 

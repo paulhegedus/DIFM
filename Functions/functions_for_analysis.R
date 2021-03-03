@@ -330,7 +330,7 @@ find_field_vars <- function(data_sf) {
   #=== keep only the ones that are available ===#
   field_var_ls <- c(
     #=== topography ===#
-    "TWI", "elevation", "Slope", 
+    "twi", "tpi", "elevation", "slope", 
     #=== ssurgo ===#
     "clay", "sand", "water_storage",
     #=== ec ===#
