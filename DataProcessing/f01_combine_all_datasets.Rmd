@@ -136,6 +136,26 @@ Show the data:
 final_data
 ```  
 
+## Summary tables
+
+```{r }
+get_non_na_num <- function(x) {
+
+  sum(!is.na(x)) %>% 
+    round(digits = 0)
+
+}
+
+final_data %>% 
+  st_drop_geometry() %>% 
+  data.frame() %>% 
+  datasummary(
+    All(.) ~ Mean + (Std.Dev. = SD) + (`Number of Non-NA observations` = get_non_na_num),
+    data = .
+  )
+
+```
+
 ## Yield
 
 ```{r dependson = "map-layout"}
@@ -167,6 +187,8 @@ trial_info %>%
 
 ```{r }
 saveRDS(final_data, file = here("Data", "Growers", ffy,"Analysis-Ready/analysis_data.rds"))
+
+# final_data <- readRDS(file = here("Data", "Growers", ffy,"Analysis-Ready/analysis_data.rds"))
 ```
 
  
