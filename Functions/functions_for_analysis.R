@@ -292,7 +292,7 @@ get_pi_dif_test_zone <- function(data, gc_type, gam_res, crop_price, input_price
   return(pi_dif_test_zone)
 }
 
-find_opt_u <- function(data, gam_res, input_price) {
+find_opt_u <- function(data, gam_res, crop_price, input_price) {
 
   data_dt <- data.table(data)
 

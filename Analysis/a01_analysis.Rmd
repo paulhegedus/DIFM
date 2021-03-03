@@ -421,6 +421,7 @@ analysis_res_o <- analysis_res_p %>%
         opt_input_u = find_opt_u(
           data = data, 
           gam_res = gam_res,
+          crop_price = crop_price,
           input_price = price
         )
       )
