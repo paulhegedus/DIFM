@@ -37,7 +37,7 @@ code.r{ /* Code block */
 ```{r setup, cache = F, echo = F}
 library(knitr)
 knitr::opts_chunk$set(
-  cache = TRUE,
+  cache = FALSE,
   echo = TRUE,
   error = TRUE,
   warning = FALSE,
