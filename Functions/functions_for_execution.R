@@ -650,8 +650,12 @@ read_rmd <- function(file_name, locally_run = FALSE) {
   if (locally_run == FALSE) {
     file_name_on_github <- paste0("https://github.com/tmieno2/DIFM/blob/master/", file_name, "?raw=TRUE")  
     rmd_file <- suppressMessages(readLines(file_name_on_github))
-  } else {
+  } else if (here() == "/Users/tmieno2/Box/DIFM_DevTeam"){
+    #=== if in TM's DIFM_DevTeam folder ===#
     rmd_file <- readLines(here("Codes", file_name))
+  } else {
+    #=== if in anybody's DIFM_HQ  ===#
+    rmd_file <- readLines(here("Codes_team", file_name))
   }
 
   return(rmd_file)
@@ -662,8 +666,12 @@ get_r_file_name <- function(file_name, locally_run = FALSE) {
 
   if (locally_run == FALSE) {
     file_name <- paste0("https://github.com/tmieno2/DIFM/blob/master/", file_name, "?raw=TRUE")  
-  } else {
+  } else if (here() == "/Users/tmieno2/Box/DIFM_DevTeam"){
+    #=== if in TM's DIFM_DevTeam folder ===#
     file_name <- here("Codes", file_name)
+  } else {
+    #=== if in anybody's DIFM_HQ  ===#
+    file_name <- here("Codes_team", file_name)
   }
 
   return(file_name)
