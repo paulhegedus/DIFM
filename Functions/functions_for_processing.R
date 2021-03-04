@@ -1135,31 +1135,31 @@ max_dev_table <- expand.grid(crop = crop, input_type = input_type) %>%
     NA, # wheat-K
     2 # cotton-K
   )]
-
-
-# /*=================================================*/
-#' # Functions for topography data process
-# /*=================================================*/
-
-## except upslope.area, all other functions are same with one we used in DIFM 2019 ###
-
-upslope.area <- function(dem, log = TRUE, atb = TRUE, deg = 0.1, fill.sinks = T) {
+ 
+#/*=================================================*/
+#' # twi function
+#/*=================================================*/                            
+  upslope.area <- function(dem, log=TRUE, atb=TRUE, deg=0.1, fill.sinks=T)
+{
   # check
-  if (fill.sinks) {
+  if(fill.sinks)
+  {
     # use capture.output to supress the function console output
-    capture.output(dem <- invisible(raster::setValues(dem, topmodel::sinkfill(raster::as.matrix(dem), res = xres(dem), degree = deg))))
+    capture.output(dem <- invisible(raster::setValues(dem, topmodel::sinkfill(raster::as.matrix(dem), res=xres(dem), degree=deg))))
   }
-  topidx <- topmodel::topidx(raster::as.matrix(dem), res = xres(dem))
-
+  topidx <- topmodel::topidx(raster::as.matrix(dem), res=xres(dem))
+  
   a <- raster::setValues(dem, topidx$area)
-  if (log) {
+  if(log)
+  {
     a <- log(a)
   }
-  if (atb) {
+  if(atb)
+  {
     atb <- raster::setValues(dem, topidx$atb)
     # add the topographic index ln(a/tanB)
     a <- addLayer(a, atb)
-    names(a) <- c("a", "atb")
+    names(a)<-c("a", "atb")
   }
   return(a)
 }
