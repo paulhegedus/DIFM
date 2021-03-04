@@ -29,7 +29,7 @@ input_data <- readRDS(
 
 w_trial_info <- filter(
   trial_info,
-  input_type == input_type
+  input_type == "_input_type_here_"
 )
 
 ```
