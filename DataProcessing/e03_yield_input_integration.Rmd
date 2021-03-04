@@ -146,7 +146,7 @@ yield_input_data <- input_pct %>%
   left_join(max_dev_table, by = c("crop", "input_type")) %>% 
   mutate(
     input_pct_data = list(
-      copy(input_pct_data) %>% 
+      data.table::copy(input_pct_data) %>% 
       .[tot_sub_pct > 0.9 & tot_sub_pct < 1.1, ] %>% 
       .[dev_input_rate < max_dev_allowed, ] %>% 
       .[, .(yield_id, input_rate)] %>% 
