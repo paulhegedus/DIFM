@@ -165,7 +165,7 @@ sum_tab <- data.table::copy(opt_gc_data) %>%
   flextable() %>% 
   font(fontname = "Times", part = "all") %>% 
   hline(
-    i = seq(2, num_zones*2, by = 2),
+    i = seq(2, num_zones * 2, by = 2),
     border = fp_border(
       color = "black",
       width = 1
