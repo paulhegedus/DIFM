@@ -18,27 +18,45 @@ library(tmap)
 
 ```{r }
 #--- read the boundary file ---#
-boundary <- st_read("Raw/boundary.shp") %>% 
-  st_bbox() %>% 
-  st_as_sfc() %>% 
-  st_as_sf() 
-  # %>% 
-  # st_transform(4326) %>% 
-  # as("Spatial")
+boundary_file <- here("Data", "Growers", ffy, "Raw/boundary.shp") 
 
-# ground_resolution = (cos(latitude * pi/180) * 2 * pi * 6378137 meters) / (256 * 2^zoom_level pixels)
-# dem <- get_elev_raster(boundary)
+td_file <- here("Data", "Growers", ffy, "TrialDesign") %>% 
+  list.files(full.names = TRUE) %>% 
+  .[str_detect(., "shp")] %>% 
+  .[str_detect(., "trial-design")] %>% 
+  #=== get the first one in case we have two separate files ===#
+  .[1]
 
-#--- download elevation data ---#
-# 1m by 1m resolution 
-dem <- get_dem_usgs(boundary) %>% 	
-	#--- aggregate to 5m by 5m resolution ---#
-	raster::aggregate(., fact = 5)
+if (file.exists(boundary_file)) {
+  boundary_sf <- st_read(boundary_file) %>%
+  st_set_4326() %>%
+  st_transform_utm() %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_as_sf()
+} else if (td_file) {
+  boundary_sf <- st_read(td_file) %>%
+  st_set_4326() %>%
+  st_transform_utm() %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_as_sf()
+}
+  
+
+boundary_sp <- as(boundary_sf, "Spatial")
+
+dem <- get_elev_raster(
+  boundary_sp,
+  clip = "locations",
+  z = 14
+)
+
 ```
 
 ```{r }
 tm_shape(dem) +
-	tm_raster()
+  tm_raster()
 ```
 
 ## Calculate topographic variables
@@ -48,7 +66,7 @@ Use the `terrain()` function from raster to get slope and aspect:
 
 ```{r }
 dem_sa <- terrain(dem, opt = c("slope", "aspect"))
-names(dem_sa) <- c("Slope", "Aspect")
+names(dem_sa) <- c("slope", "aspect")
 ```
 
 ### Curvature
@@ -57,7 +75,7 @@ Use the `curvature()` function from spatialEco to get curvature:
 
 ```{r }
 curv <- curvature(dem, s = 5)
-names(curv) <- "Curv"
+names(curv) <- "curv"
 ```
 
 ### TPI
@@ -66,7 +84,7 @@ Use the `tpi()` function from the `spatialEco` to get terrain position index:
 
 ```{r }
 tpi <- tpi(dem, s = 5)
-names(tpi) <- "TPI"
+names(tpi) <- "tpi"
 ```
 
 ### TWI
@@ -76,40 +94,41 @@ Use the `upslope.area()` function from the `dynatopmodel` to get terrain wetness
 ```{r }
 contrib_area <- upslope.area(dem, atb = TRUE)
 twi <- contrib_area$atb
-names(twi) <- c("TWI")
+names(twi) <- c("twi")
 ```
 
 ## Organize the datasets and save
 
 ```{r }
 #--- Stack all the rasters together ---#
-topo <- stack(dem, dem_sa, curv, twi, tpi) %>% 
-  st_as_stars() %>% 
+topo <- stack(dem, dem_sa, curv, twi, tpi) %>%
+  st_as_stars() %>%
   split(3)
 
 #--- save the data ---#
 saveRDS(topo, "Intermediate/topography.rds")
 ```
 
-
 ## Remove the original DEM files
 
-```{r }
-list.files("Raw", full.names = TRUE)	%>% 
-	.[str_detect(., "USGS")] %>% 
-	unlink()
+```{r eval = F}
+list.files("Raw", full.names = TRUE) %>%
+  .[str_detect(., "USGS")] %>%
+  unlink()
 ```
 
 ## Visualization of the data
 
 ```{r }
-lapply(names(topo), 
-  function(x) 
-  tm_shape(topo[x, ]) + 
-  tm_raster() +
-  tm_layout(
-    legend.title.size = 3
-  )
+lapply(
+  names(topo),
+  function(x) {
+    tm_shape(topo[x, ]) +
+      tm_raster() +
+      tm_layout(
+        legend.title.size = 3
+      )
+  }
 )
 ```
 

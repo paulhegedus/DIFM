@@ -1081,7 +1081,7 @@ st_set_4326 <- function(data_sf) {
 
 # ggplot() +
 #   geom_sf(data = input_polygons[yield_polygons[5000, ], ], col = "blue") +
-#   geom_sf(data = yield_polygons[5000, ], fill = "red", alpha = 0.3) 
+#   geom_sf(data = yield_polygons[5000, ], fill = "red", alpha = 0.3)
 
 intersect_yield_input <- function(yield_polygons, input_polygons) {
   pct_int <- st_intersection(
@@ -1114,13 +1114,13 @@ intersect_yield_input <- function(yield_polygons, input_polygons) {
   return(pct_int)
 }
 
-#/*=================================================*/
+# /*=================================================*/
 #' # Table of input rate deviation allowed for a single yield polygon
-#/*=================================================*/
-crop <- c("corn", "soy", "wheat", "cotton") 
+# /*=================================================*/
+crop <- c("corn", "soy", "wheat", "cotton")
 input_type <- c("S", "N", "K")
-max_dev_table <- expand.grid(crop = crop, input_type = input_type) %>% 
-  data.table() %>% 
+max_dev_table <- expand.grid(crop = crop, input_type = input_type) %>%
+  data.table() %>%
   .[, max_dev_allowed := c(
     2, # corn-seed
     15, # soy-seed
@@ -1162,4 +1162,117 @@ max_dev_table <- expand.grid(crop = crop, input_type = input_type) %>%
     names(a)<-c("a", "atb")
   }
   return(a)
+}
+
+
+#### st_utm function to change the extent from decimal degrees to meter ####
+
+st_utm <- function(sf_obj) {
+  # Function to get UTM Zone from mean longitude:
+  long2UTM <- function(long) {
+    (floor((long + 180) / 6) %% 60) + 1
+  }
+
+  # Check if the object class is 'sf':
+  obj_c <- class(sf_obj)[1]
+  if (obj_c == "sf") {
+    # In case the object has no projectin assigned,
+    #  assume it to geographic WGS84 :
+    if (is.na(sf::st_crs(sf_obj))) {
+      sf::st_crs(sf_obj) <- sf::st_crs(4326)
+    }
+
+    # Get the center longitude in degrees:
+    bb <- sf::st_as_sfc(sf::st_bbox(sf_obj))
+    bb <- sf::st_transform(bb, sf::st_crs(4326))
+
+    # Get UTM Zone from mean longitude:
+    utmzone <- long2UTM(mean(sf::st_bbox(bb)[c(1, 3)]))
+
+    # Get the hemisphere based on the latitude:
+    NS <- 100 * (6 + (mean(sf::st_bbox(bb)[c(2, 4)]) < 0))
+
+    # Add all toghether to get the EPSG code:
+    projutm <- sf::st_crs(32000 + NS + utmzone)
+
+    # Reproject data:
+    sf_obj <- sf::st_transform(sf_obj, projutm)
+    return(sf_obj)
+  } else {
+    options(error = NULL)
+    stop("Object class is not 'sf', please insert a sf object!")
+  }
+}
+
+curvature <- function(x, type = c("planform", "profile", "total", "mcnab", "bolstad"), ...) {
+  if (!inherits(x, "RasterLayer")) stop("MUST BE RasterLayer OBJECT")
+  m <- matrix(1, nrow = 3, ncol = 3)
+  type <- type[1]
+  if (!any(c("planform", "profile", "total", "mcnab", "bolstad") %in% type)) {
+    stop("Not a valid curvature option")
+  }
+  zt.crv <- function(m, method = type, res = raster::res(x)[1], ...) {
+    p <- (m[6] - m[4]) / (2 * res)
+    q <- (m[2] - m[8]) / (2 * res)
+    r <- (m[4] + m[6] - 2 * m[5]) / (2 * (res^2))
+    s <- (m[3] + m[7] - m[1] - m[9]) / (4 * (res^2))
+    tx <- (m[2] + m[8] - 2 * m[5]) / (2 * (res^2))
+    if (type == "planform") {
+      return(round(-(q^2 * r - 2 * p * q * s + p^2 * tx) / ((p^2 + q^2) * sqrt(1 + p^2 + q^2)), 6))
+    } else if (type == "profile") {
+      return(round(-(p^2 * r + 2 * p * q * s + q^2 * tx) / ((p^2 + q^2) * sqrt(1 + p^2 + q^2)^3), 6))
+    } else if (type == "total") {
+      return(round(-(q^2 * r - 2 * p * q * s + p^2 * tx) / ((p^2 + q^2) * sqrt(1 + p^2 + q^2)), 6) +
+        round(-(p^2 * r + 2 * p * q * s + q^2 * tx) / ((p^2 + q^2) * sqrt(1 + p^2 + q^2)^3), 6))
+    }
+  }
+  if (type == "bolstad") {
+    return(10000 * ((x - raster::focal(x, w = m, fun = mean)) / 1000 / 36.2))
+  } else if (type == "mcnab") {
+    mcnab <- function(x, ...) (((x[5] - x) + (x[5] - x)) / 4)
+    return(raster::focal(x, w = m, fun = mcnab, ...))
+  } else {
+    return(raster::focal(x,
+      w = m, fun = function(x) {
+        zt.crv(m = x, type = type)
+      }, pad = TRUE,
+      padValue = 0, ...
+    ))
+  }
+}
+
+
+tpi <- function(x, scale = 3, win = "rectangle", normalize = FALSE,
+                zero.correct = FALSE) {
+  if (!inherits(x, "RasterLayer")) stop("MUST BE RasterLayer OBJECT")
+  if (win == "circle") {
+    if (scale < raster::res(x)[1] * 2) {
+      stop("Scale is too small for a circular window")
+    }
+    m <- raster::focalWeight(x, scale, type = "circle")
+    m[m > 0] <- 1
+  } else {
+    if (scale %% 2 == 0) {
+      stop("Scale for a rectangular window must be an odd number")
+    }
+    m <- matrix(1, nrow = scale, ncol = scale)
+  }
+  if (zero.correct) {
+    tp <- x - raster::focal(x, w = m, fun = function(x, ...) {
+      sum(x) / sum(m)
+    })
+  } else {
+    tp <- x - raster::focal(x, w = m, fun = mean)
+  }
+  if (normalize == TRUE) {
+    if (zero.correct) {
+      tp.sd <- raster::focal(x, w = m, fun = function(x, ...) {
+        sqrt(sum(x - sum(x) / sum(m))^2 / (sum(m) - 1))
+      })
+    } else {
+      tp.sd <- raster::focal(x, w = m, fun = stats::sd)
+    }
+    tp <- tp / tp.sd
+  }
+  return(tp)
 }

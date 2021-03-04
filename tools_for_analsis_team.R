@@ -21,6 +21,7 @@ field_data <- jsonlite::fromJSON(
 #--- get the field-year combinations ---#
 # field_year_ls <- field_data[year == 2020, ]$field_year
 field_year_ls <- field_data[year == 2020, ]$field_year
+
 field_year_ls <- field_data[year == 2019, ]$field_year
 
 # /*=================================================*/
@@ -47,12 +48,7 @@ make_data_report()
 
 #--- individually ---#
 exp_process_make_report(
-  ffy = field_year_ls[8],
-  rerun = TRUE
-)
-
-exp_process_make_report(
-  ffy = field_year_ls[9],
+  ffy = field_year_ls[7],
   rerun = TRUE
 )
 
@@ -80,7 +76,7 @@ f_process_make_report(
 
 #--- individually ---#
 run_analysis(
-  ffy = field_year_ls[17],
+  ffy = field_year_ls[7],
   rerun = TRUE,
   locally_run = TRUE
 )

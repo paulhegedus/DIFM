@@ -1,5 +1,5 @@
 
-```{r read-data-sets, results = "hide"}
+```{r read-data-sets, results = "hide", include = TRUE}
 input_type <- "_input_type_here_"
 
 #/*----------------------------------*/
@@ -29,7 +29,7 @@ input_data <- readRDS(
 
 w_trial_info <- filter(
   trial_info,
-  input_type == input_type
+  input_type == "_input_type_here_"
 )
 
 ```
@@ -47,6 +47,20 @@ get_pi <- function(opt_gc_data, c_type, w_zone){
   opt_gc_data[type == c_type & zone_txt == paste0("Zone ", w_zone), profit_hat] %>% round(digits = 2)
 }
 
+get_pi_dif <- function(pi_dif_test_zone, w_zone){
+  pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), point_est_dif] %>% round(digits = 2)
+}
+
+get_pi_ci_zone <- function(pi_dif_test_zone, w_zone){
+
+  pi_up <- pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), point_est_dif + 1.96 * point_est_dif_se] %>% round(digits = 2)
+
+  pi_low <- pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), point_est_dif - 1.96 * point_est_dif_se] %>% round(digits = 2)
+
+  return(paste0("$", pi_low, " and $", pi_up))
+
+}
+
 get_t_value <- function(pi_dif_test_zone, w_zone){
   pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), t] %>% 
     round(digits = 2)
@@ -59,7 +73,7 @@ results <- readRDS(here("Reports", "Growers", ffy, "analysis_results.rds")) %>%
   filter(input_type == "_input_type_here_")
 
 data_sf <- results$data[[1]]
-ys_by_char <- results$ys_by_char[[1]]
+field_vars <- results$field_vars[[1]]
 eval_data <- results$eval_data[[1]]
 opt_gc_data <- results$opt_gc_data[[1]]
 whole_profits_test <- results$whole_profits_test[[1]]
@@ -551,4 +565,101 @@ g_int <- ggplot(plot_data) +
   ) +
   fig_theme_nonsp
 
+#/*=================================================*/
+#' # Interactions
+#/*=================================================*/
+#=== find correlation coefs of b_slope and field vars ===#
+
+field_interactions <- results$field_interactions[[1]]
+
+cor_tab <- field_interactions$cor_tab
+interacting_vars <- field_interactions$interacting_vars
+
+if (length(interacting_vars) == 0) {
+  field_plots <- NULL
+} else {
+
+  field_plots <- tibble(
+    ch_var = interacting_vars,
+    data_plot = list(data_sf)
+  ) %>% 
+  rowwise() %>% 
+  mutate(g_map =
+    list(
+      ggplot(data_plot) +
+      geom_sf(aes_string(fill = ch_var), color = NA) +
+      theme_void() +
+      scale_fill_distiller(
+        palette = "YlGn",
+        direction = -1,
+        name = ""
+      ) + 
+      theme(
+        legend.position = "bottom",
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 12),
+        legend.key.width =  unit(1, "cm"),
+        plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+        plot.margin = unit(c(0, 2, 0, 0), "cm") 
+      ) +
+      ggtitle(ch_var)
+    )
+  ) %>% 
+  mutate(data_plot_dt = 
+    list(
+      data_plot[, c("yield", "input_rate", ch_var)] %>% 
+        st_drop_geometry() %>% 
+        setnames(ch_var, "temp_var") %>% 
+        data.table()  
+    )
+  ) %>% 
+  mutate(data_plot_dt = 
+    list(
+      mutate(
+        data_plot_dt,
+        temp_cat = cut(
+          data_plot_dt$temp_var, 
+          breaks = quantile(
+            data_plot_dt$temp_var, 
+            prob = seq(0, 1, length = 4)
+          ),
+          include.lowest = TRUE
+        )
+      )
+    )
+  ) %>% 
+  mutate(g_ys_char = list(
+    ggplot(data = data_plot_dt) +
+    geom_point(aes(y = yield, x = input_rate, color = factor(temp_cat)), size = 0.3) +
+    geom_smooth(
+      aes(
+        y = yield, 
+        x = input_rate, 
+        color = factor(temp_cat)
+      ),
+      method = "gam",
+      formula = y ~ s(x, k = 3)
+    ) +
+    theme_bw() +
+    scale_color_discrete(name = ch_var) +
+    ylab("Yield (bu/acre)") +
+    xlab(
+      paste0(
+        str_to_title("_input_full_name_l_"), 
+        " Rate (_unit_here_)"
+      )
+    ) +
+    theme_bw() +
+    theme(
+      legend.position = c(0.3, 0.2),
+      axis.title.x = element_text(size = 12),
+      axis.title.y = element_text(size = 12),
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      legend.text = element_text(size = 9),
+      legend.title = element_text(size = 9)
+    )
+  ))
+
+}
 ```

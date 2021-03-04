@@ -114,6 +114,7 @@ source(
 data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>% 
   readRDS() %>% 
   rename(yield = yield_vol) %>% 
+  setnames(names(.), tolower(names(.))) %>% 
   filter(!is.na(yield)) %>% 
   cbind(., st_coordinates(st_centroid(.))) 
 
@@ -222,7 +223,7 @@ analysis_res_g <- analysis_res_m %>%
       gam(gam_formula, data = data)
     ) 
   ) %>% 
-  #=== make the same observations have the same X and Y ===#
+  #=== make the observations in the same zone have the same X and Y ===#
   mutate(
     data = list(
       data.table(data) %>% 
@@ -234,6 +235,12 @@ analysis_res_g <- analysis_res_m %>%
     )
   )
 
+```
+
+Here is the `gam` model formula:
+
+```{r }
+analysis_res_g$gam_formula
 ```
 
 ## Define grower-chose rate
@@ -348,7 +355,14 @@ analysis_res_p %>%
         fill = "red",
         alpha = 0.4
       ) +
-      geom_point(data = data, aes(y = yield, x = input_rate)) +
+      geom_point(
+        data = data, 
+        aes(
+          y = yield, 
+          x = input_rate
+        ),
+        size = 0.4
+      ) +
       facet_grid(. ~ zone_txt) +
       ylim(ymin, NA)
     )
@@ -362,6 +376,9 @@ analysis_res_p %>%
 ### Optimal Variable and Uniform Seed Rate
 
 ```{r gen-opt-S-v-data-map}
+
+# gam_res <- analysis_res_p$gam_res[[1]]
+# input_price <- analysis_res_p$price[[1]]
 
 analysis_res_o <- analysis_res_p %>% 
   mutate(
@@ -410,8 +427,8 @@ analysis_res_o <- analysis_res_p %>%
         data, 
         opt_input_u = find_opt_u(
           data = data, 
-          var_name = "input_rate", 
           gam_res = gam_res,
+          crop_price = crop_price,
           input_price = price
         )
       )
@@ -476,28 +493,39 @@ analysis_res_og <- analysis_res_o %>%
 
 ```{r }
 
+# analysis_res_w$whole_profits_test
+
 analysis_res_w <- analysis_res_og %>% 
   mutate(whole_profits_test = 
     list(
-      get_whole_pi_test(data, gam_res, price)
+      get_whole_pi_test(
+        data = data, 
+        gam_res = gam_res, 
+        crop_price = crop_price,
+        input_price = price
+      )
     )
   ) 
 
 ```
 
-## Create figures of yield response functions by character
+## Get correlations between b_slope and soil/field characteristics
 
 ```{r }
 # data_sf <- analysis_res$data[[1]]
 
 analysis_res_ch <- analysis_res_w %>% 
-  mutate(ys_by_char = 
+  mutate(field_interactions = 
     list(
-      make_ys_by_chars(data)
+      get_field_int(data, field_vars)
     )
   ) 
 
 ```
+
+```{r }
+analysis_res_ch$field_interactions
+``` 
 
 ## Save the results
 

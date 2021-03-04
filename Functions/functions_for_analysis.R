@@ -292,19 +292,20 @@ get_pi_dif_test_zone <- function(data, gc_type, gam_res, crop_price, input_price
   return(pi_dif_test_zone)
 }
 
-find_opt_u <- function(data, var_name, gam_res, input_price) {
+find_opt_u <- function(data, gam_res, crop_price, input_price) {
 
   data_dt <- data.table(data)
 
-  input_rates <- data_dt[, ..var_name] %>% unlist()
-
   input_ls <- seq(
-    quantile(input_rates, prob = 0.025), 
-    quantile(input_rates, prob = 0.975), 
+    quantile(data_dt$input_rate, prob = 0.025), 
+    quantile(data_dt$input_rate, prob = 0.975), 
     length = 100
   )
 
   opt_input_u <- data_dt %>% 
+  # this is okay because each zone has the same
+  # number of observations
+  unique(by = "zone_txt") %>% 
   .[rep(1:nrow(.), length(input_ls)), ] %>% 
   .[, input_rate := rep(input_ls, each = nrow(.)/length(input_ls))] %>% 
   .[, yield_hat := predict(gam_res, newdata = .)] %>% 
@@ -329,7 +330,7 @@ find_field_vars <- function(data_sf) {
   #=== keep only the ones that are available ===#
   field_var_ls <- c(
     #=== topography ===#
-    "TWI", "elevation", "Slope", 
+    "twi", "tpi", "elevation", "slope", 
     #=== ssurgo ===#
     "clay", "sand", "water_storage",
     #=== ec ===#
@@ -478,6 +479,8 @@ define_mz <- function(data_sf, max_num_zones, min_obs) {
 #/*=================================================*/
 
 # data_sf <- analysis_res$data[[1]]
+# field_vars <- analysis_res$data[[1]]
+
 
 make_ys_by_chars <- function(data_sf){
 
@@ -543,7 +546,7 @@ make_ys_by_chars <- function(data_sf){
     plot_ls <- list()
     map_ls <- list()
 
-    # var_p <- "ecd"
+    # var_p <- "elevation"
 
     for (var_p in vars_plot_ls){
 
@@ -872,7 +875,7 @@ get_opt_gc_data <- function(data, eval_data, gc_type, pi_dif_test_zone) {
 
 }
     
-get_whole_pi_test <- function(data, gam_res, input_price) {
+get_whole_pi_test <- function(data, gam_res, crop_price, input_price) {
 
   test_data <- data.table(data) 
 
@@ -921,3 +924,31 @@ get_whole_pi_test <- function(data, gam_res, input_price) {
 
 }
 
+#/*=================================================*/
+#' # Interactions
+#/*=================================================*/
+
+get_field_int <- function(data_sf, field_vars) {
+
+  #=== find correlation coefs of b_slope and field vars ===#
+  cor_tab <- data_sf[, c("b_slope", field_vars)] %>% 
+    st_drop_geometry() %>% 
+    cor(use = "complete.obs") %>% 
+    .[, "b_slope", drop = FALSE] %>% 
+    .[!(rownames(.) %in% c("b_slope")), , drop = FALSE] %>% 
+    data.frame() %>% 
+    arrange(desc(abs(b_slope)))
+
+  #=== find variables that are correlated with b_slope higher than 0.2 ===#
+  interacting_vars <- rownames(cor_tab)[abs(cor_tab) >= 0.2] %>% 
+    .[!str_detect(., "yield")]
+
+  return(list(
+    cor_tab = cor_tab, 
+    interacting_vars = interacting_vars
+  ))
+
+}
+
+
+  

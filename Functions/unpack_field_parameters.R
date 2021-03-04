@@ -10,11 +10,15 @@ field_data <- jsonlite::fromJSON(
   flatten = TRUE
 ) %>%
 data.table() %>%
-.[, field_year := paste(farm, field, year, sep = "_")] %>% 
+.[, farm_field := paste(farm, field, sep = "_")] %>% 
+.[, field_year := paste(farm_field, year, sep = "_")] %>% 
 .[field_year == ffy, ]
 
 #--- get field parameters for the field-year ---#
 w_field_data <- field_data[field_year == ffy, ]
+
+w_farm_field <- w_field_data$farm_field
+w_year <- w_field_data$year
 
 #--- get input data ---#
 input_data <- dplyr::select(w_field_data, starts_with(

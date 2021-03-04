@@ -59,7 +59,10 @@ soil_char_data <- tabular$chorizon %>%
   .[is.na(comppct.r), comppct.r := 0] %>% 
   #--- aggregate up to mukey ---#
   get_aggregated(., key = "mukey", weight = "comppct.r", awc_sum = FALSE) %>% 
-  setnames(c("claytotal.r", "silttotal.r", "sandtotal.r", "awc.r"), c("clay", "sand", "silt", "water_storage"))
+  setnames(
+    c("claytotal.r", "silttotal.r", "sandtotal.r", "awc.r"), 
+    c("clay", "sand", "silt", "water_storage")
+  )
 
 #--- soil names and descriptions ---#
 names <- tabular$muaggatt %>% 
@@ -70,7 +73,7 @@ names <- tabular$muaggatt %>%
 #--- merge soil data to polygons ---#
 ssurgo_sf <- as(spatial <- ssurgo$spatial, "sf") %>% 
   setnames(names(.), tolower(names(.))) %>% 
-  mutate(mukey = as.numeric(mukey)) %>% 
+  mutate(mukey = as.numeric(as.character(mukey))) %>% 
   left_join(., soil_char_data, by = "mukey") %>% 
   left_join(., names, by = "mukey") 
 ```
