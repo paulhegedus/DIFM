@@ -687,6 +687,14 @@ insert_rmd <- function(target_rmd, inserting_rmd, target_text) {
 
 get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_zone, opt_gc_data, gc_type, locally_run = FALSE){
 
+  #=== for debugging ===#
+  # input_type <- report_rmd_ls$input_type[[1]]
+  # gc_rate <- report_rmd_ls$gc_rate[[1]]
+  # whole_profits_test <- report_rmd_ls$whole_profits_test[[1]]
+  # pi_dif_test_zone <- report_rmd_ls$pi_dif_test_zone[[1]]
+  # opt_gc_data <- report_rmd_ls$opt_gc_data[[1]]
+  # gc_type <- report_rmd_ls$gc_type[[1]]
+
   if (gc_type == "Rx") {
 
     t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
@@ -754,21 +762,29 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
     #/*----------------------------------*/
     # Statements about the difference between 
     # optimal vs grower-chosen rates
-    gc_opt_comp_txt_ls <- c()
-    
-    for (i in 1:num_zones) {
-      temp_dif <- get_input(opt_gc_data, "gc", i) - get_input(opt_gc_data, "opt_v", i)
-      gc_opt_comp_txt_ls <- c(gc_opt_comp_txt_ls,
-        paste0(
-          abs(temp_dif),
-          " _unit_here_ per acre", 
-          ifelse(temp_dif > 0, " too high", " too low"),
-          " in Zone ", i
-        ) 
-      )
-    }
-    gc_opt_comp_txt <- paste0(gc_opt_comp_txt_ls, collapse = ", ")
 
+    gc_opt_comp_txt <- left_join(
+      opt_gc_data[type == "opt_v", ],
+      opt_gc_data[type == "gc", ],
+      by = "zone_txt"
+    ) %>% 
+    #=== y for gc and x for opt_v ===#
+    mutate(dif = input_rate.y - input_rate.x) %>% 
+    dplyr::select(zone_txt, dif) %>% 
+    arrange(zone_txt) %>% 
+    mutate(
+      gc_opt_comp_txt = 
+        paste0(
+          abs(dif) %>% round(digits = 0),
+          " _unit_here_ per acre", 
+          ifelse(dif > 0, " too high", " too low"),
+          " in ",
+          str_to_title(zone_txt)
+        )
+    ) %>% 
+    pull(gc_opt_comp_txt) %>% 
+    paste(collapse = ", ")
+     
     res_disc_rmd <- gsub(
       "_gc-opt-comp-txt-comes-here_",
       gc_opt_comp_txt,
