@@ -209,7 +209,7 @@ analysis_res_g <- analysis_res_m %>%
   mutate(
     gam_formula = list(
       paste0(
-        "yield ~ s(input_rate, bs = \"cv\", by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5))",
+        "yield ~ s(input_rate, k = 5, by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5))",
         ifelse(
           length(field_vars) > 0,
           paste0(" + ", paste0(field_vars, collapse = " + ")),
@@ -220,7 +220,7 @@ analysis_res_g <- analysis_res_m %>%
   ) %>% 
   mutate(
     gam_res = list(
-      scam(gam_formula, data = data)
+      gam(gam_formula, data = data)
     ) 
   ) %>% 
   #=== make the observations in the same zone have the same X and Y ===#
