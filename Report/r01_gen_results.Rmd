@@ -152,7 +152,7 @@ g_opt_input <- data_sf %>%
 #/*----------------------------------*/
 #' ## summary table
 #/*----------------------------------*/
-sum_tab <- copy(opt_gc_data) %>% 
+sum_tab <- data.table::copy(opt_gc_data) %>% 
   .[order(zone_txt, type),] %>% 
   .[, .(zone_txt, type, yield_hat, input_rate)] %>% 
   .[, type := case_when(
@@ -165,7 +165,7 @@ sum_tab <- copy(opt_gc_data) %>%
   flextable() %>% 
   font(fontname = "Times", part = "all") %>% 
   hline(
-    i = c(2, 4, 6, 8),
+    i = seq(2, num_zones*2, by = 2),
     border = fp_border(
       color = "black",
       width = 1
@@ -174,7 +174,7 @@ sum_tab <- copy(opt_gc_data) %>%
   merge_v(
     j = 1
   ) %>% 
-  align(
+  flextable::align(
     align = "center",
     part = "all"
   ) %>% 
