@@ -106,7 +106,7 @@ topo <- stack(dem, dem_sa, curv, twi, tpi) %>%
   split(3)
 
 #--- save the data ---#
-saveRDS(topo, "Intermediate/topography.rds")
+saveRDS(topo, here("Data", "Growers", ffy, "Intermediate/topography.rds"))
 ```
 
 ## Remove the original DEM files
