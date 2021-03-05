@@ -40,30 +40,58 @@ w_trial_info <- filter(
 #' # Define functions
 #/*=================================================*/
 get_input <- function(opt_gc_data, c_type, w_zone){
-  opt_gc_data[type == c_type & zone_txt == paste0("Zone ", w_zone), input_rate] %>% round(digits = 0)
+  opt_gc_data[
+    type == c_type & zone_txt == paste0("Zone ", w_zone), 
+    input_rate
+  ] %>% 
+  round(digits = 0)
 }
 
 get_pi <- function(opt_gc_data, c_type, w_zone){
-  opt_gc_data[type == c_type & zone_txt == paste0("Zone ", w_zone), profit_hat] %>% round(digits = 2)
+  opt_gc_data[
+    type == c_type & zone_txt == paste0("Zone ", w_zone),
+    profit_hat
+  ] %>% 
+  round(digits = 2) %>% 
+  format(nsmall = 2)
 }
 
 get_pi_dif <- function(pi_dif_test_zone, w_zone){
-  pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), point_est_dif] %>% round(digits = 2)
+  pi_dif_test_zone[
+    zone_txt == paste0("Zone ", w_zone), 
+    point_est_dif
+  ] %>% 
+  round(digits = 2) %>% 
+  format(nsmall = 2)
 }
 
 get_pi_ci_zone <- function(pi_dif_test_zone, w_zone){
 
-  pi_up <- pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), point_est_dif + 1.96 * point_est_dif_se] %>% round(digits = 2)
+  pi_up <- pi_dif_test_zone[
+    zone_txt == paste0("Zone ", w_zone), 
+    point_est_dif + 1.96 * point_est_dif_se
+  ] %>% 
+  round(digits = 2) %>% 
+  format(nsmall = 2)
 
-  pi_low <- pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), point_est_dif - 1.96 * point_est_dif_se] %>% round(digits = 2)
+  pi_low <- pi_dif_test_zone[
+    zone_txt == paste0("Zone ", w_zone), 
+    point_est_dif - 1.96 * point_est_dif_se
+  ] %>% 
+  round(digits = 2) %>% 
+  format(nsmall = 2)
 
   return(paste0("$", pi_low, " and $", pi_up))
 
 }
 
 get_t_value <- function(pi_dif_test_zone, w_zone){
-  pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), t] %>% 
-    round(digits = 2)
+  pi_dif_test_zone[
+    zone_txt == paste0("Zone ", w_zone), 
+    t
+  ] %>% 
+  round(digits = 2) %>% 
+  format(nsmall = 2)
 } 
 
 #/*----------------------------------*/
