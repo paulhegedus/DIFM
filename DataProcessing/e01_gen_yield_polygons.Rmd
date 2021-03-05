@@ -185,10 +185,18 @@ tm_layout_to_add
 sd_factor <- 4
 
 yield_grouped <- flag_bad_points(
-  yield_grouped, 
-  "yield_vol", 
-  sd = sd_factor
-)  
+    yield_grouped, 
+    "yield_vol", 
+    sd = sd_factor
+  ) %>% 
+  #=== speed-based ===#
+  mutate(flag_bad = 
+    ifelse(
+      speed < 0.7 | speed > 8.2,
+      1, 
+      flag_bad
+    )
+  )
 
 ```
 
@@ -199,12 +207,6 @@ yield_grouped %>% filter(flag_bad == 0) %>%
   pull(yield_vol) %>% 
   hist()
 ```
-
-**Supplementary information:**
-
-<br>
-
-Note: `speed` is not currently used for flagging bad data points.
 
 <br> 
 

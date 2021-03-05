@@ -34,7 +34,7 @@ if (file.exists(boundary_file)) {
   st_bbox() %>%
   st_as_sfc() %>%
   st_as_sf()
-} else if (td_file) {
+} else if (file.exists(td_file)) {
   boundary_sf <- st_read(td_file) %>%
   st_set_4326() %>%
   st_transform_utm() %>%
@@ -42,7 +42,6 @@ if (file.exists(boundary_file)) {
   st_as_sfc() %>%
   st_as_sf()
 }
-  
 
 boundary_sp <- as(boundary_sf, "Spatial")
 

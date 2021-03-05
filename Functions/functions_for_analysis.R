@@ -334,7 +334,7 @@ find_field_vars <- function(data_sf) {
     #=== ssurgo ===#
     "clay", "sand", "water_storage",
     #=== ec ===#
-    "ecs"
+    "ecs", "om", "cec", "ec02"
   ) %>% 
   .[. %in% names(data_sf)]
 

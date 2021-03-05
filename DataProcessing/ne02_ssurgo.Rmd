@@ -9,17 +9,31 @@ library(FedData)
 + `get_ssurgo()` is defined in **functions_for_processing.R** 
 
 ```{r }
+#--- read the boundary file ---#
+boundary_file <- here("Data", "Growers", ffy, "Raw/boundary.shp") 
 
-#--- get the boundary ---#
-boundary_sf <- st_read("Raw/boundary.shp") %>%
+td_file <- here("Data", "Growers", ffy, "TrialDesign") %>% 
+  list.files(full.names = TRUE) %>% 
+  .[str_detect(., "shp")] %>% 
+  .[str_detect(., "trial-design")] %>% 
+  #=== get the first one in case we have two separate files ===#
+  .[1]
+
+if (file.exists(boundary_file)) {
+  boundary_sf <- st_read(boundary_file) %>%
+  st_set_4326() %>%
   st_transform_utm() %>%
   st_bbox() %>%
-  st_as_sfc() 
-
-# boundary_sf <- st_read("TrialDesign/trial-design.shp") %>%
-#   st_transform_utm() %>%
-#   st_bbox() %>%
-#   st_as_sfc() 
+  st_as_sfc() %>%
+  st_as_sf()
+} else if (file.exists(td_file)) {
+  boundary_sf <- st_read(td_file) %>%
+  st_set_4326() %>%
+  st_transform_utm() %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_as_sf()
+}
 
 boundary_sp <- as(boundary_sf, "Spatial")
 
