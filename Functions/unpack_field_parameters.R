@@ -34,7 +34,8 @@ crop_price <- w_field_data[, crop_price]
 if(!is.numeric(crop_price)) {
   crop_price <- case_when(
     crop == "soy" ~ 14, # $/bu
-    crop == "corn" ~ 5.5 # $/bu
+    crop == "corn" ~ 5.5, # $/bu
+    crop == "cotton" ~ 0.93 * 480, # $/bales
   )
 }
 land_unit <- w_field_data[, land_unit] 
@@ -271,7 +272,7 @@ if (process_k) {
   }
 
   #++++++++++++++++
-  # N price
+  # k price
   #++++++++++++++++
   if ("price" %in% names(input_data_k)) {
     k_price <- input_data_k[, price]

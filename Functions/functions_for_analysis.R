@@ -159,7 +159,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   ones <- matrix(1 / dim(Xmat_base)[1], 1, dim(Xmat_base)[1])
 
   #--- average yield ---#
-  yhat_base <- ones %*% Xmat_base %*% gam_res$coefficients
+  yhat_base <- ones %*% Xmat_base %*% gam_res$coefficients.t
 
   #--- point estimate of profit differential ---#
   pi_gc <- crop_price * yhat_base - (input_price * ones %*% base_data$input_rate)  
@@ -178,7 +178,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   ones <- matrix(1 / dim(Xmat_comp)[1], 1, dim(Xmat_comp)[1])
 
   #--- average yield ---#
-  yhat_comp <- ones %*% Xmat_comp %*% gam_res$coefficients
+  yhat_comp <- ones %*% Xmat_comp %*% gam_res$coefficients.t
 
   #--- point estimate of profit differential ---#
   pi_opt <- crop_price * yhat_comp - (input_price * ones %*% comp_data$input_rate)  
@@ -201,7 +201,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   big_mat_dif <- ones %*% X_dif_mat
 
   #--- point estimate of profit differential ---#
-  pi_dif <- ones %*% ((crop_price * X_dif_mat %*% gam_res$coefficients) - input_price * (comp_data$input_rate - base_data$input_rate))  
+  pi_dif <- ones %*% ((crop_price * X_dif_mat %*% gam_res$coefficients.t) - input_price * (comp_data$input_rate - base_data$input_rate))  
 
   #--- se of the profit differential  ---# 
   pi_dif_se <- crop_price * sqrt(big_mat_dif %*% gam_res$Ve %*% t(big_mat_dif))
