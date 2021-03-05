@@ -4,9 +4,9 @@
 
 + Baseline _input_full_name_l_ rate: _base_rate_statement_here_.
 
-+ Seed target rates: `r paste0(tgti_ls, "K", collapse = ", ")`
++ _input_full_name_here_c_ target rates: `r paste0(tgti_ls, "K", collapse = ", ")`
 
-+ Planter width: `r w_trial_info$machine_width` feet
++ `r str_to_title("_planter-applicator-here_")` width: `r w_trial_info$machine_width` feet
 
 + Harvester width: `r harvester_width` feet
 
@@ -17,9 +17,9 @@ A _crop_type_here_ _input_full_name_l_ rate trial was conducted on the `r w_farm
 
 # Economic Results and Implications 
 
-+ Crop price: $`r results$crop_price`/bu 
++ Crop price: $`r format(results$crop_price, nsmall = 2)`/bu 
 
-+ _input_full_name_l_ price: $`r results$price`/_unit_here_
++ _input_full_name_l_ price: $`r format(results$price, nsmall = 2)`/_unit_here_
 
 Figure \@ref(fig:optimal-variable-s) shows the analysis's recommended site-specific _input_full_name_l_ rate map. The figure was calculated using data from each management zone separately. (Details about how management zones were determined are provided later in this report.)  A generalized additive model (GAM) regression was used to model yield as a function of _input_full_name_l_ rate in each zone, and then given that model estimation, the profit-maximizing _input_full_name_l_ rate was found for each zone. Table \@ref(tab:yield-summary-table) lists for each zone the estimated per-acre yields that would have resulted, given the year's growing conditions, from applying the grower-chosen _seeding-or-application_ strategy and the estimated optimal _input_full_name_l_ rate derived from the data and model. 
 
@@ -91,7 +91,7 @@ In terms of the model used in this analysis, correlation between the estimated p
 
 `r results$field_vars[[1]]` were tested to see if they are correlated with the management zones. Among these variables, `r field_plots$ch_var` seem to affect how yield responds to _input_full_name_l_. 
 
-```{r fig.height = 5}
+```{r fig.height = 5.5}
 
 if (!is.null(field_plots)) {
   for (i in seq_len(nrow(field_plots))) {
