@@ -437,6 +437,10 @@ analysis_res_o <- analysis_res_p %>%
 
 ```
 
+```{r }
+analysis_res_o$pi_dif_test_zone 
+``` 
+
 ### Optimal vs GC (profit difference for individual observations)
 
 ```{r }
@@ -507,6 +511,10 @@ analysis_res_w <- analysis_res_og %>%
     )
   ) 
 
+```
+
+```{r }
+analysis_res_w$whole_profits_test
 ```
 
 ## Get correlations between b_slope and soil/field characteristics
