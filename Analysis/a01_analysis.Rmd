@@ -77,7 +77,9 @@ source(
 )
 
 crop_price_table <- fread(here("Data/CommonData/CropPrice.csv")) %>% 
-  setnames(names(.), tolower(names(.)))
+  setnames(names(.), tolower(names(.))) %>% 
+  filter(type == "current") %>% 
+  rename(crop_price = price)
 
 input_price_table <- fread(here("Data/CommonData/InputPrice.csv")) %>% 
   setnames(names(.), tolower(names(.)))
@@ -127,6 +129,7 @@ data_sf <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %>%
 ```{r gwr, results = "hide"}
 
 analysis_res_g <- trial_info %>% 
+  left_join(crop_price_table, by = "crop") %>% 
   mutate(data = rep(list(data_sf), nrow(.))) %>% 
   rowwise() %>% 
   mutate(
@@ -241,6 +244,7 @@ Here is the `gam` model formula:
 
 ```{r }
 analysis_res_g$gam_formula
+
 ```
 
 ## Define grower-chose rate
@@ -264,6 +268,7 @@ analysis_res_gcr <- analysis_res_g %>%
 ```{r }
 
 analysis_res_p <- analysis_res_gcr %>% 
+  #=== predict yield values at different input rates ===#
   mutate(eval_data = 
     list(
       predict_yield_range(
@@ -279,10 +284,12 @@ analysis_res_p <- analysis_res_gcr %>%
     )
   ) %>% 
   mutate(
+    #=== mean predicted yield ===#
     mean_yield_hat = 
     list(
       eval_data[, .(mean_yield_hat = mean(yield_hat)), by = zone_txt]
     ), 
+    #=== mean actual yield by zone ===#
     mean_yield_actual = 
     list(
       data.table(data)[, 
@@ -290,6 +297,7 @@ analysis_res_p <- analysis_res_gcr %>%
       by = zone_txt
       ]
     ),
+    #=== shift yield so that figures look ===#
     yield_shift = 
     list(
       mean_yield_actual[mean_yield_hat, on = "zone_txt"] %>% 

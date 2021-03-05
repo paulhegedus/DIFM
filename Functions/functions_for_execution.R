@@ -808,10 +808,10 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
 
 get_t_confidence_statement <- function(t_value) {
   case_when(
-    t_value < 1.30 ~ "negligible",
-    1.30 <= t_value & t_value < 1.64 ~ "only limited",
-    1.64 <= t_value & t_value < 1.96 ~ "moderate", 
-    t_value >= 1.96  ~ "strong"  
+    t_value < qt(0.75, df = 1000) ~ "negligible",
+    qt(0.75, df = 1000) <= t_value & t_value < qt(0.85, df = 1000) ~ "only limited",
+    qt(0.85, df = 1000) <= t_value & t_value < qt(0.95, df = 1000) ~ "moderate", 
+    t_value >= qt(0.95, df = 1000)  ~ "strong"  
   )
 }
 
@@ -819,13 +819,17 @@ get_whole_pi_txt <- function(results) {
 
   whole_pi_t <- results$whole_profits_test[[1]][type_short == "ovg", t]
 
-  if (whole_pi_t > 1.96) {
+  if (whole_pi_t > qt(0.95, df = 1000)) {
 
     text_summary <- "The data and model provide a high degree of statistical confidence in this result"
 
-  } else if (whole_pi_t > 1.3) {
+  } else if (whole_pi_t > qt(0.85, df = 1000)) {
 
     text_summary <- "The data and model provide a moderate degree of statistical confidence in this result"
+
+  } else if (whole_pi_t > qt(0.75, df = 1000)) {
+
+    text_summary <- "The data and model provide an only limited  degree of statistical confidence in this result"
 
   } else {
     
