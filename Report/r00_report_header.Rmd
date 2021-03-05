@@ -77,7 +77,7 @@ library(GWmodel)
 ffy <- "_field-year-here_"
 
 #--- root directory ---#
-opts_knit$set(root.dir = here("Data", "Growers", ffy))
+# opts_knit$set(root.dir = here("Data", "Growers", ffy))
 # setwd(here("Data", ffy))
 
 #--- source functions ---#
