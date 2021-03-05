@@ -167,7 +167,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   big_mat_base <- ones %*% Xmat_base
 
   #--- se of the profit differential  ---# 
-  pi_gc_se <- crop_price * sqrt(big_mat_base %*% gam_res$Ve %*% t(big_mat_base))
+  pi_gc_se <- crop_price * sqrt(big_mat_base %*% gam_res$Ve.t %*% t(big_mat_base))
 
   #/*----------------------------------*/
   #' ## Profit (optimal)
@@ -186,7 +186,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   big_mat_comp <- ones %*% Xmat_comp
 
   #--- se of the profit differential  ---# 
-  pi_opt_se <- crop_price * sqrt(big_mat_comp %*% gam_res$Ve %*% t(big_mat_comp))
+  pi_opt_se <- crop_price * sqrt(big_mat_comp %*% gam_res$Ve.t %*% t(big_mat_comp))
 
   #/*----------------------------------*/
   #' ## Profit differential
@@ -204,7 +204,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   pi_dif <- ones %*% ((crop_price * X_dif_mat %*% gam_res$coefficients.t) - input_price * (comp_data$input_rate - base_data$input_rate))  
 
   #--- se of the profit differential  ---# 
-  pi_dif_se <- crop_price * sqrt(big_mat_dif %*% gam_res$Ve %*% t(big_mat_dif))
+  pi_dif_se <- crop_price * sqrt(big_mat_dif %*% gam_res$Ve.t %*% t(big_mat_dif))
 
   #--- t-stat ---#
   t_stat <- (pi_dif/pi_dif_se) %>% round(digits = 2)  
