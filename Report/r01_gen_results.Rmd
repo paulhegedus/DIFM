@@ -44,7 +44,8 @@ get_input <- function(opt_gc_data, c_type, w_zone){
     type == c_type & zone_txt == paste0("Zone ", w_zone), 
     input_rate
   ] %>% 
-  round(digits = 0)
+  round(digits = 2) %>% 
+  format(nsmall = 2)
 }
 
 get_pi <- function(opt_gc_data, c_type, w_zone){
