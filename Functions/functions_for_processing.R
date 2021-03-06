@@ -3,6 +3,7 @@
 # /*=================================================*/
 
 reduce_points_v <- function(data_sf, nobs_per_group, var_interest, by_var = NA) {
+  
   if (!is.na(by_var)) {
     data_dt <- data_sf %>%
       cbind(., st_coordinates(.)) %>%
@@ -15,12 +16,12 @@ reduce_points_v <- function(data_sf, nobs_per_group, var_interest, by_var = NA) 
       .[, .(
         X = mean(X),
         Y = mean(Y),
-        angle = mean(angle),
+        # angle = mean(angle),
         width = mean(width),
         var_i = mean(var_i),
-        min_distance = min(distance),
-        max_distance = max(distance),
-        speed = mean(speed),
+        # min_distance = min(distance),
+        # max_distance = max(distance),
+        # speed = mean(speed),
         flag_bad = mean(flag_bad)
       ),
       by = .(id_in_group, group_var)
@@ -41,10 +42,10 @@ reduce_points_v <- function(data_sf, nobs_per_group, var_interest, by_var = NA) 
       .[flag_bad == 0, .(
         X = mean(X),
         Y = mean(Y),
-        angle = mean(angle),
+        # angle = mean(angle),
         width = mean(width),
         var_i = mean(var_i),
-        speed = mean(speed)
+        # speed = mean(speed)
       ),
       by = .(id_in_group)
       ] %>%
@@ -191,6 +192,7 @@ drop_group_points_sc <- function(data_sf, by_var = NA) {
 # data_sf <- yield
 
 group_points_sc <- function(data_sf, by_var = NA, angle_threshold) {
+
   if (!is.na(by_var)) {
     setup_dt <- data_sf %>%
       cbind(., st_coordinates(.)) %>%
@@ -648,6 +650,148 @@ get_polygons_by_group <- function(group_id, sf_point) {
   return(all_polygons)
 }
 
+#/*=================================================*/
+#' # Recover sectionid
+#/*=================================================*/
+# data <- aa_input 
+
+group_and_recover_section_id <- function(data) {
+
+  #=== define section group ===#
+  aa_dt <- data %>% 
+    cbind(., st_coordinates(.)) %>% 
+    data.table() %>% 
+    .[, dif_X := c(0, diff(X))] %>% 
+    .[, dif_Y := c(0, diff(Y))] %>%  
+    #--- distance in meter ---#
+    .[, dist := sqrt(dif_X ^ 2 + dif_Y ^ 2)] %>% 
+    .[, dist_sec := median(dist)] %>% 
+    .[, change_in_group := !(dist < dist_sec * 1.1 & dist > dist_sec * 0.9)] %>% 
+    .[1, change_in_group := FALSE] %>% 
+    .[, section_group := cumsum(change_in_group) + 1] %>% 
+    .[, `:=`(
+      dif_X = NULL,
+      dif_Y = NULL,
+      change_in_group = NULL,
+      dist = NULL
+    )]  
+
+  dist_sec <- aa_dt[, dist_sec] %>% unique()
+  angle_threshold <- 30
+
+  #=== strip grouping by group centroid ===# 
+  aa_strip_group <- aa_dt[, .(X = mean(X), Y = mean(Y)), by = section_group] %>% 
+    .[, d_X := c(0, diff(X))] %>%
+    .[, d_Y := c(0, diff(Y))] %>%
+    .[, distance := sqrt(d_X^2 + d_Y^2)] %>%
+    #--- if distance is 0, then it means the consecutive points are duplicates ---#
+    .[distance != 0, ] %>%
+    .[, d_X2 := data.table::shift(d_X, type = "lag", fill = NA)] %>%
+    .[, d_Y2 := data.table::shift(d_Y, type = "lag", fill = NA)] %>%
+    .[, distance2 := data.table::shift(distance, type = "lag", fill = NA)] %>%
+    .[, vec_ip_d := (d_X * d_X2 + d_Y * d_Y2) / (distance * distance2)] %>%
+    #--- get the angle of three consecutive points ---#
+    .[, angle := acos(vec_ip_d) / pi * 180] %>%
+    .[0.99 < vec_ip_d, angle := 0] %>%
+    #--- 15 is the magic number (may not work) ---#
+    .[, change_group := angle >= angle_threshold] %>%
+    .[is.na(change_group), change_group := TRUE] %>%
+    .[1, change_group := TRUE] %>%
+    .[, strip_group := cumsum(change_group)] %>%
+    .[, obs_per_group := .N, by = strip_group] %>%
+    .[obs_per_group > 1, ] %>% 
+    .[, .(section_group, strip_group, change_group)]
+
+  aa_sf_section_unidentified <- aa_strip_group[aa_dt, on = "section_group"] %>% 
+    .[section_group == 1, strip_group := 1] %>% 
+    .[!is.na(strip_group),] %>% 
+    setnames("dist_sec", "width")
+
+  strip_groups_ls <- aa_sf_section_unidentified$strip_group %>% unique()
+
+  plan(multiprocess, workers = detectCores() - 2)
+
+  section_id_data <- future_lapply(
+    strip_groups_ls,
+    function(x) {
+      recover_section_id_by_group(
+        aa_sf_section_unidentified, 
+        x
+      )
+    }
+  ) %>% 
+  rbindlist()
+
+  data_to_return <- section_id_data[aa_sf_section_unidentified, on = "id"] %>% 
+    .[, new_group := paste(strip_group, sectionid, sep = "_")] 
+
+  return(data_to_return)
+ 
+}
+
+
+#/*=================================================*/
+#' # Recover section id
+#/*=================================================*/
+
+recover_section_id_by_group <- function(data, group_id) {
+
+  temp_data <- data[strip_group == group_id, ] %>% 
+    .[, .(id, section_group, X, Y)]
+
+  section_group_ls <- temp_data[, section_group] %>% unique()
+  section_len <- length(section_group_ls)
+
+  dist_data <- temp_data %>% 
+    rename(section_group_id = section_group) %>% 
+    rowwise() %>% 
+    mutate(n_points = list(
+      temp_data[section_group == section_group_id + 1, ] %>% 
+        setnames(names(.), paste0(names(.), "_n"))
+    )) %>% 
+  unnest(n_points) %>% 
+  data.table() %>% 
+  .[, dist := sqrt((X - X_n) ^ 2 + (Y - Y_n) ^ 2)] %>% 
+  .[, .SD[which.min(dist), ], by = id]
+
+  max_id <- temp_data$id %>% max()
+
+  get_section_id(start_id = 13261, max_id)
+
+  get_section_id <- function(start_id, max_id) {
+
+    temp_id <- start_id
+    id_ls <- temp_id  
+
+    while (temp_id < max_id) {
+      temp_id <- dist_data[id == temp_id, id_n]
+      if (length(temp_id) == 0){
+        break
+      } else {
+        id_ls <- c(id_ls, temp_id)
+      }
+    }
+
+    section_id_data <- data.table(
+      sectionid = start_id, 
+      id = id_ls
+    )
+
+    return(section_id_data)
+  }
+
+  min_section_id <- dist_data$section_group_id %>% min()
+
+  section_id_data <- lapply(
+    dist_data[section_group_id == min_section_id, id],
+    function(x) get_section_id(x, max_id)
+  ) %>% 
+  rbindlist()
+
+  return(section_id_data)
+
+}
+  
 # /*----------------------------------*/
 #' ## make polygons when section control is available
 # /*----------------------------------*/
@@ -656,11 +800,11 @@ get_polygons_by_group <- function(group_id, sf_point) {
 
 # st_as_sf(temp_sf_point[1:100]) %>%
 #   ggplot() +
-#     geom_sf(aes(color = reduce_group), size = 0.5)
+#     geom_sf(aes(color = section_group), size = 0.5)
 
 # the same reduce group shares the same angle
 
-make_polygons_by_group_with_sc <- function(group_id, sf_point) {
+make_polygons_by_group_with_sc <- function(sf_point, group_id) {
   temp_sf_point <- sf_point[group == group_id, ]
 
   reduce_group_ls <- temp_sf_point[, reduce_group] %>% unique()
@@ -804,12 +948,12 @@ make_polygons_by_group_with_sc <- function(group_id, sf_point) {
 }
 
 
-make_fmb_points <- function(sfp_1, sfp_2) {
+make_fmb_points <- function(sfp_1, sfp_2, sec_width) {
 
   #--- points data ---#
   temp_data <- rbind(sfp_1, sfp_2) %>%
     data.table() %>%
-    .[, .(X, Y, width = width * num_points)] %>%
+    .[, .(X, Y, width = sec_width)] %>%
     #--- get a vector of point to point ---#
     .[, `:=`(
       d_X = c(0, diff(X)),
@@ -955,7 +1099,6 @@ make_convex_hull <- function(sf, wid) {
   return(return_sf)
 }
 
-
 # /*=================================================*/
 #' # Making variable names consistent
 # /*=================================================*/
@@ -977,7 +1120,7 @@ make_var_name_consistent <- function(data, dictionary) {
 
       data <- setnames(data, temp_names_ls[matches][1], col)
     } else {
-      data <- mutate(data, !!col := 0)
+      # data <- mutate(data, !!col := NA)
     }
   }
 
