@@ -143,7 +143,14 @@ predict_yield <- function(data, est, var_name) {
 
 get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, input_price){
     
-  
+  if ("scam" %in% class(gam_res)) {
+    gam_coef <- gam_res$coefficients.t
+    gam_V <- gam_res$Ve.t
+  } else {
+    gam_coef <- gam_res$coefficients
+    gam_V <- gam_res$Ve
+  }
+
   base_data <- data.table::copy(data) %>% 
     .[, (test_var) := get(gc_var)]
 
@@ -159,7 +166,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   ones <- matrix(1 / dim(Xmat_base)[1], 1, dim(Xmat_base)[1])
 
   #--- average yield ---#
-  yhat_base <- ones %*% Xmat_base %*% gam_res$coefficients.t
+  yhat_base <- ones %*% Xmat_base %*% gam_coef
 
   #--- point estimate of profit differential ---#
   pi_gc <- crop_price * yhat_base - (input_price * ones %*% base_data$input_rate)  
@@ -167,7 +174,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   big_mat_base <- ones %*% Xmat_base
 
   #--- se of the profit differential  ---# 
-  pi_gc_se <- crop_price * sqrt(big_mat_base %*% gam_res$Ve.t %*% t(big_mat_base))
+  pi_gc_se <- crop_price * sqrt(big_mat_base %*% gam_V %*% t(big_mat_base))
 
   #/*----------------------------------*/
   #' ## Profit (optimal)
@@ -178,7 +185,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   ones <- matrix(1 / dim(Xmat_comp)[1], 1, dim(Xmat_comp)[1])
 
   #--- average yield ---#
-  yhat_comp <- ones %*% Xmat_comp %*% gam_res$coefficients.t
+  yhat_comp <- ones %*% Xmat_comp %*% gam_coef
 
   #--- point estimate of profit differential ---#
   pi_opt <- crop_price * yhat_comp - (input_price * ones %*% comp_data$input_rate)  
@@ -186,7 +193,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   big_mat_comp <- ones %*% Xmat_comp
 
   #--- se of the profit differential  ---# 
-  pi_opt_se <- crop_price * sqrt(big_mat_comp %*% gam_res$Ve.t %*% t(big_mat_comp))
+  pi_opt_se <- crop_price * sqrt(big_mat_comp %*% gam_V %*% t(big_mat_comp))
 
   #/*----------------------------------*/
   #' ## Profit differential
@@ -201,10 +208,10 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   big_mat_dif <- ones %*% X_dif_mat
 
   #--- point estimate of profit differential ---#
-  pi_dif <- ones %*% ((crop_price * X_dif_mat %*% gam_res$coefficients.t) - input_price * (comp_data$input_rate - base_data$input_rate))  
+  pi_dif <- ones %*% ((crop_price * X_dif_mat %*% gam_coef) - input_price * (comp_data$input_rate - base_data$input_rate))  
 
   #--- se of the profit differential  ---# 
-  pi_dif_se <- crop_price * sqrt(big_mat_dif %*% gam_res$Ve.t %*% t(big_mat_dif))
+  pi_dif_se <- crop_price * sqrt(big_mat_dif %*% gam_V %*% t(big_mat_dif))
 
   #--- t-stat ---#
   t_stat <- (pi_dif/pi_dif_se) %>% round(digits = 2)  
@@ -393,6 +400,70 @@ gen_y_res <- function (data_sf, field_var_ls){
 
     return(data_sf)
   }
+}
+
+#/*=================================================*/
+#' # Run scam or gam
+#/*=================================================*/
+# data <- analysis_res_g$data[[1]]
+# field_vars <- analysis_res_m$field_vars[[1]]
+
+run_scam_gam <- function(data, field_vars){
+
+  results <- NULL
+
+  #=== start with 6 knots ===#
+  start_k <- 6
+
+  while (is.null(results) | start_k >= 4 ) {
+
+    results <- tryCatch(
+      {
+        withTimeout(
+          {
+            formula <- paste0(
+              "yield ~ s(input_rate, k = ",
+              start_k,
+              ", bs = \"cv\", by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5))",
+              ifelse(
+                length(field_vars) > 0,
+                paste0(" + ", paste0(field_vars, collapse = " + ")),
+                ""
+              )
+            ) %>% formula()
+
+            scam(formula, data = data)
+          },
+          timeout = 20, # 2 minutes,
+          onTimeout = "silent"
+        )
+      }, 
+      error = function(cond){
+        return(NULL)
+      }
+    )
+
+    start_k <- start_k - 1 
+
+  }
+
+  if (is.null(results)) {
+
+    formula <- paste0(
+      "yield ~ s(input_rate, k = 5, by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5))",
+      ifelse(
+        length(field_vars) > 0,
+        paste0(" + ", paste0(field_vars, collapse = " + ")),
+        ""
+      )
+    ) %>% formula()
+
+    results <- gam(formula, data = data)
+
+  }
+
+ return(results) 
+
 }
 
 #/*=================================================*/
