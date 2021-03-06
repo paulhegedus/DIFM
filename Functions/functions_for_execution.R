@@ -854,7 +854,7 @@ get_td_text <- function(input_type, gc_type, locally_run = FALSE) {
       gsub("input", input_type)
   } else if (gc_type == "uniform") {
     grower_plan_text <- "apply _gc_rate_here_ _unit_here_ per acre 
-      uniformly across the field. _num_exp_rates_here_ 
+      uniformly across the field. `r length(unique(trial_design$tgti))` 
       experimental _input_full_name_l_ rates were assigned randomly and in 
       roughly equal number to plots" 
   }
