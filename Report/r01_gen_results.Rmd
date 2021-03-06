@@ -651,7 +651,7 @@ if (length(interacting_vars) == 0) {
           breaks = quantile(
             data_plot_dt$temp_var, 
             prob = seq(0, 1, length = 4)
-          ),
+          ) %>% unique(),
           include.lowest = TRUE
         )
       )

@@ -22,7 +22,7 @@ field_data <- jsonlite::fromJSON(
 # field_year_ls <- field_data[year == 2020, ]$field_year
 field_year_ls <- field_data[year == 2020, ]$field_year
 
-field_year_ls <- field_data[year == 2019, ]$field_year
+field_year_ls <- field_data$field_year
 
 # /*=================================================*/
 #' # Data Processing
@@ -48,7 +48,7 @@ make_data_report()
 
 #--- individually ---#
 exp_process_make_report(
-  ffy = field_year_ls[7],
+  ffy = field_year_ls[16],
   rerun = TRUE
 )
 
@@ -76,9 +76,8 @@ f_process_make_report(
 
 #--- individually ---#
 run_analysis(
-  ffy = field_year_ls[7],
-  rerun = TRUE,
-  locally_run = TRUE
+  ffy = field_year_ls[17],
+  rerun = TRUE
 )
 
 # /*----------------------------------*/
@@ -90,8 +89,7 @@ run_analysis(
 #--- individually ---#
 make_grower_report(
   ffy = field_year_ls[17],
-  rerun = TRUE,
-  locally_run = TRUE
+  rerun = TRUE
 )
 
 # render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")
