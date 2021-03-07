@@ -103,6 +103,7 @@ results <- readRDS(here("Reports", "Growers", ffy, "analysis_results.rds")) %>%
 
 data_sf <- results$data[[1]]
 field_vars <- results$field_vars[[1]]
+field_plots <- results$field_plots[[1]]
 eval_data <- results$eval_data[[1]]
 opt_gc_data <- results$opt_gc_data[[1]]
 whole_profits_test <- results$whole_profits_test[[1]]
@@ -446,7 +447,7 @@ if (sn_ew_ratio > 1.1) {
     tm_fill(
       col = "b_slope", 
       palette = "PuRd",
-      title = "Yield\n(bu/acre)",
+      title = "Estimated Yield\nResponse Parameter",
       # legend.is.portrait = FALSE,
       style = "cont"
     ) +
@@ -460,7 +461,7 @@ if (sn_ew_ratio > 1.1) {
     tm_fill(
       col = "b_slope", 
       palette = "PuRd",
-      title = "Yield (bu/acre)",
+      title = "Estimated Yield Response Parameter",
       legend.is.portrait = FALSE,
       style = "cont"
     ) +
@@ -476,7 +477,7 @@ if (sn_ew_ratio > 1.1) {
     tm_fill(
       col = "zone_txt", 
       palette = "YlGnBu",
-      title = "Yield\n(bu/acre)",
+      title = "Estimated Yield\nResponse Parameter",
       # legend.is.portrait = FALSE
     ) +
     tm_layout_to_add + 
@@ -594,101 +595,4 @@ g_int <- ggplot(plot_data) +
   ) +
   fig_theme_nonsp
 
-#/*=================================================*/
-#' # Interactions
-#/*=================================================*/
-#=== find correlation coefs of b_slope and field vars ===#
-
-field_interactions <- results$field_interactions[[1]]
-
-cor_tab <- field_interactions$cor_tab
-interacting_vars <- field_interactions$interacting_vars
-
-if (length(interacting_vars) == 0) {
-  field_plots <- NULL
-} else {
-
-  field_plots <- tibble(
-    ch_var = interacting_vars,
-    data_plot = list(data_sf)
-  ) %>% 
-  rowwise() %>% 
-  mutate(g_map =
-    list(
-      ggplot(data_plot) +
-      geom_sf(aes_string(fill = ch_var), color = NA) +
-      theme_void() +
-      scale_fill_distiller(
-        palette = "YlGn",
-        direction = -1,
-        name = ""
-      ) + 
-      theme(
-        legend.position = "bottom",
-        legend.text = element_text(size = 9),
-        legend.title = element_text(size = 12),
-        legend.key.width =  unit(1, "cm"),
-        plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
-        plot.margin = unit(c(0, 2, 0, 0), "cm") 
-      ) +
-      ggtitle(ch_var)
-    )
-  ) %>% 
-  mutate(data_plot_dt = 
-    list(
-      data_plot[, c("yield", "input_rate", ch_var)] %>% 
-        st_drop_geometry() %>% 
-        setnames(ch_var, "temp_var") %>% 
-        data.table()  
-    )
-  ) %>% 
-  mutate(data_plot_dt = 
-    list(
-      mutate(
-        data_plot_dt,
-        temp_cat = cut(
-          data_plot_dt$temp_var, 
-          breaks = quantile(
-            data_plot_dt$temp_var, 
-            prob = seq(0, 1, length = 4)
-          ) %>% unique(),
-          include.lowest = TRUE
-        )
-      )
-    )
-  ) %>% 
-  mutate(g_ys_char = list(
-    ggplot(data = data_plot_dt) +
-    geom_point(aes(y = yield, x = input_rate, color = factor(temp_cat)), size = 0.3) +
-    geom_smooth(
-      aes(
-        y = yield, 
-        x = input_rate, 
-        color = factor(temp_cat)
-      ),
-      method = "gam",
-      formula = y ~ s(x, k = 3)
-    ) +
-    theme_bw() +
-    scale_color_discrete(name = ch_var) +
-    ylab("Yield (bu/acre)") +
-    xlab(
-      paste0(
-        str_to_title("_input_full_name_l_"), 
-        " Rate (_unit_here_)"
-      )
-    ) +
-    theme_bw() +
-    theme(
-      legend.position = c(0.3, 0.2),
-      axis.title.x = element_text(size = 12),
-      axis.title.y = element_text(size = 12),
-      axis.text.x = element_text(size = 12),
-      axis.text.y = element_text(size = 12),
-      legend.text = element_text(size = 9),
-      legend.title = element_text(size = 9)
-    )
-  ))
-
-}
 ```

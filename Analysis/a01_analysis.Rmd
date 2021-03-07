@@ -514,17 +514,16 @@ analysis_res_w <- analysis_res_og %>%
 analysis_res_w$whole_profits_test
 ```
 
-## Get correlations between b_slope and soil/field characteristics
+## Get correlations between b_slope and soil/field characteristics and create figures of interactions
 
 ```{r }
-# data_sf <- analysis_res$data[[1]]
-
 analysis_res_ch <- analysis_res_w %>% 
-  mutate(field_interactions = 
-    list(
+  mutate(field_interactions = list(
       get_field_int(data, field_vars)
-    )
-  ) 
+  )) %>% 
+  mutate(field_plots = list(
+    get_inteactions_maps_ys(data, input_type, field_interactions)
+  ))
 
 ```
 
@@ -550,5 +549,8 @@ file_name <- here(
 )
 
 saveRDS(analysis_res_f, file_name)
+
+# analysis_res_f <- readRDS(file_name)
+
 ```
 

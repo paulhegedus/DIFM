@@ -452,6 +452,28 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
         c(report_rmd, report_body)
       )
     ) %>% 
+    mutate(field_plots_rmd = list(
+      field_plots %>% 
+        ungroup() %>% 
+        mutate(index = as.character(seq_len(nrow(.)))) %>% 
+        rowwise() %>% 
+        mutate(rmd = list(
+          read_rmd(
+            "Report/ri04_interaction_figures.Rmd", 
+            locally_run = locally_run
+          ) %>% 
+          str_replace_all("_i-here_", index) %>% 
+          str_replace_all("_ch_var_here_", ch_var)  
+        )) %>% 
+        pluck("rmd")
+    )) %>% 
+    mutate(report_rmd = list(
+      insert_rmd(
+        target_rmd = report_rmd, 
+        inserting_rmd = field_plots_rmd,
+        target_text = "_field-interactions-here_"
+      )
+    )) %>% 
     mutate(
       write_file_name = list(
         here(
