@@ -434,7 +434,7 @@ run_scam_gam <- function(data, field_vars){
 
             scam(formula, data = data)
           },
-          timeout = 20, # 2 minutes,
+          timeout = 20, # 20 seconds,
           onTimeout = "silent"
         )
       }, 
