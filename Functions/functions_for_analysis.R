@@ -1140,7 +1140,8 @@ get_inteactions_maps_ys <- function(data, input_type, field_interactions) {
         legend.text = element_text(size = 9),
         legend.title = element_text(size = 9)
       )
-    ))
+    )) %>% 
+    dplyr::select(- data_plot, - data_plot_dt, - breaks)
 
   }
 
