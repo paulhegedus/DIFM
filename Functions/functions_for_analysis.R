@@ -1022,5 +1022,131 @@ get_field_int <- function(data_sf, field_vars) {
 
 }
 
+#/*=================================================*/
+#' # Interactions and illustrative figures
+#/*=================================================*/
+#=== find correlation coefs of b_slope and field vars ===#
+
+# get_inteactions_maps_ys(data, input_type, field_interactions)$g_ys_char
+
+get_inteactions_maps_ys <- function(data, input_type, field_interactions) {
+
+  cor_tab <- field_interactions$cor_tab
+  interacting_vars <- field_interactions$interacting_vars
+
+  unit_txt = case_when(
+    input_type == "S" ~ "K seeds",
+    input_type == "N" ~ "lbs",
+    input_type == "K" ~ "lbs"
+  )
+
+  input_full_name = case_when(
+    input_type == "S" ~ "Seed",
+    input_type == "N" ~ "Nitrogen",
+    input_type == "K" ~ "Potassium"
+  )
+
+  if (length(interacting_vars) == 0) {
+    field_plots <- NULL
+  } else {
+
+    field_plots <- tibble(
+      ch_var = interacting_vars,
+      data_plot = list(data)
+    ) %>% 
+    rowwise() %>% 
+    mutate(g_map =
+      list(
+        ggplot(data_plot) +
+        geom_sf(aes_string(fill = ch_var), color = NA) +
+        theme_void() +
+        scale_fill_distiller(
+          palette = "YlGn",
+          direction = -1,
+          name = ""
+        ) + 
+        theme(
+          legend.position = "bottom",
+          legend.text = element_text(size = 9),
+          legend.title = element_text(size = 12),
+          legend.key.width =  unit(1, "cm"),
+          plot.title = element_text(size = 12, hjust = 0.5),
+          plot.margin = unit(c(0, 2, 0, 0), "cm") 
+        ) +
+        ggtitle(ch_var)
+      )
+    ) %>% 
+    mutate(data_plot_dt = 
+      list(
+        data_plot[, c("yield", "input_rate", ch_var)] %>% 
+          st_drop_geometry() %>% 
+          setnames(ch_var, "temp_var") %>% 
+          data.table()  
+      )
+    ) %>% 
+    mutate(breaks = list(
+      quantile(
+        data_plot_dt$temp_var, 
+        prob = seq(0, 1, length = 4)
+      ) %>% 
+      data.table(breaks = .) %>% 
+      .[1, breaks := floor(breaks)] %>% 
+      .[.N, breaks := ceiling(breaks)] %>% 
+      .[, breaks] %>% 
+      unique()
+    )) %>% 
+    mutate(data_plot_dt = 
+      list(
+        mutate(
+          data_plot_dt,
+          temp_cat = cut(
+            data_plot_dt$temp_var, 
+            breaks = breaks,
+            include.lowest = TRUE
+          )
+        )
+      )
+    ) %>% 
+    mutate(g_ys_char = list(
+      ggplot(data = data_plot_dt) +
+      geom_point(aes(y = yield, x = input_rate, color = factor(temp_cat)), size = 0.3) +
+      geom_smooth(
+        aes(
+          y = yield, 
+          x = input_rate, 
+          color = factor(temp_cat)
+        ),
+        method = "gam",
+        formula = y ~ s(x, k = 3)
+      ) +
+      theme_bw() +
+      scale_color_discrete(name = ch_var) +
+      ylab("Yield (bu/acre)") +
+      xlab(
+        paste0(
+          input_full_name, 
+          " Rate (",
+          unit_txt,
+          ")"
+        )
+      ) +
+      theme_bw() +
+      theme(
+        legend.position = "bottom",
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 9)
+      )
+    ))
+
+  }
+
+  return(field_plots)
+
+}
+
 
   
