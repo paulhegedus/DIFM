@@ -111,7 +111,7 @@ A yield polygon was judged as having a "dominant treatment" when the standard de
 include_graphics(machinery_alignment.png))) 
 ```
 
-```{r  processed-yield-as-applied-combined, echo = F, fig.cap = "Yield and _asa-or-asp_ _input_full_name_l_ rates", dependson = "save-figures-yield-seed-processed", fig.height = ifelse(sn_ew_ratio > 1.1, 5, 8)}
+```{r  processed-yield-as-applied-combined, echo = F, fig.cap = "Yield and _asa-or-asp_ _input_full_name_l_ rates after data processing", dependson = "save-figures-yield-seed-processed", fig.height = ifelse(sn_ew_ratio > 1.1, 5, 8)}
 
 if (sn_ew_ratio > 1.1) {
   tmap_arrange(tm_p_input, tm_p_yield, ncol = 2)
