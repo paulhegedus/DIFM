@@ -61,7 +61,7 @@ exp_process_make_report(
 
 #--- individually ---#
 f_process_make_report(
-  ffy = field_year_ls[17],
+  ffy = field_year_ls[2],
   rerun = TRUE
 )
 
@@ -77,7 +77,7 @@ f_process_make_report(
 
 #--- individually ---#
 run_analysis(
-  ffy = field_year_ls[14],
+  ffy = field_year_ls[2],
   rerun = TRUE,
   locally_run = TRUE
 )
