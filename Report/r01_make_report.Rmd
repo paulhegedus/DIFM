@@ -88,20 +88,7 @@ g_int
 ```
 
 ```{r }
-field_var_data <- c(
-    #=== topography ===#
-    "twi", "tpi", "elevation", "slope", 
-    #=== ssurgo ===#
-    "clay", "sand", "water_storage",
-    #=== ec ===#
-    "ecs", "om", "cec", "ec02"
-) %>% 
-data.table(field_vars = .) %>% 
-.[, var_txt_in_report := c(
-  "TWI", "TPI", "elevation", "slope",
-  "clay content (%)", "sand content (%)", "water storage",
-  "EC", "organic matter", "CEC", "EC"
-)]
+
 
 field_var_txt <- data.table(field_vars = field_vars) %>% 
   field_var_data[., on = "field_vars"] %>% 

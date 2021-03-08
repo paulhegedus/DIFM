@@ -1031,6 +1031,9 @@ get_field_int <- function(data_sf, field_vars) {
 
 get_inteactions_maps_ys <- function(data, input_type, field_interactions) {
 
+# field_interactions <- results$field_interactions[[1]]
+# data <- results$data[[1]]
+
   cor_tab <- field_interactions$cor_tab
   interacting_vars <- field_interactions$interacting_vars
 
@@ -1054,6 +1057,7 @@ get_inteactions_maps_ys <- function(data, input_type, field_interactions) {
       ch_var = interacting_vars,
       data_plot = list(data)
     ) %>% 
+    left_join(., field_var_data, by = c("ch_var" = "field_vars")) %>% 
     rowwise() %>% 
     mutate(g_map =
       list(
@@ -1073,7 +1077,7 @@ get_inteactions_maps_ys <- function(data, input_type, field_interactions) {
           plot.title = element_text(size = 12, hjust = 0.5),
           plot.margin = unit(c(0, 2, 0, 0), "cm") 
         ) +
-        ggtitle(ch_var)
+        ggtitle(str_to_title(var_txt_in_report))
       )
     ) %>% 
     mutate(data_plot_dt = 
@@ -1120,7 +1124,7 @@ get_inteactions_maps_ys <- function(data, input_type, field_interactions) {
         formula = y ~ s(x, k = 3)
       ) +
       theme_bw() +
-      scale_color_discrete(name = ch_var) +
+      scale_color_discrete(name = str_to_title(var_txt_in_report)) +
       ylab("Yield (bu/acre)") +
       xlab(
         paste0(
@@ -1149,5 +1153,20 @@ get_inteactions_maps_ys <- function(data, input_type, field_interactions) {
 
 }
 
-
-  
+#/*=================================================*/
+#' # Field variable name in the report  
+#/*=================================================*/
+field_var_data <- c(
+    #=== topography ===#
+    "twi", "tpi", "elevation", "slope", 
+    #=== ssurgo ===#
+    "clay", "sand", "water_storage",
+    #=== ec ===#
+    "ecs", "om", "cec", "ec02"
+) %>% 
+data.table(field_vars = .) %>% 
+.[, var_txt_in_report := c(
+  "TWI", "TPI", "elevation", "slope",
+  "clay content (%)", "sand content (%)", "water storage",
+  "EC", "organic matter", "CEC", "EC"
+)] 
