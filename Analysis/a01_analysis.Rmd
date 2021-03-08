@@ -550,7 +550,11 @@ file_name <- here(
 
 saveRDS(analysis_res_f, file_name)
 
-# analysis_res_f <- readRDS(file_name)
+```
 
+```{r eval = F}
+# analysis_res_f$field_plots[[1]]$g_ys_char
+# analysis_res_f <- readRDS(file_name)
+ 
 ```
 
