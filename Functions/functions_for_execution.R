@@ -755,27 +755,32 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
     # Statements about the difference between 
     # optimal vs grower-chosen rates
 
-    pi_dif_zone_rmd <- tibble(
-      w_zone = 2:nrow(pi_dif_test_zone)
-    ) %>% 
-    rowwise() %>% 
-    mutate(t_value = list(
-      pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), t]
-    )) %>% 
-    mutate(pi_dif_rmd_indiv = list(
-        read_rmd(
-          "Report/ri02_profit_dif_statement.Rmd",
-          locally_run = locally_run
-        ) %>%
-        gsub("_insert-zone-here_", w_zone, .) %>% 
-        gsub(
-          "_t-confidence-statement_", 
-          get_t_confidence_statement(t_value), 
-          .
-        )
-    )) %>% 
-    pluck("pi_dif_rmd_indiv") %>% 
-    reduce(c)
+    if (nrow(pi_dif_test_zone) > 1) {
+      pi_dif_zone_rmd <- tibble(
+        w_zone = 2:nrow(pi_dif_test_zone)
+      ) %>% 
+      rowwise() %>% 
+      mutate(t_value = list(
+        pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), t]
+      )) %>% 
+      mutate(pi_dif_rmd_indiv = list(
+          read_rmd(
+            "Report/ri02_profit_dif_statement.Rmd",
+            locally_run = locally_run
+          ) %>%
+          gsub("_insert-zone-here_", w_zone, .) %>% 
+          gsub(
+            "_t-confidence-statement_", 
+            get_t_confidence_statement(t_value), 
+            .
+          )
+      )) %>% 
+      pluck("pi_dif_rmd_indiv") %>% 
+      reduce(c)
+    } else {
+      #=== if there is only one zone ===#
+      pi_dif_zone_rmd <- NULL
+    }
 
     res_disc_rmd <- insert_rmd(
       target_rmd = res_disc_rmd, 
