@@ -465,7 +465,8 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
           str_replace_all("_i-here_", index) %>% 
           str_replace_all("_ch_var_here_", ch_var)  
         )) %>% 
-        pluck("rmd")
+        pluck("rmd") %>% 
+        reduce(c)
     )) %>% 
     mutate(report_rmd = list(
       insert_rmd(
