@@ -463,7 +463,11 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
             locally_run = locally_run
           ) %>% 
           str_replace_all("_i-here_", index) %>% 
-          str_replace_all("_ch_var_here_", ch_var)  
+          str_replace_all("_ch_var_here_", ch_var) %>% 
+          str_replace_all(
+            "_ch_var_here_no_underbar_", 
+            gsub("_", "-", ch_var)
+          )  
         )) %>% 
         pluck("rmd") %>% 
         reduce(c)
