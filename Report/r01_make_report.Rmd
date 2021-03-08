@@ -88,11 +88,8 @@ g_int
 ```
 
 ```{r }
-
-
 field_var_txt <- data.table(field_vars = field_vars) %>% 
   field_var_data[., on = "field_vars"] %>% 
-  .[1, var_txt_in_report := str_to_title(var_txt_in_report)] %>% 
   .[.N, var_txt_in_report := paste0("and ", var_txt_in_report)] %>% 
   .[, var_txt_in_report] %>% 
   paste0(collapse = ", ")
@@ -107,7 +104,7 @@ int_var_txt <- data.table(field_vars = field_plots$ch_var) %>%
 
 ```
 
-`r field_var_txt` were tested to see if they are correlated with the management zones. Among these variables, `r int_var_txt` seem to affect how yield responds to _input_full_name_l_. 
+DIFM researchers are currently working on ways to efficiently identify interactions among field characteristics and management inputs. The research is in its early stages. However in an exploratory analysis, `r field_var_txt` were tested to see if they are correlated with the management zones. Among these variables, `r int_var_txt` seem to affect how yield responds to _input_full_name_l_. 
 
 _field-interactions-here_
 
