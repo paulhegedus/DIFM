@@ -415,7 +415,7 @@ run_scam_gam <- function(data, field_vars){
   #=== start with 6 knots ===#
   start_k <- 6
 
-  while (is.null(results) & start_k >= 4) {
+  while (is.null(results) & start_k >= 5) {
 
     results <- tryCatch(
       {
