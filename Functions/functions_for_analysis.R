@@ -29,88 +29,58 @@ get_ttest_text <- function(test_results, zone){
 # all_var_names_ls_ls <- c(all_var_names_ls_ls, "n_rate")
 # est$model$n_rate <- 1
 
-# trial_type <- "S"
+make_data_for_eval <- function(data, est) {
 
-predict_yield_range <- function(data, est, var_name, by = NULL, crop_price) {
+# data <- analysis_res_gcr$data[[1]]
+# est <- analysis_res_gcr$gam_res[[1]]
 
   data_dt <- data.table(data)
 
-  if (is.null(by)) {
+  var_names_ls <- est$model %>% 
+    data.table() %>% 
+    dplyr::select(- any_of(c("input_rate", "yield"))) %>%
+    names() 
 
-    var_names_ls <- est$model %>% 
-      data.table() %>% 
-      dplyr::select(- any_of(c(var_name, "yield"))) %>%
-      names() 
+  data_for_eval <- data_dt[, ..var_names_ls] %>% 
+    .[, lapply(.SD, mean), by = zone_txt]
 
-    other_vars_exp <- paste0(var_names_ls, " = mean(data_dt$", var_names_ls, ")", collapse = ",")
+  return(data_for_eval)
 
-    var_interest <- data_dt[, ..var_name] %>% 
-      .[, lapply(.SD, function(x) 
-        seq(
-          quantile(x, prob = 0.025), 
-          quantile(x, prob = 0.975), 
-          length = 100
-        )
-      )] %>% 
-      expand.grid() %>% 
-      data.table()
+}
 
-    eval(parse(text=
-      paste0("eval_data_row <- var_interest %>%  mutate(", other_vars_exp, ")")
-    ))
-    
-    eval_data <- eval_data_row %>% 
-      data.table()  
+make_eval_data_gc <- function(data, data_for_eval, gc_type, w_gc_rate) {
 
-    yield_prediction <- predict(est, newdata = eval_data, se = TRUE)
-
-    #--- predict yield ---#
-    eval_data[, yield_hat := yield_prediction$fit]
-    eval_data[, yield_hat_se := yield_prediction$se.fit]
-
+  if (gc_type == "Rx") {
+    #=== individual plot data ===#
+    data_for_eval <- data %>% 
+      .[, input_rate := NULL] %>% 
+      #=== designate gc_rate as input_rate for prediction ===#
+      .[, input_rate := gc_rate]  
   } else {
-
-    var_names_ls <- est$model %>% 
-      data.table() %>% 
-      dplyr::select(- any_of(c(var_name, "yield", by))) %>%
-      names() 
-
-    by_var_values <- unique(data_dt[, ..by]) %>% unlist()
-
-    other_vars_exp <- paste0(var_names_ls, " = mean(data_dt$", var_names_ls, ")", collapse = ",")
-
-    var_interest <- data_dt[, ..var_name] %>% 
-      .[, lapply(.SD, function(x) 
-        seq(
-          quantile(x, prob = 0.025), 
-          quantile(x, prob = 0.975), 
-          length = 100
-        )
-      )] %>% 
-      expand.grid() %>% 
-      data.table() %>% 
-      .[rep(seq_len(nrow(.)), each = length(by_var_values)),] %>% 
-      .[, by_var := rep(by_var_values, nrow(.)/length(by_var_values))] %>% 
-      data.table() %>% 
-      setnames("by_var", by)
-
-    eval(parse(text=
-      paste0("eval_data_row <- var_interest %>%  mutate(", other_vars_exp, ")")
-    ))
-    
-    eval_data <- eval_data_row %>% 
-      data.table() 
-
-    yield_prediction <- predict(est, newdata = eval_data, se = TRUE)
-
-    #--- predict yield ---#
-    eval_data <- eval_data %>% 
-      .[, `:=`(
-        yield_hat = yield_prediction$fit,
-        yield_hat_se = yield_prediction$se.fit
-      )] 
-
+    #=== data by zone ===#
+    data_for_eval <- data_for_eval %>% 
+      #=== designate gc_rate as input_rate for prediction ===#
+      .[, gc_rate := w_gc_rate]
   }
+
+  return(data_for_eval)
+}
+
+input_rate_seq <- analysis_res_p$input_rate_seq[[1]]
+data_for_eval <- analysis_res_p$data[[1]]
+
+predict_yield_range <- function(data_for_eval, input_rate_seq, est) {
+
+  eval_data <- data_for_eval[input_rate_seq, on = "zone_txt"]  
+
+  #--- predict yield ---#
+  yield_prediction <- predict(est, newdata = eval_data, se = TRUE)
+
+  eval_data <- eval_data %>% 
+    .[, `:=`(
+      yield_hat = yield_prediction$fit,
+      yield_hat_se = yield_prediction$se.fit
+    )] 
 
   return(eval_data)
 
@@ -161,6 +131,7 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
   #' ## Profit (gc)
   #/*----------------------------------*/
   Xmat_base <- predict(gam_res, newdata = base_data, type = "lpmatrix") 
+  # predict(gam_res, newdata = base_data) %>% mean
 
   #--- vector of 1s for summation divided by the number of observations for averaging ---#
   ones <- matrix(1 / dim(Xmat_base)[1], 1, dim(Xmat_base)[1])
@@ -232,6 +203,10 @@ get_dif_stat <- function(data, test_var, opt_var, gc_var, gam_res, crop_price, i
 
 }
 
+# data = analysis_res_o$data[[1]] %>% data.table()
+# gam_res = analysis_res_o$gam_res[[1]]
+# input_price = analysis_res_o$price[[1]]
+
 get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var, crop_price, input_price){
 
   zone_ls <- data[, ..by_var] %>% 
@@ -264,11 +239,17 @@ get_dif_stat_zone <- function(data, test_var, opt_var, gc_var, gam_res, by_var, 
 
 }
 
+# data <- analysis_res_o$data[[1]]
+# gc_type <- analysis_res_o$gc_type[[1]]
+# gam_res <- analysis_res_o$gam_res[[1]]
+# crop_price <- analysis_res_o$crop_price[[1]]
+# input_price <- analysis_res_o$price[[1]]
+
 get_pi_dif_test_zone <- function(data, gc_type, gam_res, crop_price, input_price) {
 
   if (gc_type == "uniform") {
 
-    data_for_test <- data.table(data) %>% unique(by = "zone_txt")
+    data_for_test <- data.table(data)
 
     pi_dif_test_zone <- get_dif_stat_zone(
       data = data_for_test, 
@@ -912,60 +893,42 @@ assign_gc_rate <- function(data, input_type, gc_type, gc_rate) {
 #/*=================================================*/
 #' # optimal-grower-chosen data
 #/*=================================================*/ 
-# data <-  analysis_res$data[[1]]
-# eval_data <-  analysis_res$eval_data[[1]]
-# gc_type <-  analysis_res$gc_type[[1]]
-# input_price <-  analysis_res$price[[1]]
+# data <-  analysis_res_o$data[[1]]
+# pi_dif_test_zone <-  analysis_res_o$pi_dif_test_zone[[1]]
+# opt_input_data <-  analysis_res_o$opt_input_data[[1]]
 
-get_opt_gc_data <- function(data, eval_data, gc_type, pi_dif_test_zone) {
+get_opt_gc_data <- function(data, pi_dif_test_zone, opt_input_data) {
 
-  opt_input_data <- eval_data %>% 
-    .[type == "opt_v", ] %>% 
-    .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
-    setnames("input_rate", "opt_input")
+  mean_gc_rate_by_zone <- data.table(data) %>% 
+    .[, .(input_rate = mean(gc_rate)), by = zone_txt]
 
-  if (gc_type == "uniform") {
+  gc_data <- pi_dif_test_zone %>% 
+    .[, .(yhat_est_gc, point_est_gc, point_est_gc_se, zone_txt)] %>% 
+    mean_gc_rate_by_zone[., on = "zone_txt"] %>% 
+    setnames(
+      c("yhat_est_gc", "point_est_gc", "point_est_gc_se"), 
+      c("yield_hat", "profit_hat", "profit_hat_se")
+    ) %>% 
+    .[, `:=`(
+      pi_upper = profit_hat + 1.96 * profit_hat_se,
+      pi_lower = profit_hat - 1.96 * profit_hat_se
+    )] %>% 
+    .[, type := "gc"]
 
-    opt_gc_data <- data.table::copy(opt_input_data) %>% 
-      setnames("opt_input", "input_rate") %>% 
-      rbind(., eval_data[type == "gc",]) %>% 
-      .[, pi_upper := profit_hat + profit_hat_se * 1.96] %>% 
-      .[, pi_lower := profit_hat - profit_hat_se * 1.96]
+  opt_data <- pi_dif_test_zone %>% 
+    .[, .(yhat_est_opt, point_est_opt, point_est_opt_se, zone_txt)] %>% 
+    opt_input_data[, .(zone_txt, opt_input)][., on = "zone_txt"] %>% 
+    setnames(
+      c("yhat_est_opt", "point_est_opt", "point_est_opt_se", "opt_input"), 
+      c("yield_hat", "profit_hat", "profit_hat_se", "input_rate")
+    ) %>% 
+    .[, `:=`(
+      pi_upper = profit_hat + 1.96 * profit_hat_se,
+      pi_lower = profit_hat - 1.96 * profit_hat_se
+    )] %>% 
+    .[, type := "opt_v"]
 
-  } else if (gc_type == "Rx") {
-
-    mean_gc_rate_by_zone <- data.table(data) %>% 
-      .[, .(input_rate = mean(gc_rate)), by = zone_txt]
-
-    gc_data <- pi_dif_test_zone %>% 
-      .[, .(yhat_est_gc, point_est_gc, point_est_gc_se, zone_txt)] %>% 
-      mean_gc_rate_by_zone[., on = "zone_txt"] %>% 
-      setnames(
-        c("yhat_est_gc", "point_est_gc", "point_est_gc_se"), 
-        c("yield_hat", "profit_hat", "profit_hat_se")
-      ) %>% 
-      .[, `:=`(
-        pi_upper = profit_hat + 1.96 * profit_hat_se,
-        pi_lower = profit_hat - 1.96 * profit_hat_se
-      )] %>% 
-      .[, type := "gc"]
-
-    opt_data <- pi_dif_test_zone %>% 
-      .[, .(yhat_est_opt, point_est_opt, point_est_opt_se, zone_txt)] %>% 
-      opt_input_data[, .(zone_txt, opt_input)][., on = "zone_txt"] %>% 
-      setnames(
-        c("yhat_est_opt", "point_est_opt", "point_est_opt_se", "opt_input"), 
-        c("yield_hat", "profit_hat", "profit_hat_se", "input_rate")
-      ) %>% 
-      .[, `:=`(
-        pi_upper = profit_hat + 1.96 * profit_hat_se,
-        pi_lower = profit_hat - 1.96 * profit_hat_se
-      )] %>% 
-      .[, type := "opt_v"]
-
-    opt_gc_data <- rbind(opt_data, gc_data)
-
-  }
+  opt_gc_data <- rbind(opt_data, gc_data)
 
   return(opt_gc_data)
 

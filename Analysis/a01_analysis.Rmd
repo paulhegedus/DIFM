@@ -209,74 +209,74 @@ pluck(analysis_res_m, "data") %>%
 
 ```{r gam-estimate}
 
-analysis_res_g <- analysis_res_m %>% 
-  mutate(
-    gam_res = list(
-      run_scam_gam(data = data, field_vars = field_vars)
-    ) 
-  ) %>% 
-  #=== make the observations in the same zone have the same X and Y ===#
-  mutate(
-    data = list(
-      data.table(data) %>% 
-        .[, `:=`(
-          X = mean(X), 
-          Y = mean(Y)
-        ), by = "zone_txt"] %>% 
-        st_as_sf()
-    )
-  )
+analysis_res_gam <- analysis_res_m %>% 
+  mutate(gam_res = list(
+    run_scam_gam(data = data, field_vars = field_vars)
+  )) 
+  # %>% 
+  # #=== make the observations in the same zone have the same X and Y ===#
+  # mutate(
+  #   data = list(
+  #     data.table(data) %>% 
+  #       .[, `:=`(
+  #         X = mean(X), 
+  #         Y = mean(Y)
+  #       ), by = "zone_txt"] %>% 
+  #       st_as_sf()
+  #   )
+  # )
 
 ```
 
 Here is the `gam` model formula:
 
 ```{r }
-analysis_res_g$gam_res
+analysis_res_gam$gam_res
 
 ```
 
-## Define grower-chose rate
-
-```{r }
-
-analysis_res_gcr <- analysis_res_g %>% 
-  mutate(data = 
-    list(
-      assign_gc_rate(data, input_type, gc_type, gc_rate)
-    )
-  )
-
-
-```
 
 ## Profit estimation and economic optimization
 
-### Yield-Profit Estimation (at hypothetical points)
-
 ```{r }
 
-analysis_res_p <- analysis_res_gcr %>% 
-  #=== predict yield values at different input rates ===#
-  mutate(eval_data = 
-    list(
-      predict_yield_range(
-        data = data, 
-        est = gam_res, 
-        var_name = "input_rate", 
-        by = "zone_txt"
-      ) %>% 
-      .[, type := "opt_v"]%>% 
-      .[, .(
-        input_rate, zone_txt, type, yield_hat, yield_hat_se
-      )]
+analysis_res_e <- analysis_res_gam %>% 
+  #=== single average observation by zone ===#
+  mutate(data_for_eval = list(
+    make_data_for_eval(
+      data = data,
+      est = gam_res
     )
-  ) %>% 
+  )) %>% 
+  #=== input rate sequence by zone to be tested ===#
+  mutate(input_rate_seq = list(
+    data.table(data)[, .(
+      input_rate = seq(
+        quantile(input_rate, 0.025),
+        quantile(input_rate, 0.975),
+        length = 100
+      )
+    ),
+    by = zone_txt]
+  )) %>% 
+  #=== predict yield values at different input rates ===#
+  mutate(eval_data_opt = list(
+    predict_yield_range(
+      data_for_eval = data_for_eval, 
+      input_rate_seq = input_rate_seq,
+      est = gam_res
+    ) %>% 
+    .[, type := "opt_v"]%>% 
+    .[, .(
+      input_rate, zone_txt, type, yield_hat, yield_hat_se
+    )]
+  )) %>% 
+  #=== Adjust yield values to match up with actual yields (this is purely for figures below) ===#
   mutate(
     #=== mean predicted yield ===#
-    mean_yield_hat = 
+    mean_yield_hat_opt = 
     list(
-      eval_data[, .(mean_yield_hat = mean(yield_hat)), by = zone_txt]
+      eval_data_opt[, .(mean_yield_hat = mean(yield_hat)), by = zone_txt]
     ), 
     #=== mean actual yield by zone ===#
     mean_yield_actual = 
@@ -287,44 +287,51 @@ analysis_res_p <- analysis_res_gcr %>%
       ]
     ),
     #=== shift yield so that figures look ===#
-    yield_shift = 
+    yield_shift_opt = 
     list(
-      mean_yield_actual[mean_yield_hat, on = "zone_txt"] %>% 
+      mean_yield_actual[mean_yield_hat_opt, on = "zone_txt"] %>% 
         .[, yield_shift :=  mean_yield_actual - mean_yield_hat] %>% 
         .[, .(zone_txt, yield_shift)]
     ),
-    gc_rate_data = 
+    eval_data_opt = 
     list(
-      data.table(data) %>% 
-        unique(by = "zone") %>% 
-        .[, input_rate := gc_rate] 
-    ),
-    eval_data_gc =
-    list(
-      predict_yield(
-        data = gc_rate_data, 
-        est = gam_res,
-        var_name = "gc_rate"
-      ) %>% 
-      data.table() %>% 
-      .[, type := "gc"] %>% 
-      .[, .(
-        input_rate, zone_txt, type, yield_hat, yield_hat_se
-      )]
-    ),
-    eval_data = 
-    list(
-      rbind(eval_data, eval_data_gc) %>% 
-      yield_shift[., on = "zone_txt"] %>% 
+      eval_data_opt %>% 
+      yield_shift_opt[., on = "zone_txt"] %>% 
       .[, yield_hat := yield_hat + yield_shift] %>% 
       .[, profit_hat := crop_price * yield_hat - price * input_rate] %>% 
       .[, profit_hat_se := crop_price * yield_hat_se] 
-    ) 
+    )
   ) %>% 
   dplyr::select(
-    - mean_yield_hat, - mean_yield_actual, - yield_shift, 
-    - gc_rate_data, - eval_data_gc
-  )
+    - mean_yield_hat_opt, 
+    - yield_shift_opt, 
+    - mean_yield_actual
+  ) %>% 
+  mutate(opt_input_data = list(
+   opt_input_data <- eval_data_opt %>% 
+    .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
+    setnames("input_rate", "opt_input") 
+  )) %>% 
+  #=== assign optimal variable input rate to the data ===#
+  mutate(data = list(
+    left_join(
+      data, 
+      opt_input_data,
+      by = "zone_txt"
+    )
+  )) %>% 
+  #=== find the optimal uniform rate ===#
+  mutate(data = list(
+    mutate(
+      data, 
+      opt_input_u = find_opt_u(
+        data = data, 
+        gam_res = gam_res,
+        crop_price = crop_price,
+        input_price = price
+      )
+    )
+  ))
 
 ```
 
@@ -332,14 +339,14 @@ analysis_res_p <- analysis_res_gcr %>%
 
 ```{r }
 
-analysis_res_p %>% 
+analysis_res_e %>% 
   mutate(
-    ymin = eval_data[, min(yield_hat - 1.96 * yield_hat_se)] - 10
+    ymin = eval_data_opt[, min(yield_hat - 1.96 * yield_hat_se)] - 10
   ) %>% 
-  dplyr::select("data", "eval_data", "ymin") %>% 
+  dplyr::select("data", "eval_data_opt", "ymin") %>% 
   mutate(g_ys = 
     list(
-      eval_data %>% 
+      eval_data_opt %>% 
       filter(type == "opt_v") %>% 
       ggplot(data = .) +
       geom_line(aes(y = yield_hat, x = input_rate)) +
@@ -365,87 +372,58 @@ analysis_res_p %>%
     )
   ) %>% 
   pluck("g_ys")
-
   
 ```
 
-
-### Optimal Variable and Uniform Seed Rate
+## Testing Profitability by Zone
 
 ```{r gen-opt-S-v-data-map}
 
-# gam_res <- analysis_res_p$gam_res[[1]]
-# input_price <- analysis_res_p$price[[1]]
+# analysis_res_o$data[[1]]
+# analysis_res_o$pi_dif_test_zone
+# analysis_res_o$opt_gc_data
+# analysis_res_o$data[[1]] %>% data.table %>% 
+#   .[, mean(yield), by = zone_txt] 
 
-analysis_res_o <- analysis_res_p %>% 
-  mutate(
-    opt_input_data = list(
-     opt_input_data <- eval_data %>% 
-      .[type == "opt_v", ] %>% 
-      .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
-      setnames("input_rate", "opt_input") 
+analysis_res_o <- analysis_res_e %>% 
+  #=== Assign gc_rate for all the observations ===#
+  mutate(data = list(
+    assign_gc_rate(data, input_type, gc_type, gc_rate)
+  )) %>% 
+  #=== Test the statistical sig for profit differential by zone ===#
+  mutate(pi_dif_test_zone = list(
+    get_dif_stat_zone(
+      data = data.table(data), 
+      test_var = "input_rate", 
+      opt_var = "opt_input",
+      gc_var = "gc_rate",
+      gam_res = gam_res,
+      by_var = "zone_txt",
+      crop_price = crop_price,
+      input_price = price
     )
-  ) %>% 
-  #=== assign optimal variable input rate ===#
-  mutate(data = 
-    list(
-      left_join(
-        data, 
-        opt_input_data,
-        by = "zone_txt"
-      )
+  )) %>% 
+  mutate(opt_gc_data = list(
+    get_opt_gc_data(
+      data = data,
+      pi_dif_test_zone = pi_dif_test_zone,
+      opt_input_data = opt_input_data
     )
-  ) %>% 
-  mutate(pi_dif_test_zone =
-    list(
-      get_pi_dif_test_zone(
-        data, 
-        gc_type,
-        gam_res,
-        crop_price,
-        price 
-      )
-    )
-  ) %>% 
-  mutate(
-    opt_gc_data = list(
-      get_opt_gc_data(
-        data, 
-        eval_data, 
-        gc_type,
-        pi_dif_test_zone
-      )
-    )
-  ) %>% 
-  #=== find the optimal uniform rate ===#
-  mutate(data = 
-    list(
-      mutate(
-        data, 
-        opt_input_u = find_opt_u(
-          data = data, 
-          gam_res = gam_res,
-          crop_price = crop_price,
-          input_price = price
-        )
-      )
-    )
-  )
+  ))
 
 ```
 
 ```{r }
 analysis_res_o$pi_dif_test_zone 
+analysis_res_o$opt_gc_data 
 ``` 
 
 ### Optimal vs GC (profit difference for individual observations)
 
 ```{r }
-
 analysis_res_og <- analysis_res_o %>% 
   mutate(
-    pi_indiv_opt = 
-    list(
+    pi_indiv_opt = list(
       predict_yield(
         data = data, 
         est = gam_res, 
@@ -455,8 +433,7 @@ analysis_res_og <- analysis_res_o %>%
       .[, .(yield_hat, obs_id, input_rate)] %>% 
       .[, pi_hat_opt := crop_price * yield_hat - price * input_rate]
     ),
-    pi_indiv_gc = 
-    list(
+    pi_indiv_gc = list(
       predict_yield(
         data = data, 
         est = gam_res, 
@@ -466,8 +443,7 @@ analysis_res_og <- analysis_res_o %>%
       .[, .(yield_hat, obs_id, input_rate)] %>% 
       .[, pi_hat_gc := crop_price * yield_hat - price * input_rate]
     ),
-    pi_dif = 
-    list(
+    pi_dif = list(
       left_join(
         pi_indiv_opt, 
         pi_indiv_gc,
@@ -477,16 +453,15 @@ analysis_res_og <- analysis_res_o %>%
         pi_dif = pi_hat_opt - pi_hat_gc
       )
     ),
-    data = 
-    list(
-      left_join(
-        data,
-        pi_dif,
-        by = "obs_id"
-      )
-    )
+    data = list(
+      left_join(data, pi_dif, by = "obs_id"
+    ))
   ) %>% 
-  dplyr::select(- pi_indiv_opt, - pi_indiv_gc, - pi_dif)
+  dplyr::select(
+    - pi_indiv_opt, 
+    - pi_indiv_gc, 
+    - pi_dif
+  )
 
 ```
 
@@ -497,16 +472,14 @@ analysis_res_og <- analysis_res_o %>%
 # analysis_res_w$whole_profits_test
 
 analysis_res_w <- analysis_res_og %>% 
-  mutate(whole_profits_test = 
-    list(
-      get_whole_pi_test(
-        data = data, 
-        gam_res = gam_res, 
-        crop_price = crop_price,
-        input_price = price
-      )
+  mutate(whole_profits_test = list(
+    get_whole_pi_test(
+      data = data, 
+      gam_res = gam_res, 
+      crop_price = crop_price,
+      input_price = price
     )
-  ) 
+  )) 
 
 ```
 
