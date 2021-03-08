@@ -412,19 +412,13 @@ run_scam_gam <- function(data, field_vars){
 
   results <- NULL
 
-  #=== start with 6 knots ===#
-  start_k <- 6
-
-  while (is.null(results) & start_k >= 5) {
-
-    results <- tryCatch(
+  
+  results <- tryCatch(
       {
         withTimeout(
           {
             formula <- paste0(
-              "yield ~ s(input_rate, k = ",
-              start_k,
-              ", bs = \"cv\", by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5))",
+              "yield ~ s(input_rate, bs = \"cv\", by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5))",
               ifelse(
                 length(field_vars) > 0,
                 paste0(" + ", paste0(field_vars, collapse = " + ")),
@@ -443,9 +437,40 @@ run_scam_gam <- function(data, field_vars){
       }
     )
 
-    start_k <- start_k - 1 
+  # #=== start with 6 knots ===#
+  # start_k <- 6
 
-  }
+  # while (is.null(results) & start_k >= 5) {
+
+  #   results <- tryCatch(
+  #     {
+  #       withTimeout(
+  #         {
+  #           formula <- paste0(
+  #             "yield ~ s(input_rate, k = ",
+  #             start_k,
+  #             ", bs = \"cv\", by = zone_txt) + s(X, k = 5) + s(Y, k = 5) + te(X, Y, k = c(5, 5))",
+  #             ifelse(
+  #               length(field_vars) > 0,
+  #               paste0(" + ", paste0(field_vars, collapse = " + ")),
+  #               ""
+  #             )
+  #           ) %>% formula()
+
+  #           scam(formula, data = data)
+  #         },
+  #         timeout = 20, # 20 seconds,
+  #         onTimeout = "silent"
+  #       )
+  #     }, 
+  #     error = function(cond){
+  #       return(NULL)
+  #     }
+  #   )
+
+  #   start_k <- start_k - 1 
+
+  # }
 
   if (is.null(results)) {
 
