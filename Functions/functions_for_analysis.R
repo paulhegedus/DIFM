@@ -66,8 +66,8 @@ make_eval_data_gc <- function(data, data_for_eval, gc_type, w_gc_rate) {
   return(data_for_eval)
 }
 
-input_rate_seq <- analysis_res_p$input_rate_seq[[1]]
-data_for_eval <- analysis_res_p$data[[1]]
+# input_rate_seq <- analysis_res_p$input_rate_seq[[1]]
+# data_for_eval <- analysis_res_p$data[[1]]
 
 predict_yield_range <- function(data_for_eval, input_rate_seq, est) {
 
