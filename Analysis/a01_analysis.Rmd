@@ -260,7 +260,7 @@ analysis_res_e <- analysis_res_gam %>%
     by = zone_txt]
   )) %>% 
   #=== predict yield values at different input rates ===#
-  mutate(eval_data_opt = list(
+  mutate(eval_data = list(
     predict_yield_range(
       data_for_eval = data_for_eval, 
       input_rate_seq = input_rate_seq,
@@ -276,7 +276,7 @@ analysis_res_e <- analysis_res_gam %>%
     #=== mean predicted yield ===#
     mean_yield_hat_opt = 
     list(
-      eval_data_opt[, .(mean_yield_hat = mean(yield_hat)), by = zone_txt]
+      eval_data[, .(mean_yield_hat = mean(yield_hat)), by = zone_txt]
     ), 
     #=== mean actual yield by zone ===#
     mean_yield_actual = 
@@ -293,9 +293,9 @@ analysis_res_e <- analysis_res_gam %>%
         .[, yield_shift :=  mean_yield_actual - mean_yield_hat] %>% 
         .[, .(zone_txt, yield_shift)]
     ),
-    eval_data_opt = 
+    eval_data = 
     list(
-      eval_data_opt %>% 
+      eval_data %>% 
       yield_shift_opt[., on = "zone_txt"] %>% 
       .[, yield_hat := yield_hat + yield_shift] %>% 
       .[, profit_hat := crop_price * yield_hat - price * input_rate] %>% 
@@ -308,7 +308,7 @@ analysis_res_e <- analysis_res_gam %>%
     - mean_yield_actual
   ) %>% 
   mutate(opt_input_data = list(
-   opt_input_data <- eval_data_opt %>% 
+   opt_input_data <- eval_data %>% 
     .[, .SD[profit_hat == max(profit_hat), ], by = zone_txt] %>% 
     setnames("input_rate", "opt_input") 
   )) %>% 
@@ -341,12 +341,12 @@ analysis_res_e <- analysis_res_gam %>%
 
 analysis_res_e %>% 
   mutate(
-    ymin = eval_data_opt[, min(yield_hat - 1.96 * yield_hat_se)] - 10
+    ymin = eval_data[, min(yield_hat - 1.96 * yield_hat_se)] - 10
   ) %>% 
-  dplyr::select("data", "eval_data_opt", "ymin") %>% 
+  dplyr::select("data", "eval_data", "ymin") %>% 
   mutate(g_ys = 
     list(
-      eval_data_opt %>% 
+      eval_data %>% 
       filter(type == "opt_v") %>% 
       ggplot(data = .) +
       geom_line(aes(y = yield_hat, x = input_rate)) +
