@@ -88,23 +88,39 @@ g_int
 ```
 
 ```{r }
-field_vars
-field_var_len <- length(field_vars) 
+field_var_data <- c(
+    #=== topography ===#
+    "twi", "tpi", "elevation", "slope", 
+    #=== ssurgo ===#
+    "clay", "sand", "water_storage",
+    #=== ec ===#
+    "ecs", "om", "cec", "ec02"
+) %>% 
+data.table(field_vars = .) %>% 
+.[, var_txt_in_report := c(
+  "TWI", "TPI", "elevation", "slope",
+  "clay content (%)", "sand content (%)", "water storage",
+  "EC", "organic matter", "CEC", "EC"
+)]
 
-field_vars[field_var_len] <- paste0("and ", field_vars[field_var_len]) 
+field_var_txt <- data.table(field_vars = field_vars) %>% 
+  field_var_data[., on = "field_vars"] %>% 
+  .[1, var_txt_in_report := str_to_title(var_txt_in_report)] %>% 
+  .[.N, var_txt_in_report := paste0("and ", var_txt_in_report)] %>% 
+  .[, var_txt_in_report] %>% 
+  paste0(collapse = ", ")
 
-field_var_txt <- paste0(field_vars, collapse = ", ")
 
 #=== interacting field vars ===#
-int_var_show <- field_plots$ch_var 
-int_var_len <- length(int_var_show) 
+int_var_txt <- data.table(field_vars = field_plots$ch_var) %>% 
+  field_var_data[., on = "field_vars"] %>% 
+  .[.N, var_txt_in_report := paste0("and ", var_txt_in_report)] %>% 
+  .[, var_txt_in_report] %>% 
+  paste0(collapse = ", ")
 
-int_var_show[int_var_len] <- paste0("and ", int_var_show[int_var_len]) 
-
-int_var_txt <- paste0(int_var_show, collapse = ", ")
 ```
 
-`r str_to_title(field_var_txt)` were tested to see if they are correlated with the management zones. Among these variables, `r int_var_txt` seem to affect how yield responds to _input_full_name_l_. 
+`r field_var_txt` were tested to see if they are correlated with the management zones. Among these variables, `r int_var_txt` seem to affect how yield responds to _input_full_name_l_. 
 
 _field-interactions-here_
 
