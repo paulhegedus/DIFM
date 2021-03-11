@@ -231,7 +231,7 @@ if (recover_section_id) { # if section id is missing even though the data is obs
 
 Red points are those that are recognized for making a sharp turn from their respective previous points.
 
-```{r eval = !use_points_data}
+```{r }
 tm_shape(aa_input_grouped) +
     tm_dots(col = "blue") +
 tm_shape(filter(aa_input_grouped, change_group == TRUE)) +
@@ -378,7 +378,7 @@ aa_input_sf <- aa_input_reduced_v %>%
 
 ```
 
-```{r eval = !use_points_data}
+```{r }
 tm_shape(aa_input_sf) +
   tm_polygons(
     lwd = 0.05,
@@ -390,7 +390,7 @@ tm_layout_to_add
 
 **Check if polygon width is reasonable**
 
-```{r eval = !use_points_data}
+```{r }
 tm_shape(aa_input_sf) +
   tm_polygons(
     lwd = 0.05,
