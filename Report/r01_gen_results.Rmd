@@ -145,8 +145,8 @@ if (input_type == "N") {
       input_data_n$unit, 
       tgti, 
       field_data$reporting_unit
-    )
-  ) + n_base_rate
+    ) + n_base_rate
+  )
 } else if (input_type == "S") {
   #--- seed rate conversion ---#
   if (any(trial_design$tgti > 10000)){
