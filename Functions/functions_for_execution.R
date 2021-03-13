@@ -453,7 +453,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
       )
     ) %>% 
     mutate(field_plots_rmd = list(
-      if (!is.null(field_plots_rmd)) {
+      if (!is.null(field_plots)) {
         field_plots %>% 
           ungroup() %>% 
           mutate(index = as.character(seq_len(nrow(.)))) %>% 
