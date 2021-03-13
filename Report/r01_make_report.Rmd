@@ -94,13 +94,16 @@ field_var_txt <- data.table(field_vars = field_vars) %>%
   .[, var_txt_in_report] %>% 
   paste0(collapse = ", ")
 
-
 #=== interacting field vars ===#
-int_var_txt <- data.table(field_vars = field_plots$ch_var) %>% 
+if (!is.null(field_plots)) {
+  int_var_txt <- data.table(field_vars = field_plots$ch_var) %>% 
   field_var_data[., on = "field_vars"] %>% 
   .[.N, var_txt_in_report := paste0("and ", var_txt_in_report)] %>% 
   .[, var_txt_in_report] %>% 
   paste0(collapse = ", ")
+} else {
+  int_var_txt <- "no variables"
+}
 
 ```
 
