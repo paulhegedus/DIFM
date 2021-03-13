@@ -4,7 +4,7 @@
 
 + Baseline _input_full_name_l_ rate: _base_rate_statement_here_.
 
-+ _input_full_name_here_c_ target rates: `r paste0(tgti_ls, "K", collapse = ", ")`
++ _input_full_name_here_c_ target rates: `r paste0(tgti_ls, collapse = ", ")` (_unit_here_)
 
 + `r str_to_title("_planter-applicator-here_")` width: `r w_trial_info$machine_width` feet
 
