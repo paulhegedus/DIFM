@@ -266,6 +266,10 @@ aa_input_grouped %>%
 `speed` vs `input_rate`
 
 ```{r }
+if("speed" %in% names(aa_input_grouped) == FALSE){
+  aa_input_grouped$speed <- 0
+}
+
 speed_n_before <- ggplot(aa_input_grouped) +
   geom_point(aes(y = input_rate, x = speed))
 
