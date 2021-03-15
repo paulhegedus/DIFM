@@ -112,6 +112,10 @@ yield <- dplyr::select(yield, matches(col_list)) %>%
   mutate(yield_id := 1:nrow(.)) %>% 
   filter(!is.na(yield_vol))
 
+if("offset" %in% names(yield) == FALSE){
+  yield$offset <- 0
+}
+
 ```
 
 ### Order by time
@@ -188,7 +192,10 @@ yield_grouped <- flag_bad_points(
     yield_grouped, 
     "yield_vol", 
     sd = sd_factor
-  ) %>% 
+  )
+
+if("speed" %in% names(yield_grouped)){
+  yield_grouped %>%
   #=== speed-based ===#
   mutate(flag_bad = 
     ifelse(
@@ -197,6 +204,7 @@ yield_grouped <- flag_bad_points(
       flag_bad
     )
   )
+}
 
 ```
 
