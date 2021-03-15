@@ -221,6 +221,11 @@ yield_grouped %>% filter(flag_bad == 0) %>%
 `speed` vs `yield_vol`
 
 ```{r }
+# now add speed if speed is missing 
+if("speed" %in% names(yield) == FALSE){
+  yield$speed <- 0
+}
+
 ggplot(yield_grouped) +
   geom_point(aes(y = yield_vol, x = speed))
 ```
