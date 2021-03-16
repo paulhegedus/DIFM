@@ -163,7 +163,7 @@ if (sectionid_var_available) { # if non-na section id variable is in the dataset
   }
 
 } else { # if sectionid variable is not present in the data
-  
+
   #=== find the number of the dominant number of the same rates ===#
   # Note: for non-section-controlled machines the dominant number should be 1
   dominant_rate_cluster_num <- data.table(aa_input)[
@@ -174,7 +174,24 @@ if (sectionid_var_available) { # if non-na section id variable is in the dataset
     .[, .(num_num = .N), by = num_same_rate] %>% 
     .[num_num == max(num_num), num_same_rate]
 
-  if (dominant_rate_cluster_num > 1) {
+  #=== estimate the machined width ===#
+  # if not section controlled, get_med_dist() gets us
+  # the median distance between points. 
+  # if section controlled, get_med_dist() gets us
+  # the distance sections. This width times the number of sections has to be similar with the actual machine width.
+    
+  estimated_width <- dominant_rate_cluster_num * get_med_dist(aa_input)
+
+  actual_machine_width <- filter(trial_info, input_type == "N") %>% 
+    pull(machine_width) %>% 
+    #=== this needs to change ===#
+    conv_unit("ft", "m")
+
+  if (
+    dominant_rate_cluster_num > 1 & 
+    actual_machine_width * 0.95 < estimated_width & 
+    actual_machine_width * 1.05 > estimated_width
+  ) {
     # this is the case where section level data is available, but section id is not available
     recover_section_id <- TRUE
     section_num <- 99 # (any positive number greater than 1 will do)
