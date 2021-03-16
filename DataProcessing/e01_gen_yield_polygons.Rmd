@@ -222,8 +222,8 @@ yield_grouped %>% filter(flag_bad == 0) %>%
 
 ```{r }
 # now add speed if speed is missing 
-if("speed" %in% names(yield) == FALSE){
-  yield$speed <- 0
+if("speed" %in% names(yield_grouped) == FALSE){
+  yield_grouped$speed <- 0
 }
 
 ggplot(yield_grouped) +
