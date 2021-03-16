@@ -224,8 +224,8 @@ if (recover_section_id) { # if section id is missing even though the data is obs
       #--- remove observations with no group assigned ---#
       mutate(
         new_group = paste(group, sectionid, sep = "_")
-      )
-
+      ) %>% 
+      arrange(id)
     #--- medium distance between aa_input points ---#
     med_distance_v <- get_med_dist_sec(aa_input_grouped)
 
