@@ -756,7 +756,7 @@ recover_section_id_by_group <- function(data, group_id) {
 
   max_id <- temp_data$id %>% max()
 
-  get_section_id(start_id = 13261, max_id)
+ # get_section_id(start_id = 13261, max_id)
 
   get_section_id <- function(start_id, max_id) {
 
