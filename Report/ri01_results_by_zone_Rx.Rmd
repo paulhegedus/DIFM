@@ -11,7 +11,8 @@ if (w_trial_info$gc_type == "Rx") {
   Rx <- st_read(w_trial_info$gc_rate) %>% 
     st_set_crs(4326) %>% 
     st_transform(st_crs(data_sf)) %>%
-    st_make_valid()
+    st_make_valid() %>%
+    setnames(names(.), tolower(names(.)))
 
   dict_input <- dictionary[type == paste0("Rx-", tolower(input_type)), ]
   col_list <- dict_input[, column]
