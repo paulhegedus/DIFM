@@ -186,6 +186,9 @@ tm_layout_to_add
 ## Flag bad yield data points
 
 ```{r Flagging-outliers}
+#/*----------------------------------*/
+#' ## Yield-based
+#/*----------------------------------*/
 sd_factor <- 4
 
 yield_grouped <- flag_bad_points(
@@ -194,7 +197,12 @@ yield_grouped <- flag_bad_points(
     sd = sd_factor
   )
 
-if("speed" %in% names(yield_grouped)){
+#/*----------------------------------*/
+#' ## Speed-based
+#/*----------------------------------*/
+is_speed_available <- !all(is.na(yield_grouped$speed))
+
+if (is_speed_available){
   yield_grouped %>%
   #=== speed-based ===#
   mutate(flag_bad = 
@@ -222,12 +230,11 @@ yield_grouped %>% filter(flag_bad == 0) %>%
 
 ```{r }
 # now add speed if speed is missing 
-if("speed" %in% names(yield_grouped) == FALSE){
-  yield_grouped$speed <- 0
+if (is_speed_available) {
+  ggplot(yield_grouped) +
+    geom_point(aes(y = yield_vol, x = speed)) 
 }
 
-ggplot(yield_grouped) +
-  geom_point(aes(y = yield_vol, x = speed))
 ```
 
 Which data points were dropped?

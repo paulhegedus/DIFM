@@ -1120,7 +1120,7 @@ make_var_name_consistent <- function(data, dictionary) {
 
       data <- setnames(data, temp_names_ls[matches][1], col)
     } else {
-      # data <- mutate(data, !!col := NA)
+      data <- mutate(data, !!col := NA)
     }
   }
 
