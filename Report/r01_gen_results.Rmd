@@ -12,11 +12,20 @@ analysis_data <- here("Data/Growers", ffy, "Analysis-Ready/analysis_data.rds") %
     "input_rate"
   )
 
-trial_design <- here("Data/Growers", ffy, "TrialDesign/trial-design.shp") %>% 
+if (list.files(here("Data/Growers", ffy, "TrialDesign"), pattern = ".shp") %>%
+  length() > 1){
+  trial_design <- here("Data/Growers", ffy, paste0("TrialDesign/trial-design-", tolower(input_type), ".shp")) %>% 
   st_read() %>% 
   setnames(names(.), tolower(names(.))) %>% 
   st_transform_utm() %>% 
   mutate(type = tolower(type))
+}else{
+  trial_design <- here("Data/Growers", ffy, "TrialDesign/trial-design.shp") %>% 
+  st_read() %>% 
+  setnames(names(.), tolower(names(.))) %>% 
+  st_transform_utm() %>% 
+  mutate(type = tolower(type))
+  }
 
 yield_polygons <- readRDS(here("Data/Growers", ffy, "Intermediate/yield_polygons.rds"))
 
