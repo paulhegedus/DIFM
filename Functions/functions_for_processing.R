@@ -1269,7 +1269,7 @@ max_dev_table <- expand.grid(crop = crop, input_type = input_type) %>%
     15, # soy-seed
     NA, # wheat-seed
     NA, # cotton-seed
-    20, # corn-seed
+    5, # corn-seed
     NA, # soy-seed
     NA, # wheat-seed
     NA, # cotton-seed
