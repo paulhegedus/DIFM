@@ -834,7 +834,9 @@ assign_gc_rate <- function(data, input_type, gc_type, gc_rate) {
     Rx <- st_read(gc_rate) %>% 
       st_set_crs(4326) %>% 
       st_transform(st_crs(data)) %>%
-      st_make_valid()
+      st_make_valid() %>%
+      setnames(names(.), tolower(names(.)))
+    
 
     dict_input <- dictionary[type == paste0("Rx-", tolower(input_type)), ]
     col_list <- dict_input[, column]
