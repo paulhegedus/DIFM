@@ -844,10 +844,10 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
 
 get_t_confidence_statement <- function(t_value) {
   case_when(
-    t_value < qt(0.75, df = 1000) ~ "negligible",
-    qt(0.75, df = 1000) <= t_value & t_value < qt(0.85, df = 1000) ~ "only limited",
-    qt(0.85, df = 1000) <= t_value & t_value < qt(0.95, df = 1000) ~ "moderate", 
-    t_value >= qt(0.95, df = 1000)  ~ "strong"  
+    t_value < qt(0.75, df = 1000) ~ "could establish only with a negligible",
+    qt(0.75, df = 1000) <= t_value & t_value < qt(0.85, df = 1000) ~ "could establish only with a limited",
+    qt(0.85, df = 1000) <= t_value & t_value < qt(0.95, df = 1000) ~ "established with a moderate", 
+    t_value >= qt(0.95, df = 1000)  ~ "established with a strong"  
   )
 }
 
