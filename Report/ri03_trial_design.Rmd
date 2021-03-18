@@ -4,7 +4,7 @@ The field's status quo _seeding-or-application_ plan (that is, the one that woul
 
 Plots were all `r plot_width` feet wide.  Plot were all between <!--shortest_plot_length_hereK--> and <!--longest_plot_length_hereK-->feet long. A rate of <!--buffer_zone_rate_hereK--> per acre was assigned to a buffer zone around the perimeter of the trial, but observations from the buffer zone were not included as part of the trial in later analysis. Figure \@ref(fig:tgti-yield-ap) pairs the trial's design, _asa-or-asp_, and yield maps. 
 
-```{r tgti-yield-ap, fig.cap = "Trial design, _asa-or-asp_ nitrogen rates, and _crop_type_here_ yields, 2020)", fig.height = ifelse(w_trial_info$use_td, 5, 10)}
+```{r tgti-yield-ap, fig.cap = "Trial design, _asa-or-asp_ rates, and yields, 2020)", fig.height = ifelse(w_trial_info$use_td, 5, 10)}
 
 if (w_trial_info$use_td) {
   tmap_arrange(
