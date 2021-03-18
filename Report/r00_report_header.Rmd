@@ -1,7 +1,5 @@
 ---
-title: |
-  <center> "Report on DIFM Field Trial" <center>
-  <center> _field-year-here_ <center>
+title: "Report on DIFM Field Trial \n _field-year-here_"
 output:
   bookdown::word_document2:
     toc: false
