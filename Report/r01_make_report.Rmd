@@ -32,10 +32,6 @@ g_opt_input
 
 ```
 
-```{r yield-summary-table, tab.cap = "Summary yield and _input_full_name_l_ rate data by zone"}
-sum_tab
-
-```
 
 _results-and-discussions-here_
 
