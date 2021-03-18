@@ -79,7 +79,9 @@ ggplot(data_sf) +
     aes(fill = pi_dif),
     size = 0.1
   ) +
-  scale_fill_viridis_c(
+  scale_fill_distiller(
+    palette = "Reds", 
+    direction = 1,
     name = "Difference in Profit ($/acre)"
   ) +
   theme_void() +

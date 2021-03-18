@@ -77,7 +77,7 @@ f_process_make_report(
 
 #--- individually ---#
 run_analysis(
-  ffy = field_year_ls[2],
+  ffy = field_year_ls[7],
   rerun = TRUE,
   locally_run = TRUE
 )
@@ -90,9 +90,8 @@ run_analysis(
 
 #--- individually ---#
 make_grower_report(
-  ffy = field_year_ls[2],
-  rerun = TRUE,
-  locally_run = TRUE
+  ffy = field_year_ls[6],
+  rerun = TRUE
 )
 
 # render("/Users/tmieno2/Box/DIFM_Central/Reports/Growers/Scheider_Roby_2019/grower-report_DSB.Rmd")
