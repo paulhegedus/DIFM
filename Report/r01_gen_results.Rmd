@@ -486,7 +486,7 @@ if (sn_ew_ratio > 1.1) {
     tm_fill(
       col = "zone_txt", 
       palette = "YlGnBu",
-      title = "Estimated Yield\nResponse Parameter",
+      title = "Management\nZones",
       # legend.is.portrait = FALSE
     ) +
     tm_layout_to_add + 
@@ -499,7 +499,7 @@ if (sn_ew_ratio > 1.1) {
     tm_fill(
       col = "zone_txt", 
       palette = "YlGnBu",
-      title = "Yield (bu/acre)",
+      title = "Management Zones",
       legend.is.portrait = FALSE
     ) +
     tm_layout_to_add + 
