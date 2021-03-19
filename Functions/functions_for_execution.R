@@ -540,7 +540,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
             )
           ) %>% 
           str_replace_all(
-            "_uniform_Rx_", 
+            "_uniform_Rx_1_", 
             case_when(
               gc_type == "Rx" ~ "the commercial variable-rate prescription",
               gc_type != "Rx" ~ "the uniform rate"

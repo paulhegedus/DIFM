@@ -1,4 +1,4 @@
-If the grower had not participated in the experiment, the chosen strategy would have been to apply _input_full_name_l_ according to _uniform_Rx_ displayed in the first panel of figure \@ref(fig:mix-figures).
+If the grower had not participated in the experiment, the chosen strategy would have been to apply _input_full_name_l_ according to _uniform_Rx_1_ displayed in the first panel of figure \@ref(fig:mix-figures).
 
 The second panel of figure \@ref(fig:mix-figures) shows the analysis's recommended site-specific _input_full_name_l_ rate map. The figure was calculated using data from each management zone separately. (Details about how management zones were determined are provided later in this report.)  A generalized additive model (GAM) regression was used to model yield as a function of _input_full_name_l_ rate in each zone, and then given that model estimation, the profit-maximizing _input_full_name_l_ rate was found for each zone. 
 
@@ -39,3 +39,5 @@ Figure \@ref(fig:whole-field-profit-comp) shows confidence intervals of the gain
 g_whole_pi
 
 ```
+
+
