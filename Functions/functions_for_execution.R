@@ -497,7 +497,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
           gsub(
             "_base_rate_statement_here_", 
             case_when(
-              gc_type == "uniform" ~ "`r _gc_rate_here_` _unit_here_",
+              gc_type == "uniform" ~ "`r round(_gc_rate_here_, digits = 0)` _unit_here_",
               gc_type == "Rx" ~ "Rx (see the map below)"
             ), 
             .
