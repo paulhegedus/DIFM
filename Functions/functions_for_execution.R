@@ -839,6 +839,7 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
     res_disc_rmd
   )
 
+
   return(res_disc_rmd) 
 
 }

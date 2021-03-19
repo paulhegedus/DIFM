@@ -213,6 +213,8 @@ sum_tab <- data.table::copy(opt_gc_data) %>%
 #/*----------------------------------*/
 #' ## Whole-field profit comparison 
 #/*----------------------------------*/
+
+
 g_whole_pi <- ggplot(data = whole_profits_test) +
   geom_errorbar(
     aes(
