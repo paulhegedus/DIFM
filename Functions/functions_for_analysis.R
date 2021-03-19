@@ -1158,7 +1158,7 @@ field_var_data <- c(
 ) %>% 
 data.table(field_vars = .) %>% 
 .[, var_txt_in_report := c(
-  "TWI", "TPI", "elevation", "slope",
+  "topological wetness index", "topological position index", "elevation", "slope",
   "clay content (%)", "sand content (%)", "water storage",
   "EC", "organic matter", "CEC", "EC"
 )] 

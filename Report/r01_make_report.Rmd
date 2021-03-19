@@ -55,8 +55,7 @@ $$
 Yield_i = \alpha_i + \beta_i ln(Seed) + v_i.
 $$
 
-The $\beta$ parameter is an estimate of the percentage change in yield give a 1% change in _input_full_name_l_ rate.  A higher $\beta_i$ estimate predicts a higher yield response to _input_full_name_l_ rate at site $i$, which implies a higher economically optimal _input_full_name_l_ rate at that site.  Using a statistical technique called geographically weighted regression (GWR), a value of the beta parameter was estimated at each observation of the field's processed data.  Figure \@ref(fig:map-response) displays the map of the values of $\beta$ on the field.
-
+The $\beta$ parameter is an estimate of the percentage change in yield give a 1% change in _input_full_name_l_ rate.  A higher $\beta_i$ estimate predicts a higher yield response to _input_full_name_l_ rate at site $i$, which implies a higher economically optimal _input_full_name_l_ rate at that site.  Using a statistical technique called geographically weighted regression (GWR), a value of the beta parameter was estimated at each observation of the field's processed data. The first panel of figure \@ref(fig:map-response) maps the values of $\beta$ throughout the field. The second panel of figure \@ref(fig:map-response) displays the resultant management zones.  
 
 ```{r map-response, echo = F, fig.cap = "Map of the estimated values of the yield response parameter $\\beta$, and the derived management zones" , dependson = "gen-map-response", fig.height = ifelse(sn_ew_ratio > 1.1, 5, 8)}
 
@@ -73,7 +72,7 @@ g_ys_zone
 
 ```
 
-The values of $\beta$ in all of the field's observation points were partitioned into `r num_zones` "zones," with Zone 1 consisting of the observation points in the lowest fourth of estimated values of $\beta$, and Zones 2, 3, and 4, containing the observations points from second, third and fourth fourths.  The bottom panel of Figure \@ref(fig:map-response) displays those zones.  Figure \@ref(fig:ys-by-mz) shows the zones' (_input_full_name_l_ rate, yield) scatterplots and estimated yield response curves, which were produced using General Additive Model regression techniques. 
+The values of $\beta$ in all of the field's observation points were partitioned into `r num_zones` "zones," with Zone 1 consisting of the observation points in the lowest fourth of estimated values of $\beta$, and Zones 2, 3, and 4, containing the observations points from second, third and fourth fourths. Figure \@ref(fig:ys-by-mz) shows the zones' (_input_full_name_l_ rate, yield) scatterplots and estimated yield response curves, which were produced using General Additive Model regression techniques. 
 
 # Exploring Interactions between _input_full_name_here_c_ Rate and Field Characteristics in the Yield Response Function
 
@@ -107,13 +106,13 @@ if (!is.null(field_plots)) {
 
 ```
 
-DIFM researchers are currently working on ways to efficiently identify interactions among field characteristics and management inputs. The research is in its early stages. However in an exploratory analysis, `r field_var_txt` were tested to see if they are correlated with the management zones. Among these variables, `r int_var_txt` seem to affect how yield responds to _input_full_name_l_. 
+DIFM researchers are currently working on ways to efficiently identify interactions among field characteristics and management inputs. The research is in its early stages. However, in an exploratory analysis, `r field_var_txt` were tested to see if they are correlated with the management zones. Among these variables, `r int_var_txt` seem to affect how yield responds to _input_full_name_l_. 
 
 _field-interactions-here_
 
 # Appendix: Overview of Data Processing
 
-The variable-rate _planter-applicator-here_ and yield monitor provided raw _asa-or-asp_ and harvest data. An initial cleaning removed observations with extreme yield or _asa-or-asp_ rates ("outliers") from the raw data. Points were also removed from the headlands, where the data is less reliable due to differences in sun exposure, changes in driving speed, potential application overlaps, etc. The yield points were grouped into polygons using the distance between points, swath width, and the the headings recorded in the raw yield data. Subplots were created by grouping contiguous yield polygons with similar _input_full_name_l_ rates into sets of four.  (Subplots were treated as the unit of observation in later analysis.) 
+The variable-rate _planter-applicator-here_ and yield monitor provided raw _asa-or-asp_ and harvest data. An initial cleaning removed observations with extreme yield or _asa-or-asp_ rates ("outliers") from the raw data. Points were also removed from the headlands, where the data is less reliable due to differences in sun exposure, changes in driving speed, potential application overlaps, etc. The yield points were grouped into polygons using the distance between points, swath width, and the headings recorded in the raw yield data. Subplots were created by grouping contiguous yield polygons with similar _input_full_name_l_ rates into sets of four.  (Subplots were treated as the unit of observation in later analysis.) 
 
 A yield polygon was judged as having a "dominant treatment" when the standard deviation of the yield values at points within the polygon was below a threshold level. Adjacent _asa-or-asp_ polygons were judged as not being in the same group when the difference in application rates surpassed a threshold level.  Polygons without a dominant treatment were not included in the data set used for analysis. This technique also helped eliminate "transition zones, which are areas in which the data show where the harvester and _planter-applicator-here_ did not immediately adjust to new target rates or yield levels when passing from one plot into another. Each subplot's mean _asa-or-asp_ rate and yield were recorded as data. Finally, for each subplot the means of the electrical-conductivity data, SSURGO soil data, and USGS digital elevation data were recorded. In addition, the values topographical aspect, slope, curvature, topographical position index and topographical wetness index were calculated from the raw data, and each subplot's means of these values were included in the data used for analysis. Figure \@ref(fig:processed-yield-as-applied-combined) shows maps of the processed yield and _asa-or-asp_ data. 
 
