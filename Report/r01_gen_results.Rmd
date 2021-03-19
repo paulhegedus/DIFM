@@ -665,9 +665,9 @@ tm_opt_gc <- tm_shape(data_plot) +
   tm_polygons(
     col = "value",
     palette = "Greens",
-    legend.is.portrait = FALSE,
+    # legend.is.portrait = FALSE,
     style = "cont",
-    title = "_input_full_name_l_ Rate (_unit_here_)",
+    title = "_input_full_name_l_\nRate (_unit_here_)",
     lwd = 0.2
   ) +
   tm_facets(
@@ -676,15 +676,31 @@ tm_opt_gc <- tm_shape(data_plot) +
   ) +
   tm_layout_to_add + 
   tm_layout(
-    legend.outside.position = "bottom",
+    # legend.outside.position = "bottom",
     legend.position = c(0.25, 0.25)
   )
 
 ```
 
-```{r profit-dif-map}
+```{r profit-dif-map-gen}
 
-tm_pi_dif_zones <- tm_shape(data_sf) +
+
+if (sn_ew_ratio > 1.1) {
+  tm_pi_dif_zones <- tm_shape(data_sf) +
+  tm_fill(
+    col = "pi_dif",
+    palette = "Reds",
+    title = "Difference in\nProfit ($/acre)",
+    # legend.is.portrait = FALSE,
+    style = "cont"
+  ) +
+  tm_layout_to_add + 
+  tm_layout(
+    # legend.outside.position = "bottom",
+    legend.position = c(0.25, 0.25)
+  )
+} else {
+  tm_pi_dif_zones <- tm_shape(data_sf) +
   tm_fill(
     col = "pi_dif",
     palette = "Reds",
@@ -697,8 +713,7 @@ tm_pi_dif_zones <- tm_shape(data_sf) +
     legend.outside.position = "bottom",
     legend.position = c(0.25, 0.25)
   )
-
-  
+} 
 ```
 
 ```{r }
