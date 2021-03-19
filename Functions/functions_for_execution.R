@@ -889,8 +889,7 @@ get_td_text <- function(input_type, gc_type, locally_run = FALSE) {
 
   if (gc_type == "Rx") {
     grower_plan_text <- "follow the commercial prescription depicted 
-      in figure \\\\@ref(fig:rx-input-map)" %>% 
-      gsub("input", input_type)
+      in the first panel of figure \\\\@ref(fig:mix-figures)"
   } else if (gc_type == "uniform") {
     grower_plan_text <- "apply _gc_rate_here_ _unit_here_ per acre 
       uniformly across the field. `r length(unique(trial_design$tgti))` 

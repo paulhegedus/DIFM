@@ -4,7 +4,7 @@ The second panel of figure \@ref(fig:mix-figures) shows the analysis's recommend
 
 <!-- Table \@ref(tab:yield-summary-table) lists for each zone the estimated per-acre yields that would have resulted, given the year's growing conditions, from applying the grower-chosen _seeding-or-application_ strategy and the estimated optimal _input_full_name_l_ rate derived from the data and model.  -->
 
-```{r mix-figures, fig.cap = "Estimated Optimal site-specific _input_full_name_l_ rate Rx", fig.height  = 5}
+```{r mix-figures, fig.cap = "Estimated Optimal site-specific _input_full_name_l_ rate Rx", fig.height  = 4.5}
 
 tm_opt_gc
 
@@ -12,7 +12,7 @@ tm_opt_gc
 
 Figure \@ref(fig:profit-dif-map) shows the estimate of the gain in per-acre net revenues that would have resulted in each of the observation units from following the estimated economically optimal Rx rather than the _uniform_Rx_2_. (Net revenues equal revenues from _crop_type_here_ sales minus _input_full_name_l_ costs.)
 
-```{r profit-dif-map, fig.cap = "Map of the difference in profits between the optimal and Rx", fig.height = 5}
+```{r profit-dif-map, fig.cap = "Map of the difference in profits between the optimal and Rx", fig.height = 4.5}
 tm_pi_dif_zones 
 ```
 
