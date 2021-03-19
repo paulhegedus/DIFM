@@ -21,7 +21,7 @@ The model predicts that this strategy was approximately _gc-opt-comp-txt-comes-h
 
 For each of our management zones, Figure \@ref(fig:status-quo-optimal-v) compares the differences in per-acre net revenues that would have resulted from different management strategies. (Net revenues equal revenues from soybean sales minus _input_full_name_l_ costs.) For Zone 1, the best estimates of the gain in net revenues when switching from the grower's chosen rate of _input_full_name_l_ _unit_here_ per acre would have been $`r get_pi_dif(pi_dif_test_zone, 1)`. Of course, as with any statistical data analysis, there cannot be 100% certainty that the actual difference in net revenues from the two management plans would end up being exactly $`r get_pi_dif(pi_dif_test_zone, 1)`. The black brackets centered over Zone 1's red circle illustrates that a 95% level of statistical confidence that the different in net revenues would have been between `r get_pi_ci_zone(pi_dif_test_zone, 1)`
 
-A formal statistical test (called a t-test) _t-confidence-statement_1_ level of statistical confidence that net revenues would indeed be greater at the `r get_input(opt_gc_data, "opt_v", 1)`K rate than at the grower-chosen rate of _gc_rate_here_ _unit_here_ (t-value of `r get_t_value(pi_dif_test_zone, 1)`). _RX_notes_here_ 
+A formal statistical test (called a t-test) _t-confidence-statement_1_ level of statistical confidence that net revenues would indeed be greater at the `r get_input(opt_gc_data, "opt_v", 1)` _unit_here_ per acre than at the grower-chosen rate of `r get_input(opt_gc_data, "gc", 1)` _unit_here_ per acre (t-value of `r get_t_value(pi_dif_test_zone, 1)`). _RX_notes_here_ 
 
 _rest-of-the-zones-here_
 
