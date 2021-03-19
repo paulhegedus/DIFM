@@ -538,6 +538,27 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
               crop == "soy" ~ "soybean",
               crop != "soy" ~ crop
             )
+          ) %>% 
+          str_replace_all(
+            "_uniform_Rx_", 
+            case_when(
+              gc_type == "Rx" ~ "the commercial variable-rate prescription",
+              gc_type != "Rx" ~ "the uniform rate"
+            )
+          ) %>% 
+          str_replace_all(
+            "_uniform_Rx_2_", 
+            case_when(
+              gc_type == "Rx" ~ "commercial Rx",
+              gc_type != "Rx" ~ "uniform rate"
+            )
+          )%>% 
+          str_replace_all(
+            "_RX_notes_here_", 
+            case_when(
+              gc_type == "Rx" ~ "(the average of the Rx rates within the zone)",
+              gc_type != "Rx" ~ ""
+            )
           )
       )
     )
@@ -734,108 +755,89 @@ get_ERI_texts <- function(input_type, gc_rate, whole_profits_test, pi_dif_test_z
   # opt_gc_data <- report_rmd_ls$opt_gc_data[[1]]
   # gc_type <- report_rmd_ls$gc_type[[1]]
 
-  if (gc_type == "Rx") {
+  res_disc_rmd <- read_rmd("Report/ri01_results_by_zone.Rmd", locally_run = locally_run)
+  
+  #/*----------------------------------*/
+  #' ## Profit differential narrative
+  #/*----------------------------------*/
+  # Statements about the difference between 
+  # optimal vs grower-chosen rates
 
-    t_whole_ovg <- whole_profits_test[type_short == "ovg", t]
-
-    res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_Rx.Rmd", locally_run = locally_run) %>% 
-    gsub(
-      "_stat_confidence_here_", 
-      case_when(
-        t_whole_ovg >= 1.96 ~ "high",
-        t_whole_ovg >= 1.3 & t_whole_ovg < 1.96 ~ "moderate",
-        t_whole_ovg < 1.3 ~ "low"
-      ), 
-      .
-    )
-
-  } else {
-
-    res_disc_rmd <- read_rmd("Report/ri01_results_by_zone_non_Rx.Rmd", locally_run = locally_run)
-    
-    #/*----------------------------------*/
-    #' ## Profit differential narrative
-    #/*----------------------------------*/
-    # Statements about the difference between 
-    # optimal vs grower-chosen rates
-
-    if (nrow(pi_dif_test_zone) > 1) {
-      pi_dif_zone_rmd <- tibble(
-        w_zone = 2:nrow(pi_dif_test_zone)
-      ) %>% 
-      rowwise() %>% 
-      mutate(t_value = list(
-        pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), t]
-      )) %>% 
-      mutate(pi_dif_rmd_indiv = list(
-          read_rmd(
-            "Report/ri02_profit_dif_statement.Rmd",
-            locally_run = locally_run
-          ) %>%
-          gsub("_insert-zone-here_", w_zone, .) %>% 
-          gsub(
-            "_t-confidence-statement_", 
-            get_t_confidence_statement(t_value), 
-            .
-          )
-      )) %>% 
-      pluck("pi_dif_rmd_indiv") %>% 
-      reduce(c)
-    } else {
-      #=== if there is only one zone ===#
-      pi_dif_zone_rmd <- NULL
-    }
-
-    res_disc_rmd <- insert_rmd(
-      target_rmd = res_disc_rmd, 
-      inserting_rmd = pi_dif_zone_rmd,
-      target_text = "_rest-of-the-zones-here_"
+  if (nrow(pi_dif_test_zone) > 1) {
+    pi_dif_zone_rmd <- tibble(
+      w_zone = 2:nrow(pi_dif_test_zone)
     ) %>% 
-    gsub("_gc_rate_here_", gc_rate, .) %>% 
-    #=== t-test statement for zone 1 (exception) ===#
-    gsub(
-      "_t-confidence-statement_1_", 
-      get_t_confidence_statement(
-        pi_dif_test_zone[zone_txt == paste0("Zone ", 1), t]
-      ), 
-      .
-    )
-
-    #/*----------------------------------*/
-    #' ## Difference between optimal vs grower-chosen rates
-    #/*----------------------------------*/
-    # Statements about the difference between 
-    # optimal vs grower-chosen rates
-
-    gc_opt_comp_txt <- left_join(
-      opt_gc_data[type == "opt_v", ],
-      opt_gc_data[type == "gc", ],
-      by = "zone_txt"
-    ) %>% 
-    #=== y for gc and x for opt_v ===#
-    mutate(dif = input_rate.y - input_rate.x) %>% 
-    dplyr::select(zone_txt, dif) %>% 
-    arrange(zone_txt) %>% 
-    mutate(
-      gc_opt_comp_txt = 
-        paste0(
-          abs(dif) %>% round(digits = 0),
-          " _unit_here_ per acre", 
-          ifelse(dif > 0, " too high", " too low"),
-          " in ",
-          str_to_title(zone_txt)
+    rowwise() %>% 
+    mutate(t_value = list(
+      pi_dif_test_zone[zone_txt == paste0("Zone ", w_zone), t]
+    )) %>% 
+    mutate(pi_dif_rmd_indiv = list(
+        read_rmd(
+          "Report/ri02_profit_dif_statement.Rmd",
+          locally_run = locally_run
+        ) %>%
+        gsub("_insert-zone-here_", w_zone, .) %>% 
+        gsub(
+          "_t-confidence-statement_", 
+          get_t_confidence_statement(t_value), 
+          .
         )
-    ) %>% 
-    pull(gc_opt_comp_txt) %>% 
-    paste(collapse = ", ")
-     
-    res_disc_rmd <- gsub(
-      "_gc-opt-comp-txt-comes-here_",
-      gc_opt_comp_txt,
-      res_disc_rmd
-    )
-
+    )) %>% 
+    pluck("pi_dif_rmd_indiv") %>% 
+    reduce(c)
+  } else {
+    #=== if there is only one zone ===#
+    pi_dif_zone_rmd <- NULL
   }
+
+  res_disc_rmd <- insert_rmd(
+    target_rmd = res_disc_rmd, 
+    inserting_rmd = pi_dif_zone_rmd,
+    target_text = "_rest-of-the-zones-here_"
+  ) %>% 
+  gsub("_gc_rate_here_", gc_rate, .) %>% 
+  #=== t-test statement for zone 1 (exception) ===#
+  gsub(
+    "_t-confidence-statement_1_", 
+    get_t_confidence_statement(
+      pi_dif_test_zone[zone_txt == paste0("Zone ", 1), t]
+    ), 
+    .
+  )
+
+  #/*----------------------------------*/
+  #' ## Difference between optimal vs grower-chosen rates
+  #/*----------------------------------*/
+  # Statements about the difference between 
+  # optimal vs grower-chosen rates
+
+  gc_opt_comp_txt <- left_join(
+    opt_gc_data[type == "opt_v", ],
+    opt_gc_data[type == "gc", ],
+    by = "zone_txt"
+  ) %>% 
+  #=== y for gc and x for opt_v ===#
+  mutate(dif = input_rate.y - input_rate.x) %>% 
+  dplyr::select(zone_txt, dif) %>% 
+  arrange(zone_txt) %>% 
+  mutate(
+    gc_opt_comp_txt = 
+      paste0(
+        abs(dif) %>% round(digits = 0),
+        " _unit_here_ per acre", 
+        ifelse(dif > 0, " too high", " too low"),
+        " in ",
+        str_to_title(zone_txt)
+      )
+  ) %>% 
+  pull(gc_opt_comp_txt) %>% 
+  paste(collapse = ", ")
+   
+  res_disc_rmd <- gsub(
+    "_gc-opt-comp-txt-comes-here_",
+    gc_opt_comp_txt,
+    res_disc_rmd
+  )
 
   return(res_disc_rmd) 
 

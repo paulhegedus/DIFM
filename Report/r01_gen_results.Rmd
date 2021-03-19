@@ -171,22 +171,7 @@ tgti_ls <- tgti_ls[order(tgti_ls)]
 #' # Figures and Tables
 #/*=================================================*/
 
-g_opt_input <- data_sf %>% 
-  mutate(opt_input = round(opt_input)) %>% 
-  ggplot(data = .) +
-    geom_sf(aes(fill = factor(opt_input)), size = 0.1) +
-  scale_fill_brewer(
-    palette = "Greens",
-    direction = 1,
-    name = "Optimal _input_full_name_here_c_ Rate \n (_unit_here_)"
-  ) +
-  theme_void() +
-  theme(
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.position = "bottom"
-  ) +
-  fig_theme_sp
+
 
 #/*----------------------------------*/
 #' ## summary table
@@ -442,7 +427,6 @@ if (sn_ew_ratio > 1.1) {
     )
 }
 
-
 #/*----------------------------------*/
 #' ## Management zone
 #/*----------------------------------*/
@@ -604,4 +588,160 @@ g_int <- ggplot(plot_data) +
   ) +
   fig_theme_nonsp
 
+```
+
+```{r rx-results-map, results = "hide"}
+#/*=================================================*/
+#' # Rx map if the status-quo rate is Rx
+#/*=================================================*/ 
+
+if (w_trial_info$gc_type == "Rx") {
+
+#/*----------------------------------*/
+#' ## Read Rx data
+#/*----------------------------------*/
+  Rx <- st_read(w_trial_info$gc_rate) %>% 
+    st_set_crs(4326) %>% 
+    st_transform(st_crs(data_sf)) %>%
+    st_make_valid() %>%
+    setnames(names(.), tolower(names(.)))
+
+  dict_input <- dictionary[type == paste0("Rx-", tolower(input_type)), ]
+  col_list <- dict_input[, column]
+
+  Rx <- make_var_name_consistent(
+    Rx, 
+    dict_input 
+  )
+
+  #/*----------------------------------*/
+  #' ## Unit conversion
+  #/*----------------------------------*/
+  if (input_type == "N") {
+    Rx <- mutate(Rx, 
+      tgti = convert_N_unit(
+        input_data_n$form, 
+        input_data_n$unit, 
+        tgti, 
+        field_data$reporting_unit
+      ) 
+      # + n_base_rate # add base N rate
+    )
+  } else if (input_type == "S") {
+    #--- seed rate conversion ---#
+    if (any(Rx$tgti > 10000)){
+      #--- convert to K ---#
+      Rx <- mutate(Rx, tgti = tgti / 1000)
+    }
+  }
+
+
+} else { # if no Rx file
+  
+  Rx <- mutate(trial_design, tgti = w_trial_info$gc_rate) %>% 
+    dplyr::select(tgti)
+
+}
+
+
+#/*----------------------------------*/
+#' ## Optimal input rate and gc side by side
+#/*----------------------------------*/
+opt_input_sf <- data_sf %>% 
+  select(opt_input) %>% 
+  mutate(type = "Estimated Optimal Rate") %>% 
+  rename(value = opt_input) %>% 
+  rename(geometry = x)  
+
+Rx <- Rx %>% 
+  select(tgti) %>% 
+  mutate(type = "Grower-chosen Rates") %>% 
+  rename(value = tgti)
+
+data_plot <- rbind(opt_input_sf, Rx) %>% 
+  mutate(type = factor(type, levels = c("Grower-chosen Rates", "Estimated Optimal Rate")))
+
+tm_opt_gc <- tm_shape(data_plot) +
+  tm_polygons(
+    col = "value",
+    palette = "Greens",
+    legend.is.portrait = FALSE,
+    style = "cont",
+    title = "_input_full_name_l_ Rate (_unit_here_)",
+    lwd = 0.2
+  ) +
+  tm_facets(
+    by = "type",
+    free.coords = FALSE
+  ) +
+  tm_layout_to_add + 
+  tm_layout(
+    legend.outside.position = "bottom",
+    legend.position = c(0.25, 0.25)
+  )
+
+```
+
+```{r profit-dif-map}
+
+tm_pi_dif_zones <- tm_shape(data_sf) +
+  tm_fill(
+    col = "pi_dif",
+    palette = "Reds",
+    title = "Difference in Profit ($/acre)",
+    legend.is.portrait = FALSE,
+    style = "cont"
+  ) +
+  tm_layout_to_add + 
+  tm_layout(
+    legend.outside.position = "bottom",
+    legend.position = c(0.25, 0.25)
+  )
+
+  
+```
+
+```{r }
+#/*----------------------------------*/
+#' ## profit difference by zone with CI
+#/*----------------------------------*/
+fig_data <- data.table::copy(pi_dif_test_zone) %>% 
+  mutate(
+    pi_dif_upper = point_est_dif + 1.96 * point_est_dif_se,
+    pi_dif_lower = point_est_dif - 1.96 * point_est_dif_se
+  )
+
+g_pi_dif_zone <- ggplot(data = fig_data) +
+  geom_point(
+    aes(
+      y = point_est_dif,
+      x = zone_txt
+    ), 
+    size = 3, 
+    color = "red"
+  ) +
+  geom_errorbar(
+    aes(
+    ymin = pi_dif_lower, 
+    ymax = pi_dif_upper, 
+    x = zone_txt
+    ),
+    size = 1
+  ) +
+  geom_hline(
+    yintercept = 0, 
+    color = "red", 
+    size = 1.5
+  ) +
+  theme_bw() +
+  ylab("Difference in Net Revenue ($/acre)") +
+  theme(
+    axis.title.x = element_text(size = 12, vjust = -1),
+    axis.title.y = element_text(size = 12),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    strip.text = element_text(size = 12)
+  ) +
+  fig_theme_nonsp
+ 
 ```

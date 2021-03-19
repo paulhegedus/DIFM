@@ -61,7 +61,7 @@ exp_process_make_report(
 
 #--- individually ---#
 f_process_make_report(
-  ffy = field_year_ls[2],
+  ffy = field_year_ls[7],
   rerun = TRUE
 )
 
@@ -90,7 +90,7 @@ run_analysis(
 
 #--- individually ---#
 make_grower_report(
-  ffy = field_year_ls[6],
+  ffy = field_year_ls[20],
   rerun = TRUE
 )
 
