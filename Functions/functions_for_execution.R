@@ -586,9 +586,10 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 #' # Make trial design and create a report
 #/*=================================================*/
 
-make_trial_design <- function(ffy, rates = NA, plot_width = NA, head_dist = NA, use_ab = TRUE, rerun = FALSE, local = FALSE) {
+make_trial_design <- function(ffy, rates = NA, plot_width = NA, gc_rate, head_dist = NA, use_ab = TRUE, rerun = FALSE, local = FALSE) {
 
   # head_dist in feet
+  library(measurements)
 
   print(paste0("Generating a trial-design for ", ffy))
 
@@ -605,7 +606,7 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, head_dist = NA, 
   #--- read in the template ---#
   # td_rmd <- file.path(here(), "Codes/TrialDesignGeneration/trial_design_header.Rmd") %>%
   #   readLines() %>% 
-  td_rmd <- read_rmd("TrialDesignGeneration/trial_design_header.Rmd", local = local) %>% 
+  td_rmd <- read_rmd("TrialDesignGeneration/trial_design_header.Rmd", locally_run = locally_run) %>% 
     gsub("field-year-here", ffy, .) %>% 
     gsub("title-here", "Trial Design Generation Report", .)
 
@@ -613,10 +614,13 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, head_dist = NA, 
   if(use_ab) {
     # ab_rmd <- file.path(here(), "Codes/TrialDesignGeneration/trial-design-ab-line.Rmd") %>% 
     #   readLines()
-    ab_rmd <- read_rmd("TrialDesignGeneration/trial-design-ab-line.Rmd", local = local) 
+    ab_rmd <- read_rmd("TrialDesignGeneration/trial-design-ab-line.Rmd", locally_run = locally_run) 
     td_rmd <- c(td_rmd, ab_rmd)
   }  
 
+  #/*----------------------------------*/
+  #' ## The length of heading
+  #/*----------------------------------*/
   if (!is.na(head_dist)) {
     td_rmd <- gsub(
       "head-dist-here", 
@@ -631,6 +635,9 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, head_dist = NA, 
     )
   }
 
+  #/*----------------------------------*/
+  #' ## User-supplied plot width
+  #/*----------------------------------*/
   if (!is.na(plot_width) & is.numeric(plot_width)) {
     td_rmd <- gsub(
       "plot-width-here", 
@@ -648,6 +655,9 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, head_dist = NA, 
     break
   }
 
+  #/*----------------------------------*/
+  #' ## Rates
+  #/*----------------------------------*/
   if (!is.na(rates) & is.numeric(rates)) {
     td_rmd <- gsub(
       "rates-here", 
@@ -668,8 +678,36 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, head_dist = NA, 
   } else {
     writeLines("The rates you provided are not valid.")
     break
+  }  
+
+  #/*----------------------------------*/
+  #' ## Grower-chosen rates
+  #/*----------------------------------*/
+  if (!is.na(gc_rate) & is.numeric(gc_rate)) {
+    td_rmd <- gsub(
+      "_gc-rate-here_", 
+      paste0("c(", paste0(gc_rate, collapse = ","), ")"), 
+      td_rmd
+    ) 
+
+  } else if (is.na(gc_rate)) {
+    td_rmd <- gsub(
+      "_gc-rate-here_", 
+      "NA", 
+      td_rmd
+    )  
+    writeLines(
+      "Grower-chosen rate was not provided."
+    )
+
+  } else {
+    writeLines("The grower-chosen rate you provided are not valid.")
+    break
   }
 
+  #/*=================================================*/
+  #' # Wrapping up
+  #/*=================================================*/
   td_file_name <- file.path(here(), "Data/Growers", ffy, "TrialDesign/make_trial_design.Rmd")
 
   writeLines(td_rmd, con = td_file_name)

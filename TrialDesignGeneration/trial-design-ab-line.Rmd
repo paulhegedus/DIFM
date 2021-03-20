@@ -59,6 +59,7 @@ source(
 rates_ls <- rates-here
 headland_length <- head-dist-here
 plot_width <- plot-width-here
+gc_rate <- _gc-rate-here_
 ```
 
 # Create Trial Design
@@ -139,7 +140,7 @@ experiment_plots_dissolved <- experiment_plots %>%
 headland <- st_difference(field, experiment_plots_dissolved) %>%
   dplyr::select(geometry) %>% 
   #--- assign grower-chosen rate to the headland ---#
-  mutate(rate = grower_chosen_rate)
+  mutate(rate = gc_rate)
 
 ```
 
@@ -205,7 +206,7 @@ if (!is.na(rates_ls)) {
   rowwise() %>% 
   mutate(
     rates = list(
-      rates * grower_chosen_rate
+      rates * gc_rate
     )
   ) %>% 
   mutate(
