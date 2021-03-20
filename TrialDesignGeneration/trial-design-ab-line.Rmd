@@ -6,32 +6,34 @@
 # ffy <- "Wendte_LaueLib80_2020"
 # ffy <- "Boeckner_134n_2017"
 # ffy <- "Bohnhoff_Adams_2018"
+# ffy <- "Holzwart_Holzwart_2021"
 
 #--- field boundary ---#
-field <- ffy %>% 
-  file.path(here("Data", "Growers"), ., "Raw/boundary.shp") %>% 
-  st_read() 
-
-if (is.na(st_crs(field))){
-  field <- st_set_crs(field, 4326) 
-} 
-
-field <- field %>% 
+field <- here("Data", "Growers", ffy, "Raw/boundary.shp") %>% 
+  st_read() %>% 
+  st_set_4326() %>% 
   st_make_valid() %>%
   st_transform_utm()
 
 #--- ab-line ---#
-ab_line <- ffy %>% 
-  file.path(here("Data", "Growers"), ., "Raw/ab-line.shp") %>% 
-  st_read() 
+if (use_ab) {
+  ab_line <- here("Data", "Growers"), ffy, "Raw/ab-line.shp") %>% 
+    #--- read the data ---#
+    st_read() %>% 
+    st_set_4326() %>% 
+    st_make_valid() %>%
+    st_transform_utm() 
+} else {
+  past_aa_input <- _past-aa-input-file-name-here_
+  # past_aa_input <- past_aa_input_file %>% 
+    #--- read the data ---#
+    st_read() %>% 
+    st_set_4326() %>% 
+    st_make_valid() %>%
+    st_transform_utm() 
 
-if (is.na(st_crs(ab_line))){
-  ab_line <- st_set_crs(ab_line, 4326) 
-} 
-
-ab_line <- ab_line %>% 
-  st_make_valid() %>%
-  st_transform_utm()
+  ab_line <- get_ab_line(past_aa_input) 
+}
 
 ```
 
@@ -56,10 +58,24 @@ source(
 ## Option parameters
 
 ```{r }
-rates_ls <- rates-here
-headland_length <- head-dist-here
-plot_width <- plot-width-here
+#=== user-specified list of experimental rates ===#
+rates_ls <- _rates-here_
+
+#=== headland length ===#
+headland_length <- conv_unit(
+  _head-dist-here_,
+  "ft", "m"
+)
+
+#=== plot-width ===#
+plot_width <- conv_unit(
+  _plot-width-here_,
+  "ft", "m"
+)
+
+#=== status-quo rate ===#
 gc_rate <- _gc-rate-here_
+
 ```
 
 # Create Trial Design

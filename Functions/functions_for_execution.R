@@ -586,21 +586,55 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 #' # Make trial design and create a report
 #/*=================================================*/
 
-make_trial_design <- function(ffy, rates = NA, plot_width = NA, gc_rate, head_dist = NA, use_ab = TRUE, rerun = FALSE, local = FALSE) {
+make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_rate, head_dist = NA, use_ab = TRUE, rerun = FALSE, local = FALSE) {
 
   # head_dist in feet
   library(measurements)
 
   print(paste0("Generating a trial-design for ", ffy))
 
-  boundary_file <- here("Data", "Growers", ffy) %>%
-    file.path(., "Raw/boundary.shp")
+  boundary_file <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp")
 
-  ab_line_file <- here("Data", "Growers", ffy) %>%
-    file.path(., "Raw/ab-line.shp")
+  if (use_ab) {
+    ab_line_file <- here("Data", "Growers", ffy, "TrialDesign/ab-line.shp")
+  } else {
+    past_aa_input_file_ls <- here("Data/Growers", ffy, "TrialDesign") %>% 
+      list.files(recursive = TRUE, full.names = TRUE) %>%
+      #--- search for as-applied-s file ---#
+      .[str_detect(., "shp")] %>%
+      .[!str_detect(., "xml")] %>%
+      .[str_detect(., "past")] 
 
-  if (!file.exists(boundary_file) | !file.exists(ab_line_file)) {
+    if (input_type == "S") {
+      #=== if seed trial ===#
+      past_aa_input_file <- past_aa_input_file_ls %>% 
+        .[str_detect(., "-s")]
+    } else {
+      #=== if N, P, K trial ===#
+      past_aa_input_file <- past_aa_input_file_ls %>% 
+        .[str_detect(., paste0("-", tolower(input_type)))]    
+      if (length(past_aa_input_file) == 0) {
+
+        other_input_ls <- c("p", "n", "k") %>% 
+          .[-which(tolower(input_type) == .)] %>% 
+          paste0("-", ., collapse = "|")
+
+        #=== if the past input file of the very input is not available ===#
+        past_aa_input_file <- past_aa_input_file_ls %>% 
+          .[str_detect(., other_input_ls)] %>% 
+          #=== use the first one matched ===#
+          .[1]
+      }
+    }
+  }
+  
+
+  if (!file.exists(boundary_file)) {
     return(print("No boundary file exists."))
+  }
+
+  if (!file.exists(ab_line_file) & !file.exists(past_aa_input_file)) {
+    return(print("No ab-line file exists or an ab-line cannot be created based on the past as-applied data"))
   }
 
   #--- read in the template ---#
@@ -618,13 +652,19 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, gc_rate, head_di
     td_rmd <- c(td_rmd, ab_rmd)
   }  
 
+  tf_rmd <- gsub(
+    "_past-aa-input-file-name-here_",
+    past_aa_input_file,
+    td_rmd
+  )
+
   #/*----------------------------------*/
   #' ## The length of heading
   #/*----------------------------------*/
   if (!is.na(head_dist)) {
     td_rmd <- gsub(
       "head-dist-here", 
-      conv_unit(head_dist, "ft", "m"),
+      head_dist,
       td_rmd
     )
   } else {
@@ -638,15 +678,15 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, gc_rate, head_di
   #/*----------------------------------*/
   #' ## User-supplied plot width
   #/*----------------------------------*/
-  if (!is.na(plot_width) & is.numeric(plot_width)) {
+  if (is.numeric(plot_width)) {
     td_rmd <- gsub(
-      "plot-width-here", 
-      conv_unit(plot_width, "ft", "m"), 
+      "_plot-width-here_", 
+      plot_width,
       td_rmd
     )
   } else if (is.na(plot_width)) {
     td_rmd <- gsub(
-      "plot-width-here", 
+      "_plot-width-here_", 
       "NA", 
       td_rmd
     )
@@ -660,21 +700,19 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, gc_rate, head_di
   #/*----------------------------------*/
   if (!is.na(rates) & is.numeric(rates)) {
     td_rmd <- gsub(
-      "rates-here", 
+      "_rates-here_", 
       paste0("c(", paste0(rates, collapse = ","), ")"), 
       td_rmd
     ) 
-
   } else if (is.na(rates)) {
     td_rmd <- gsub(
-      "rates-here", 
+      "_rates-here_", 
       "NA", 
       td_rmd
     )  
     writeLines(
       "Rates were not provided. Multiple trial designs\nwill be created around the grower-chosen rate,\n and no trial design shape file will be created."
     )
-
   } else {
     writeLines("The rates you provided are not valid.")
     break
@@ -683,27 +721,19 @@ make_trial_design <- function(ffy, rates = NA, plot_width = NA, gc_rate, head_di
   #/*----------------------------------*/
   #' ## Grower-chosen rates
   #/*----------------------------------*/
-  if (!is.na(gc_rate) & is.numeric(gc_rate)) {
+  if (is.numeric(gc_rate)) {
     td_rmd <- gsub(
       "_gc-rate-here_", 
-      paste0("c(", paste0(gc_rate, collapse = ","), ")"), 
+      gc_rate, 
       td_rmd
     ) 
-
   } else if (is.na(gc_rate)) {
     td_rmd <- gsub(
       "_gc-rate-here_", 
       "NA", 
       td_rmd
     )  
-    writeLines(
-      "Grower-chosen rate was not provided."
-    )
-
-  } else {
-    writeLines("The grower-chosen rate you provided are not valid.")
-    break
-  }
+  } 
 
   #/*=================================================*/
   #' # Wrapping up

@@ -672,6 +672,32 @@ st_shift <- function(data_sf, shift) {
 
 }
 
+#/*=================================================*/
+#' # Get an ab-line
+#/*=================================================*/
+
+get_ab_line <- function(past_aa_input) {
+
+  # tm_shape(past_aa_input) +
+  #   tm_fill(col = "Potash")
+
+  #=== polygons? ===#
+  inlude_polygon <- "POLYGON" %in% st_geometry_type(past_aa_input)
+
+  if (inlude_polygon) {
+    return(NULL)
+  } else {
+    past_aa_input %>% 
+    dplyr::select(geometry) %>% 
+    cbind(., st_coordinates(.))
+  }
+
+
+
+}
+
+
+
 
 
 
