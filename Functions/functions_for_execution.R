@@ -597,6 +597,11 @@ make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_r
 
   if (use_ab) {
     ab_line_file <- here("Data", "Growers", ffy, "TrialDesign/ab-line.shp")
+
+    if (!file.exists(ab_line_file)) {
+      return(print("No ab-line file exists or an ab-line cannot be created based on the past as-applied data"))
+    }
+
   } else {
     past_aa_input_file_ls <- here("Data/Growers", ffy, "TrialDesign") %>% 
       list.files(recursive = TRUE, full.names = TRUE) %>%
@@ -626,6 +631,10 @@ make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_r
           .[1]
       }
     }
+
+    if (length(past_aa_input_file) == 0) {
+      return(print("No past as-applied data available"))
+    }
   }
   
 
@@ -633,9 +642,7 @@ make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_r
     return(print("No boundary file exists."))
   }
 
-  if (!file.exists(ab_line_file) & !file.exists(past_aa_input_file)) {
-    return(print("No ab-line file exists or an ab-line cannot be created based on the past as-applied data"))
-  }
+  
 
   #--- read in the template ---#
   # td_rmd <- file.path(here(), "Codes/TrialDesignGeneration/trial_design_header.Rmd") %>%

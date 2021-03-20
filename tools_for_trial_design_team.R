@@ -46,7 +46,7 @@ make_trial_design(
   plot_width = 30,
   gc_rate = 30, 
   head_dist = 100, 
-  use_ab = TRUE,
+  use_ab = FALSE,
   rerun = TRUE
 )
 
