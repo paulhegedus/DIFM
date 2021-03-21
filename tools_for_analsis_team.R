@@ -90,7 +90,7 @@ run_analysis(
 
 #--- individually ---#
 make_grower_report(
-  ffy = field_year_ls[7],
+  ffy = field_year_ls[6],
   rerun = TRUE
 )
 

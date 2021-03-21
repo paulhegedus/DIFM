@@ -640,7 +640,7 @@ if (w_trial_info$gc_type == "Rx") {
 
 } else { # if no Rx file
   
-  Rx <- mutate(trial_design, tgti = w_trial_info$gc_rate) %>% 
+  Rx <- mutate(trial_design, tgti = w_trial_info$gc_rate[[1]]) %>% 
     dplyr::select(tgti)
 
 }
