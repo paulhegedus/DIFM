@@ -200,7 +200,7 @@ gen_fp_template <- function(farm, field, year, crop, input_ls, strategy_ls, json
 # This function add new field parameter templates WITHOUT input data
 # for a specified field
 
-initiate_fp_entry <- function(farm, field, year, fp_file = NULL) {
+initiate_fp_entry <- function(farm, field, year, json_file = NULL) {
   
   temp_data <- data.table(
     trial_supervisor = "supervisor name",
@@ -220,25 +220,25 @@ initiate_fp_entry <- function(farm, field, year, fp_file = NULL) {
     trial_notes = "true or false (no double quotes needed)"
   )
 
-  if (!is.null(fp_file)) {
+  if (!is.null(json_file)) {
     existing_data <- jsonlite::fromJSON(
       file.path(
         here("Data", "CommonData"),
-        paste0(fp_file, ".json")
+        paste0(json_file, ".json")
       ),
       flatten = TRUE
     ) %>%
     data.table() 
     temp_data <- rbind(existing_data, temp_data, fill = TRUE)
   } else {
-    fp_file <- "fp_template"
+    json_file <- "fp_template"
   }
 
   jsonlite::write_json(
     temp_data, 
     file.path(
       here("Data", "CommonData"),
-      paste0(fp_file, ".json")
+      paste0(json_file, ".json")
     ),
     pretty = TRUE
   )
@@ -265,11 +265,7 @@ add_inputs <- function(farm, field, year, json_file, input_ls, strategy_ls) {
 
   ffy <- paste(farm, field, year, sep = "_")
 
-  existing_data <- json_file %>% 
-    file.path(
-      here("Data", "CommonData"),
-      .
-    ) %>% 
+  existing_data <-  here("Data", "CommonData", json_file) %>% 
     jsonlite::fromJSON(
       .,
       flatten = TRUE
@@ -356,7 +352,8 @@ add_inputs <- function(farm, field, year, json_file, input_ls, strategy_ls) {
 
   out_data <- rbind(
     existing_data[field_year != ffy, ],
-    w_data
+    w_data,
+    fill = TRUE
   ) %>% 
   .[order(field_year),] %>% 
   .[, field_year := NULL]

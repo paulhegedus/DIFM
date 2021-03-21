@@ -17,24 +17,21 @@ source(
 #' ## Load the field parameter data
 # /*----------------------------------*/
 field_data <- jsonlite::fromJSON(
-  file.path(
-    here("Data", "CommonData"),
-    "field_parameter_example.json"
-  ),
+  here("Data", "CommonData", "fp_2021_TM.json"),
   flatten = TRUE
 ) %>%
-  data.table() %>%
-  .[, field_year := paste(farm, field, year, sep = "_")]
+data.table() %>%
+.[, field_year := paste(farm, field, year, sep = "_")]
 
 #/*=================================================*/
 #' # Create new field parameter entries  
 #/*=================================================*/
 #--- create an field parameter entry for a farm-field-year ---#
 initiate_fp_entry(
-  farm = "DodsonAg",
-  field = "Windmill",
+  farm = "Rohrscheib",
+  field = "AlmyMain",
   year = 2021,
-  json_file = "field_parameter_example.json"
+  json_file = "fp_2021_TM.json"
 )
 
 #--- create data request folders ---#
@@ -47,12 +44,12 @@ make_grower_folders(field_data)
 
 #--- add inputs data (as the details of the trial gets clear) ---#
 add_inputs(
-  json_file = "field_parameter_example.json",
-  farm = "DodsonAg",
-  field = "Windmill",
+  json_file = "fp_2021_TM.json",
+  farm = "Rohrscheib",
+  field = "AlmyMain",
   year = "2021",
-  input_ls = c("urea", "N_equiv"),
-  strategy_ls = c("trial", "base")
+  input_ls = c("seed"),
+  strategy_ls = c("trial")
 )
 
 
