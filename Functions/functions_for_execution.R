@@ -586,7 +586,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 #' # Make trial design and create a report
 #/*=================================================*/
 
-make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_rate, head_dist = NA, use_ab = TRUE, rerun = FALSE, local = FALSE) {
+make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_rate, head_dist = NA, use_ab = TRUE, rerun = FALSE, locally_run = FALSE) {
 
   # head_dist in feet
   library(measurements)
