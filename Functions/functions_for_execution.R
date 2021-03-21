@@ -654,11 +654,13 @@ make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_r
   td_body_rmd <- read_rmd("TrialDesignGeneration/trial-design-ab-line.Rmd", locally_run = locally_run) 
   td_rmd <- c(td_rmd, td_body_rmd)
 
-  td_rmd <- gsub(
-    "_past-aa-input-file-name-here_",
-    past_aa_input_file,
-    td_rmd
-  )
+  if (!use_ab) {
+    td_rmd <- gsub(
+      "_past-aa-input-file-name-here_",
+      past_aa_input_file,
+      td_rmd
+    )
+  }
 
   #/*----------------------------------*/
   #' ## The length of heading
