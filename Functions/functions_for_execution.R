@@ -651,15 +651,10 @@ make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_r
     gsub("field-year-here", ffy, .) %>% 
     gsub("title-here", "Trial Design Generation Report", .)
 
-  #--- if using ab-line ---#
-  if(use_ab) {
-    # ab_rmd <- file.path(here(), "Codes/TrialDesignGeneration/trial-design-ab-line.Rmd") %>% 
-    #   readLines()
-    ab_rmd <- read_rmd("TrialDesignGeneration/trial-design-ab-line.Rmd", locally_run = locally_run) 
-    td_rmd <- c(td_rmd, ab_rmd)
-  }  
+  td_body_rmd <- read_rmd("TrialDesignGeneration/trial-design-ab-line.Rmd", locally_run = locally_run) 
+  td_rmd <- c(td_rmd, td_body_rmd)
 
-  tf_rmd <- gsub(
+  td_rmd <- gsub(
     "_past-aa-input-file-name-here_",
     past_aa_input_file,
     td_rmd
@@ -670,13 +665,13 @@ make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_r
   #/*----------------------------------*/
   if (!is.na(head_dist)) {
     td_rmd <- gsub(
-      "head-dist-here", 
+      "_head-dist-here_", 
       head_dist,
       td_rmd
     )
   } else {
     td_rmd <- gsub(
-      "head-dist-here", 
+      "_head-dist-here_", 
       "NA",
       td_rmd
     )

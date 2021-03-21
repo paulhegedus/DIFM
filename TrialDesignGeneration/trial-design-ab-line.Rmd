@@ -24,7 +24,7 @@ if (use_ab) {
     st_make_valid() %>%
     st_transform_utm() 
 } else {
-  past_aa_input <- _past-aa-input-file-name-here_
+  past_aa_input <- "_past-aa-input-file-name-here_" %>% 
   # past_aa_input <- past_aa_input_file %>% 
     #--- read the data ---#
     st_read() %>% 
