@@ -63,7 +63,7 @@ make_td_folders <- function(field_data) {
   
   make_indiv_folders <- function(ffy) {
 
-    root_dir <- paste0(here(), "/Data/TrialDesignDataRequest/", ffy)
+    root_dir <- paste0(here(), "/Data/DataRequest/", ffy)
 
     if (!file.exists(root_dir)) {
 
