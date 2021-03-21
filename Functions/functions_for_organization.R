@@ -119,7 +119,7 @@ gen_fp_template <- function(farm, field, year, crop, input_ls, strategy_ls, json
           Rx_exists = "not available, exists (not received), received",
           machine_width = "numeric (no double quotes needed)",
           section_num = "numeric (no double quotes needed)",
-          plot_width = "numeric (no double quotes needed)",
+          input_plot_width = "numeric (no double quotes needed)",
           use_target_rate_instead = "true or false (no double quotes needed)"
         )
       } else {
@@ -135,7 +135,7 @@ gen_fp_template <- function(farm, field, year, crop, input_ls, strategy_ls, json
           Rx_exists = "not available, exists (not received), received",
           machine_width = "numeric (no double quotes needed)",
           section_num = "numeric (no double quotes needed)",
-          plot_width = "numeric (no double quotes needed)",
+          input_plot_width = "numeric (no double quotes needed)",
           use_target_rate_instead = "true or false (not double quotes needed)"
         )
       }
@@ -311,6 +311,7 @@ add_inputs <- function(farm, field, year, json_file, input_ls, strategy_ls) {
           sq_rate = "numeric (no double quotes needed) or (Rx) prescription file name",
           Rx_exists = "not available, exists (not received), received",
           machine_width = "numeric (no double quotes needed)",
+          input_plot_width = "numeric (no double quotes needed)",
           use_target_rate_instead = "true or false (no double quotes needed)"
         )
       } else {
@@ -325,6 +326,7 @@ add_inputs <- function(farm, field, year, json_file, input_ls, strategy_ls) {
           sq_rate = "numeric (no double quotes needed) or (Rx) prescription file name",
           Rx_exists = "not available, exists (not received), received",
           machine_width = "numeric (no double quotes needed)",
+          input_plot_width = "numeric (no double quotes needed)",
           use_target_rate_instead = "true or false (not double quotes needed)"
         )
       }
