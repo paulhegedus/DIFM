@@ -1,6 +1,7 @@
 # Assign rates
 
-
+  #=== user-specified list of experimental rates ===#
+  mutate(rates = rates) %>% 
 
 ## Assigning rates
 
