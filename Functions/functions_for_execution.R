@@ -685,46 +685,6 @@ make_trial_design <-
     )
   }
 
-  #/*----------------------------------*/
-  #' ## The length of heading
-  #/*----------------------------------*/
-  if (!is.na(head_dist)) {
-    td_rmd <- gsub(
-      "_head-dist-here_", 
-      head_dist,
-      td_rmd
-    )
-  } else {
-    td_rmd <- gsub(
-      "_head-dist-here_", 
-      "NA",
-      td_rmd
-    )
-  }
-
-  #/*----------------------------------*/
-  #' ## Rates
-  #/*----------------------------------*/
-  if (!is.na(rates) & is.numeric(rates)) {
-    td_rmd <- gsub(
-      "_rates-here_", 
-      paste0("c(", paste0(rates, collapse = ","), ")"), 
-      td_rmd
-    ) 
-  } else if (is.na(rates)) {
-    td_rmd <- gsub(
-      "_rates-here_", 
-      "NA", 
-      td_rmd
-    )  
-    writeLines(
-      "Rates were not provided. Multiple trial designs\nwill be created around the grower-chosen rate,\n and no trial design shape file will be created."
-    )
-  } else {
-    writeLines("The rates you provided are not valid.")
-    break
-  }  
-
   #/*=================================================*/
   #' # Wrapping up
   #/*=================================================*/
