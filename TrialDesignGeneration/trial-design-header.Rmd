@@ -75,17 +75,8 @@ source(file.path(here("Codes", "Functions"), "functions_for_trial_design.R"))
 source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
 
 #--- define field-year ---#
-ffy <- "field-year-here"  
-
-#--- read the variable name dictionary ---#
-dictionary <- fromJSON(
-  file.path(
-    here("Data", "CommonData"),
-    "variable_name_dictionary.json"
-  ),
-  flatten = TRUE
-) %>% 
-data.table()
+ffy <- "_field-year-here_"  
+json_file <- "_json-file-here_"
 
 ```
 
@@ -98,5 +89,17 @@ tm_layout_to_add <- tm_layout(
 )
 ```
 
+# Get Experiment Parameters
 
+```{r results = "hide"}
+(
+trial_data <- get_td_parameters(ffy, json_file)
+)
+```   
 
+```{r }
+exp_plots_exists <- _exp-plots-statement_
+if (exp_plots_exists) {
+  exp_plots_rds <- readRDS(here("Data", "Growers", ffy, "TrialDesign/plots.rds"))
+}
+```

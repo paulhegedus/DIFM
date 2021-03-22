@@ -1,0 +1,193 @@
+# Assign rates
+
+
+
+## Assigning rates
+
+```{r }
+
+if (!is.na(rates_ls)) {
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### If rates are provided by the user
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+  experiment_design <- assign_rates(
+    data_sf = experiment_plots, 
+    rates_ls = rates_ls,
+    # pattern = "block_randomized"
+    pattern = "fixed-latin-square"
+    # pattern = "sequential"
+  )  %>% 
+  #--- keep cell_id here for orthogonality check later ---#
+  dplyr::select(rate)
+
+  trial_design <- rbind(
+    experiment_design,
+    headland
+  )
+
+} else {
+
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### If rate are NOT provided by the use
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+  trial_designs <- tibble(
+    rates = list(
+      c(0.5, 0.65, 0.8, 1, 1.15),
+      c(0.5, 0.65, 0.8, 1, 1.15, 1.3),
+      c(0.6, 0.75, 0.9, 1, 1.2),
+      c(0.6, 0.75, 0.9, 1, 1.15, 1.3),
+      seq(0.7, 1.2, by = 0.1),
+      seq(0.7, 1.3, by = 0.15)   
+    )
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    rates = list(
+      rates * gc_rate
+    )
+  ) %>% 
+  mutate(
+    trial_design = list(
+       assign_rates(
+        data_sf = experiment_plots, 
+        rates_ls = rates
+      )  %>% 
+      dplyr::select(rate) %>% 
+      rbind(., headland)
+    ) 
+  ) %>% 
+  mutate(
+    td_map = list(
+      tm_shape(trial_design) +
+        tm_fill(
+          col = "rate", 
+          palette = "YlGn", 
+          style = "cat"
+        ) + 
+      tm_shape(headland) +
+        tm_borders(
+          lwd = 4
+        ) +
+      tm_shape(ab_line) +
+        tm_lines(
+          col = "red",
+          lwd = 4
+        ) +
+      tm_layout_to_add
+    )
+  )
+
+  #--- show the designs ---#
+  pluck(trial_designs, "td_map")
+
+}
+
+``` 
+
+# Save the trial design
+
+```{r eval = !is.na(rates_ls), echo = !is.na(rates_ls)}
+
+trial_design_ll <- st_transform(trial_design, 4326)
+
+time_user <- paste0(
+  Sys.time(), 
+  "-",
+  Sys.getenv("USER")
+) %>% 
+gsub(" ", "-", .) %>% 
+gsub("_", "-", .)  
+
+dsn_name <- here("Data", "Growers", ffy, "TrialDesign")
+
+st_write(
+  trial_design_ll, 
+  dsn = dsn_name,
+  layer = paste0("trial-design-", time_user),
+  driver = "ESRI Shapefile"
+)
+
+writeLines(
+  paste0(
+    "The trial design was named, trial-design-",
+    time_user,
+    ".shp"
+  )
+)
+```
+
+# Orthogonality check
+
+Checking if the assigned rates are orthogonal to the soil and field characteristics. 
+
+```{r results = "hide", eval = F}
+
+topo <- file.path(here("Data", "Growers", ffy), "Intermediate/topography.rds") %>% 
+  readRDS()
+
+ssurgo <- file.path(here("Data", "Growers", ffy), "Intermediate/ssurgo.rds") %>% 
+  readRDS()
+
+topo_values <- topo %>%
+  stars_to_stack() %>%
+  exact_extract(., st_transform(experiment_design, st_crs(.))) %>%
+  rbindlist(idcol = "rowid") %>%
+  .[,
+    lapply(.SD, weighted.mean, w = coverage_fraction),
+    by = rowid,
+    .SDcols = paste0("layer.", 1:length(topo))
+  ] %>%
+  .[, rowid := NULL] %>%
+  setnames(names(.), names(topo))
+
+experiment_design <- cbind(experiment_design, topo_values)
+
+ssurgo_values <- dplyr::select(experiment_design, cell_id) %>%
+  st_intersection(., ssurgo) %>%
+  mutate(area = as.numeric(st_area(.))) %>%
+  data.table() %>%
+  .[, area_pct := area / sum(area), by = cell_id] %>%
+  .[,
+    lapply(.SD, weighted.mean, w = area_pct),
+    by = cell_id,
+    .SDcols = c("clay", "sand", "silt", "water_storage")
+  ]
+
+experiment_design <- left_join(experiment_design, ssurgo_values, by = "cell_id")
+  
+```
+
+```{r eval = F}
+#--- plot level ---#
+experiment_design %>% 
+  dplyr::select(where(is.numeric)) %>% 
+  st_drop_geometry() %>% 
+  data.table() %>% 
+  .[, lapply(.SD, mean), by = .(plot_id, strip_id)] %>% 
+  .[,`:=`(
+    plot_id = NULL,
+    strip_id = NULL
+  )] %>% 
+  cor() %>% 
+  .[, "rate"] 
+
+#--- cell-level ---#
+experiment_design %>% 
+  dplyr::select(where(is.numeric)) %>% 
+  st_drop_geometry() %>% 
+  data.table() %>% 
+  .[, cell_id := NULL] %>% 
+  cor() %>% 
+  .[, "rate"] 
+
+```
+
+
+# Things to do 
+
++ allow the design to be dependent on spatial variables
+
+## Setting parameters
+
++ optimal plot width
++ change the plot width in the middle 
