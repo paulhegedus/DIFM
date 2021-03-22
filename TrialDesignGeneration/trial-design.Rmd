@@ -133,7 +133,7 @@ if (use_ab) {
 ```
 
 ```{r }
-tm_shape(field) +
+tm_shape(field_sf) +
   tm_borders() +
   tm_shape(ab_line) +
   tm_lines(col = "red")
