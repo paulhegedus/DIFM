@@ -293,7 +293,7 @@ add_inputs <- function(json_file, farm, field, year, input_ls, strategy_ls) {
     break
   }
 
-  input_data <- select(w_data, starts_with("input.")) %>% 
+  input_data <- dplyr::select(w_data, starts_with("input.")) %>% 
     lapply(., function(x) x[[1]]) %>% 
     rbindlist(fill = TRUE)
 
