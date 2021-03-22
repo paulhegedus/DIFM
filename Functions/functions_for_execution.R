@@ -585,17 +585,16 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 #/*=================================================*/
 #' # Make trial design and create a report
 #/*=================================================*/
+# Create plots and ab-lines
 
 make_trial_design <- 
   function(
     ffy, 
     json_file,
-    input_type, 
     rates = NA, 
-    plot_width = NA, 
-    gc_rate, 
     head_dist = NA, 
     use_ab = TRUE, 
+    assign_rates = TRUE,
     rerun = FALSE, 
     locally_run = FALSE
   ) 
@@ -603,86 +602,120 @@ make_trial_design <-
 
   print(paste0("Generating a trial-design for ", ffy))
 
-#/*=================================================*/
-#' # File checks
-#/*=================================================*/
+  #/*=================================================*/
+  #' # Header Rmd
+  #/*=================================================*/
+  #=== header Rmd ===#
+  td_header_rmd <- 
+  read_rmd(
+    "TrialDesignGeneration/trial-design-header.Rmd", 
+    locally_run = locally_run
+  ) %>% 
+  gsub("_field-year-here_", ffy, .) %>% 
+  gsub("_json-file-here_", json_file, .) %>% 
+  gsub("title-here", "Trial Design Generation Report", .)
 
-#/*----------------------------------*/
-#' ## Boundary file
-#/*----------------------------------*/
+  #/*=================================================*/
+  #' # Rmd for creating plots and ab-lines
+  #/*=================================================*/
+  exp_plots_rds <- here("Data", "Growers", ffy, "TrialDesign/exp_plots.rds")
 
-  #=== read the boundary file ===#
-  boundary_file <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp")
+  exp_plots_exists <- file.exists(exp_plots_rds)
 
-  if (!file.exists(boundary_file)) {
-    return(print("No boundary file exists."))
-  }
+  td_rmd <- gsub(
+    "_exp-plots-statement_",
+    exp_plots_exists,
+    td_rmd
+  )
 
-#/*----------------------------------*/
-#' ## ab-line
-#/*----------------------------------*/
+  #=== if plots and ab-liens have not been created yet ===#
+  if (!exp_plots_exists) {
+    #/*----------------------------------*/
+    #' ## Boundary file
+    #/*----------------------------------*/
 
-  if (use_ab) { # if ab-line exists and can be readily used 
-    ab_line_file <- here("Data", "Growers", ffy, "TrialDesign/ab-line.shp")
+    #=== read the boundary file ===#
+    boundary_file <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp")
 
-    if (!file.exists(ab_line_file)) {
-      return(print("No ab-line file exists or an ab-line cannot be created based on the past as-applied data"))
+    if (!file.exists(boundary_file)) {
+      return(print("No boundary file exists."))
     }
 
-  } else { # if ab-line does not exist and needs to create one
-    past_aa_input_file_ls <- here("Data/Growers", ffy, "TrialDesign") %>% 
-      list.files(recursive = TRUE, full.names = TRUE) %>%
-      #--- search for as-applied-s file ---#
-      .[str_detect(., "shp")] %>%
-      .[!str_detect(., "xml")] %>%
-      .[str_detect(., "past")] 
+    #/*----------------------------------*/
+    #' ## ab-line
+    #/*----------------------------------*/
 
-    if (input_type == "S") {
-      #=== if seed trial ===#
-      past_aa_input_file <- past_aa_input_file_ls %>% 
-        .[str_detect(., "-s")]
-    } else {
-      #=== if N, P, K trial ===#
-      past_aa_input_file <- past_aa_input_file_ls %>% 
-        .[str_detect(., paste0("-", tolower(input_type)))]    
-      if (length(past_aa_input_file) == 0) {
+    if (use_ab) { # if ab-line exists and can be readily used 
+      ab_line_file <- here("Data", "Growers", ffy, "TrialDesign/ab-line.shp")
 
-        other_input_ls <- c("p", "n", "k") %>% 
-          .[-which(tolower(input_type) == .)] %>% 
-          paste0("-", ., collapse = "|")
+      if (!file.exists(ab_line_file)) {
+        return(print("No ab-line file exists or an ab-line cannot be created based on the past as-applied data"))
+      }
 
-        #=== if the past input file of the very input is not available ===#
+    } else { # if ab-line does not exist and needs to create one
+      past_aa_input_file_ls <- here("Data/Growers", ffy, "TrialDesign") %>% 
+        list.files(recursive = TRUE, full.names = TRUE) %>%
+        #--- search for as-applied-s file ---#
+        .[str_detect(., "shp")] %>%
+        .[!str_detect(., "xml")] %>%
+        .[str_detect(., "past")] 
+
+      if (input_type == "S") {
+        #=== if seed trial ===#
         past_aa_input_file <- past_aa_input_file_ls %>% 
-          .[str_detect(., other_input_ls)] %>% 
-          #=== use the first one matched ===#
-          .[1]
+          .[str_detect(., "-s")]
+      } else {
+        #=== if N, P, K trial ===#
+        past_aa_input_file <- past_aa_input_file_ls %>% 
+          .[str_detect(., paste0("-", tolower(input_type)))]    
+        if (length(past_aa_input_file) == 0) {
+
+          other_input_ls <- c("p", "n", "k") %>% 
+            .[-which(tolower(input_type) == .)] %>% 
+            paste0("-", ., collapse = "|")
+
+          #=== if the past input file of the very input is not available ===#
+          past_aa_input_file <- past_aa_input_file_ls %>% 
+            .[str_detect(., other_input_ls)] %>% 
+            #=== use the first one matched ===#
+            .[1]
+        }
+      }
+
+      if (length(past_aa_input_file) == 0) {
+        return(print("No past as-applied data available"))
       }
     }
 
-    if (length(past_aa_input_file) == 0) {
-      return(print("No past as-applied data available"))
-    }
-  }
-
-#/*=================================================*/
-#' # Build an Rmd
-#/*=================================================*/  
-
-  #--- read in the template ---#
-  # td_rmd <- file.path(here(), "Codes/TrialDesignGeneration/trial_design_header.Rmd") %>%
-  #   readLines() %>% 
-  td_rmd <- read_rmd("TrialDesignGeneration/trial-design.Rmd", locally_run = locally_run) %>% 
-    gsub("_field-year-here_", ffy, .) %>% 
-    gsub("_json-file-here_", json_file, .) %>% 
-    gsub("title-here", "Trial Design Generation Report", .)
-
-  #=== if ab-line does not exist ===#
-  if (!use_ab) {
-    td_rmd <- gsub(
-      "_past-aa-input-file-name-here_",
-      past_aa_input_file,
-      td_rmd
+    #=== append the Rmd to create plots and ab-lines ===#
+    td_gen_plot_rmd <- 
+    read_rmd(
+      "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
+      locally_run = locally_run
     )
+
+    td_rmd <- c(td_rmd, td_gen_plot_rmd)
+
+    #=== if ab-line does not exist ===#
+    if (!use_ab) {
+      td_rmd <- gsub(
+        "_past-aa-input-file-name-here_",
+        past_aa_input_file,
+        td_rmd
+      )
+    }  
+  } 
+
+  #/*=================================================*/
+  #' # Rmd for Assigning rates 
+  #/*=================================================*/
+  if (assign_rates) {
+    assign_rates_rmd <- 
+    read_rmd(
+      "TrialDesignGeneration/assign-rates.Rmd", 
+      locally_run = locally_run
+    )
+    td_rmd <- c(td_rmd, assign_rates_rmd)
   }
 
   #/*=================================================*/
