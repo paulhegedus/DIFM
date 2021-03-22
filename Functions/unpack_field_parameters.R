@@ -302,14 +302,16 @@ if (process_k) {
 #/*----------------------------------*/
 #' ## Trial type
 #/*----------------------------------*/
-trial_type <- case_when(
+trial_type <- 
+case_when(
   process_n & process_s ~ "SN",
   process_n & !process_s ~ "N",
   !process_n & process_s ~ "S",
   process_k ~ "K" 
 )
 
-trial_info <- tibble(
+trial_info <- 
+tibble(
   crop = crop, 
   input_type = c("S", "N", "K"),
   process = c(process_s, process_n, process_k),
