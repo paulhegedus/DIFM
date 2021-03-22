@@ -91,7 +91,7 @@ tm_layout_to_add <- tm_layout(
 
 # Get Experiment Parameters
 
-```{r results = "hide"}
+```{r }
 (
 trial_data <- get_td_parameters(ffy, json_file)
 )

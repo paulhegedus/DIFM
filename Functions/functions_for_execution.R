@@ -688,13 +688,13 @@ make_trial_design <-
     }
 
     #=== append the Rmd to create plots and ab-lines ===#
-    td_gen_plot_rmd <- 
+    create_plots_rmd <- 
     read_rmd(
       "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
       locally_run = locally_run
     )
 
-    td_rmd <- c(td_rmd, td_gen_plot_rmd)
+    td_rmd <- c(td_rmd, create_plots_rmd)
 
     #=== if ab-line does not exist ===#
     if (!use_ab) {
