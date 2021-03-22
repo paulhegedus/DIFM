@@ -183,12 +183,3 @@ experiment_design %>%
 
 ```
 
-
-# Things to do 
-
-+ allow the design to be dependent on spatial variables
-
-## Setting parameters
-
-+ optimal plot width
-+ change the plot width in the middle 
