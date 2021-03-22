@@ -606,7 +606,7 @@ make_trial_design <-
   #' # Header Rmd
   #/*=================================================*/
   #=== header Rmd ===#
-  td_header_rmd <- 
+  td_rmd <- 
   read_rmd(
     "TrialDesignGeneration/trial-design-header.Rmd", 
     locally_run = locally_run

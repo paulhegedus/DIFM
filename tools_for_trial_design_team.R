@@ -16,12 +16,9 @@ source(
 # /*----------------------------------*/
 #' ## Load the field parameter data
 # /*----------------------------------*/
-field_data <- jsonlite::fromJSON(
-  file.path(
-    here("Data", "CommonData"),
-    # "field_parameter.json"
-    "fp_2021_TD.json"
-  ),
+field_data <- 
+jsonlite::fromJSON(
+  here("Data", "CommonData", "fp_2021_TD.json"),
   flatten = TRUE
 ) %>%
 data.table() %>%
@@ -34,7 +31,7 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[]
+ffy <- field_year_ls[3]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
@@ -45,12 +42,13 @@ make_trial_design(
   json_file = "fp_2021_TD.json", 
   rates = list(
     #=== include the gc_rate ===#
-    c(28, 32, 35, 38),
-    c(10, 17, 23.43, 29)
+    c(80, 100, 120, 140, 160, 180)
   ), 
   head_dist = c(120, 120), 
   use_ab = TRUE,
-  rerun = TRUE
+  assign_rates = FALSE,
+  rerun = TRUE,
+  locally_run = TRUE
 )
 
 
