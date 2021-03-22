@@ -44,7 +44,7 @@ make_trial_design(
     #=== include the gc_rate ===#
     c(80, 100, 120, 140, 160, 180)
   ), 
-  head_dist = c(120, 120), 
+  head_dist = c(120), 
   use_ab = TRUE,
   assign_rates = FALSE,
   rerun = TRUE,

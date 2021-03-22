@@ -245,7 +245,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #--- maximum distance ---#
   max_dist <- sqrt(
     (f_bbox["xmax"] - f_bbox["xmin"])^2 +
-      (f_bbox["ymax"] - f_bbox["ymin"])^2
+    (f_bbox["ymax"] - f_bbox["ymin"])^2
   ) + 50
 
   max_dist_cover <- ceiling(max_dist / 10) * 10
@@ -293,16 +293,15 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   ) 
 
   # ggplot() +
-  #   geom_sf(data = plots, col = "blue") +
-  #   geom_sf(data = vect_to_sf_point(starting_point), col = "green") +
-  #   geom_sf(data = field, col = "blue") +
-  #   geom_sf(data = ab_line, col = "red")
+  #   geom_sf(data = plots, fill = "blue", color = NA) +
+  #   geom_sf(data = vect_to_sf_point(starting_point), col = "green", size = 2) +
+  #   geom_sf(data = field, col = "black", fill = NA) +
+  #   geom_sf(data = ab_line, col = "red", size = 2)
 
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Cut off unnecessary parts
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   
-
   # min_group <- min(plots$group)
   # max_group <- max(plots$group)
 
@@ -327,12 +326,16 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #/*~~~~~~~~~~~~~~~~~~~~~~*/   
   print("Shifting the polygons for the right starting point")
 
+  #=== find the group id for the cells that are intersecting with the ab-line  ===#
   ab_int_group <- st_intersection(plots, ab_line) %>% 
     pull(group) %>% unique()
-
+  #=== get the sf of the intersecting group ===# 
   int_group <- filter(plots, group == ab_int_group)
+
+  #=== the distance between the ab-line and the line that connect the centroids of the intersecting sf ===#
   correction_dist <- cal_dist_to_ab(int_group, ab_int_group)
 
+  #=== shift the intersecting sf  ===#
   int_group_corrected <- st_shift(int_group, correction_dist * ab_xy_nml_p90)
 
   if (cal_dist_to_ab(int_group_corrected, ab_int_group) > correction_dist) {
@@ -346,7 +349,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   }
   
   # ggplot() +
-  #   geom_sf(data = plots_shifted, col = "blue") +
+  #   geom_sf(data = plots_shifted, fill = "blue", color = NA) +
   #   geom_sf(data = ab_line, col = "red")
 
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
