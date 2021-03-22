@@ -671,13 +671,10 @@ make_trial_design <-
   #--- read in the template ---#
   # td_rmd <- file.path(here(), "Codes/TrialDesignGeneration/trial_design_header.Rmd") %>%
   #   readLines() %>% 
-  td_rmd <- read_rmd("TrialDesignGeneration/trial_design_header.Rmd", locally_run = locally_run) %>% 
+  td_rmd <- read_rmd("TrialDesignGeneration/trial_design.Rmd", locally_run = locally_run) %>% 
     gsub("_field-year-here_", ffy, .) %>% 
     gsub("_json-file-here_", json_file, .) %>% 
     gsub("title-here", "Trial Design Generation Report", .)
-
-  td_body_rmd <- read_rmd("TrialDesignGeneration/trial-design-ab-line.Rmd", locally_run = locally_run) 
-  td_rmd <- c(td_rmd, td_body_rmd)
 
   #=== if ab-line does not exist ===#
   if (!use_ab) {
