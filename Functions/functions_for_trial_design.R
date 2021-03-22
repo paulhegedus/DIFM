@@ -692,12 +692,40 @@ get_ab_line <- function(past_aa_input) {
     cbind(., st_coordinates(.))
   }
 
-
-
 }
 
+#/*=================================================*/
+#' # Get field parameters for trial design
+#/*=================================================*/
 
+get_td_parameters <- 
+function(
+  ffy, # ffy = "Sasse_JensenWest_2021"
+  json_file # json_file = "fp_2021_TD.json"
+) {
 
+  field_data <- jsonlite::fromJSON(
+    here("Data", "CommonData", json_file),
+    flatten = TRUE
+  ) %>%
+  data.table() %>%
+  .[, field_year := paste(farm, field, year, sep = "_")]
 
+  #--- get field parameters for the field-year ---#
+  w_field_data <- field_data[field_year == ffy, ]
+
+  #--- get input data ---#
+  input_data <- dplyr::select(w_field_data, starts_with(
+    "input")) %>%  map(1) %>% 
+    rbindlist(fill = TRUE) %>% 
+    filter(strategy == "trial") %>% 
+    dplyr::select(form, sq_rate, input_plot_width) %>% 
+    rename(gc_rate = sq_rate) %>% 
+    #=== the input with shorter plot length comes first ===#
+    arrange(input_plot_width)
+
+  return(input_data)
+
+}
 
 

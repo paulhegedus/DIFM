@@ -45,11 +45,11 @@ make_grower_folders(field_data)
 #--- add inputs data (as the details of the trial gets clear) ---#
 add_inputs(
   json_file = "fp_2021_TD.json",
-  farm = "Rohrscheib",
-  field = "AlmyMain",
+  farm = "Sasse",
+  field = "JensenWest",
   year = "2021",
-  input_ls = c("seed"),
-  strategy_ls = c("trial")
+  input_ls = c("N_equiv"),
+  strategy_ls = c("base")
 )
 
 #/*=================================================*/

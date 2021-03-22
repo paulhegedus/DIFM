@@ -116,6 +116,8 @@ gen_fp_template <- function(farm, field, year, crop, input_ls, strategy_ls, json
           date = "mm/dd/yyyy",
           data = "not received, lost, file_name in the Raw data folder if received",
           sq_rate = "numeric (no double quotes needed) or (Rx) prescription file name",
+          min_rate = "numeric (no double quotes needed)",
+          max_rate = "numeric (no double quotes needed)",
           Rx_exists = "not available, exists (not received), received",
           machine_width = "numeric (no double quotes needed)",
           section_num = "numeric (no double quotes needed)",
@@ -132,6 +134,8 @@ gen_fp_template <- function(farm, field, year, crop, input_ls, strategy_ls, json
           date = "mm/dd/yyyy",
           data = "not received, lost, file_name in the Raw data folder if received",
           sq_rate = "numeric (no double quotes needed) or (Rx) prescription file name",
+          min_rate = "numeric (no double quotes needed)",
+          max_rate = "numeric (no double quotes needed)",
           Rx_exists = "not available, exists (not received), received",
           machine_width = "numeric (no double quotes needed)",
           section_num = "numeric (no double quotes needed)",
@@ -261,7 +265,7 @@ initiate_fp_entry <- function(farm, field, year, json_file = NULL) {
 # an existing field parameter file
 
 
-add_inputs <- function(farm, field, year, json_file, input_ls, strategy_ls) {
+add_inputs <- function(json_file, farm, field, year, input_ls, strategy_ls) {
 
   ffy <- paste(farm, field, year, sep = "_")
 
@@ -309,6 +313,8 @@ add_inputs <- function(farm, field, year, json_file, input_ls, strategy_ls) {
           date = "mm/dd/yyyy",
           data = "not received, lost, file_name in the Raw data folder if received",
           sq_rate = "numeric (no double quotes needed) or (Rx) prescription file name",
+          min_rate = "numeric (no double quotes needed)",
+          max_rate = "numeric (no double quotes needed)",
           Rx_exists = "not available, exists (not received), received",
           machine_width = "numeric (no double quotes needed)",
           input_plot_width = "numeric (no double quotes needed)",
@@ -324,6 +330,8 @@ add_inputs <- function(farm, field, year, json_file, input_ls, strategy_ls) {
           date = "mm/dd/yyyy",
           data = "not received, lost, file_name in the Raw data folder if received",
           sq_rate = "numeric (no double quotes needed) or (Rx) prescription file name",
+          min_rate = "numeric (no double quotes needed)",
+          max_rate = "numeric (no double quotes needed)",
           Rx_exists = "not available, exists (not received), received",
           machine_width = "numeric (no double quotes needed)",
           input_plot_width = "numeric (no double quotes needed)",

@@ -20,7 +20,7 @@ field_data <- jsonlite::fromJSON(
   file.path(
     here("Data", "CommonData"),
     # "field_parameter.json"
-    "fp_heg_2021.json"
+    "fp_2021_TD.json"
   ),
   flatten = TRUE
 ) %>%
@@ -36,16 +36,19 @@ field_year_ls <- field_data$field_year
 
 ffy <- field_year_ls[8]
 
-make_trial_design(ffy, rerun = TRUE)
+get_td_parameters(ffy, "fp_2021_TD.json")
 
 #--- force headland to be 100 feet ---#
 
 make_trial_design(
   ffy, 
-  input_type = "N",
-  plot_width = 30,
-  gc_rate = 30, 
-  head_dist = 100, 
+  json_file = "fp_2021_TD.json", 
+  rates = list(
+    #=== include the gc_rate ===#
+    c(28, 32, 35, 38),
+    c(10, 17, 23.43, 29)
+  ), 
+  head_dist = c(120, 120), 
   use_ab = TRUE,
   rerun = TRUE
 )

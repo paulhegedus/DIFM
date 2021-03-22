@@ -586,23 +586,50 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 #' # Make trial design and create a report
 #/*=================================================*/
 
-make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_rate, head_dist = NA, use_ab = TRUE, rerun = FALSE, locally_run = FALSE) {
-
-  # head_dist in feet
-  library(measurements)
+make_trial_design <- 
+  function(
+    ffy, 
+    json_file,
+    input_type, 
+    rates = NA, 
+    plot_width = NA, 
+    gc_rate, 
+    head_dist = NA, 
+    use_ab = TRUE, 
+    rerun = FALSE, 
+    locally_run = FALSE
+  ) 
+  {
 
   print(paste0("Generating a trial-design for ", ffy))
 
+#/*=================================================*/
+#' # File checks
+#/*=================================================*/
+
+#/*----------------------------------*/
+#' ## Boundary file
+#/*----------------------------------*/
+
+  #=== read the boundary file ===#
   boundary_file <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp")
 
-  if (use_ab) {
+  if (!file.exists(boundary_file)) {
+    return(print("No boundary file exists."))
+  }
+
+#/*----------------------------------*/
+#' ## ab-line
+#/*----------------------------------*/
+
+  if (use_ab) { # if ab-line exists and can be readily used 
     ab_line_file <- here("Data", "Growers", ffy, "TrialDesign/ab-line.shp")
 
     if (!file.exists(ab_line_file)) {
       return(print("No ab-line file exists or an ab-line cannot be created based on the past as-applied data"))
     }
 
-  } else {
+  } else { # if ab-line does not exist and needs to create one
     past_aa_input_file_ls <- here("Data/Growers", ffy, "TrialDesign") %>% 
       list.files(recursive = TRUE, full.names = TRUE) %>%
       #--- search for as-applied-s file ---#
@@ -636,24 +663,23 @@ make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_r
       return(print("No past as-applied data available"))
     }
   }
-  
 
-  if (!file.exists(boundary_file)) {
-    return(print("No boundary file exists."))
-  }
-
-  
+#/*=================================================*/
+#' # Build an Rmd
+#/*=================================================*/  
 
   #--- read in the template ---#
   # td_rmd <- file.path(here(), "Codes/TrialDesignGeneration/trial_design_header.Rmd") %>%
   #   readLines() %>% 
   td_rmd <- read_rmd("TrialDesignGeneration/trial_design_header.Rmd", locally_run = locally_run) %>% 
-    gsub("field-year-here", ffy, .) %>% 
+    gsub("_field-year-here_", ffy, .) %>% 
+    gsub("_json-file-here_", json_file, .) %>% 
     gsub("title-here", "Trial Design Generation Report", .)
 
   td_body_rmd <- read_rmd("TrialDesignGeneration/trial-design-ab-line.Rmd", locally_run = locally_run) 
   td_rmd <- c(td_rmd, td_body_rmd)
 
+  #=== if ab-line does not exist ===#
   if (!use_ab) {
     td_rmd <- gsub(
       "_past-aa-input-file-name-here_",
@@ -680,26 +706,6 @@ make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_r
   }
 
   #/*----------------------------------*/
-  #' ## User-supplied plot width
-  #/*----------------------------------*/
-  if (is.numeric(plot_width)) {
-    td_rmd <- gsub(
-      "_plot-width-here_", 
-      plot_width,
-      td_rmd
-    )
-  } else if (is.na(plot_width)) {
-    td_rmd <- gsub(
-      "_plot-width-here_", 
-      "NA", 
-      td_rmd
-    )
-  } else {
-    writeLines("The plot width you provided are not valid.")
-    break
-  }
-
-  #/*----------------------------------*/
   #' ## Rates
   #/*----------------------------------*/
   if (!is.na(rates) & is.numeric(rates)) {
@@ -722,27 +728,12 @@ make_trial_design <- function(ffy, input_type, rates = NA, plot_width = NA, gc_r
     break
   }  
 
-  #/*----------------------------------*/
-  #' ## Grower-chosen rates
-  #/*----------------------------------*/
-  if (is.numeric(gc_rate)) {
-    td_rmd <- gsub(
-      "_gc-rate-here_", 
-      gc_rate, 
-      td_rmd
-    ) 
-  } else if (is.na(gc_rate)) {
-    td_rmd <- gsub(
-      "_gc-rate-here_", 
-      "NA", 
-      td_rmd
-    )  
-  } 
-
   #/*=================================================*/
   #' # Wrapping up
   #/*=================================================*/
-  td_file_name <- file.path(here(), "Data/Growers", ffy, "TrialDesign/make_trial_design.Rmd")
+  td_file_name <- file.path(
+    here(), "Data/Growers", ffy, "TrialDesign/make_trial_design.Rmd"
+  )
 
   writeLines(td_rmd, con = td_file_name)
 

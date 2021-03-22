@@ -1,23 +1,56 @@
-# What needs to happen
+---
+title: "Trial Design Report for field-year-here"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: true
+    number_sections: true
+---
 
-+ starting point has to be in the middle of the first plot
-+ change plot length by row 
-+ various designs of assigning seed and n (ensure orthogonality)
-+ allow the design to be dependent on spatial variables
+<style type="text/css">
 
+body{ /* Normal  */
+      font-size: 20px;
+  }
+td {  /* Table  */
+  font-size: 16px;
+}
+h1.title {
+  font-size: 56px;
+}
+h1 { /* Header 1 */
+  font-size: 48px;
+}
+h2 { /* Header 2 */
+    font-size: 36px;
+}
+h3 { /* Header 3 */
+  font-size: 24px;
+}
+code.r{ /* Code block */
+    font-size: 16px;
+}
+</style>
 
-## Setting parameters
+```{r setup, cache = F, echo = F}
+library(knitr)
+knitr::opts_chunk$set(
+  cache = TRUE,
+  echo = TRUE,
+  error = TRUE,
+  warning = FALSE,
+  cache.lazy = FALSE,
+  message = FALSE,
+  fig.width = 12, 
+  fig.height = 12
+)
+```
 
-+ we assign seed rate by section of planter
-
-+ least common multiple of the section width and harvester width is harvester width, there is no problem
-
-+ could change the plot width 
-
-
-# Prep
-
-```{r }
+```{r packages, cache = FALSE}
+# === packages ===#
+library(exactextractr)
 library(sp)
 library(sf)
 library(here)
@@ -31,16 +64,20 @@ library(tidyverse)
 library(data.table)
 ```
 
-```{r }
-#--- local ---#
-source("Codes/TrialDesignGeneration/functions_for_trial_design.R")
+```{r preparations, cache = F}
+#=== source all the functions ===#
+source(
+  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
+  local = TRUE
+)
 
-#--- github ---#
-source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
+#--- define field-year ---#
+ffy <- "_field-year-here_"  
+json_file <- "_json-file-here_"
 
 ```
 
-```{r map-layout}
+```{r map-layout, cache = TRUE}
 tm_layout_to_add <- tm_layout(
   legend.outside = "TRUE",
   frame = FALSE,
@@ -49,39 +86,51 @@ tm_layout_to_add <- tm_layout(
 )
 ```
 
-## Preparation
+
+# Preparation
+
+## Field Parameters
+
+```{r results = "hide"}
+trial_data <- get_td_parameters(ffy, json_file)
+```   
+
+## Read boundary and ab-line
 
 ```{r }
-ffy <- "Wendte_LaueLib80_2020"
-ffy <- "Boeckner_134n_2017"
+# ffy <- "Wendte_LaueLib80_2020"
+# ffy <- "Boeckner_134n_2017"
+# ffy <- "Bohnhoff_Adams_2018"
+# ffy <- "Holzwart_Holzwart_2021"
 
 #--- field boundary ---#
-field <- ffy %>% 
-  file.path(here("Data", "Growers"), ., "Raw/boundary.shp") %>% 
-  st_read() %>%
+field_sf <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp") %>% 
+  st_read() %>% 
+  st_set_4326() %>% 
   st_make_valid() %>%
   st_transform_utm()
 
 #--- ab-line ---#
-ab_line <- ffy %>% 
-  file.path(here("Data", "Growers"), ., "Raw/ab-line.shp") %>% 
-  st_read() %>%
-  st_make_valid() %>%
-  st_transform_utm()
+if (use_ab) {
+  ab_line <- here("Data", "Growers", ffy, "TrialDesign/ab-line.shp") %>% 
+    #--- read the data ---#
+    st_read() %>% 
+    st_set_4326() %>% 
+    st_make_valid() %>%
+    st_transform_utm() 
+} else {
+  past_aa_input <- "_past-aa-input-file-name-here_" %>% 
+  # past_aa_input <- past_aa_input_file %>% 
+    #--- read the data ---#
+    st_read() %>% 
+    st_set_4326() %>% 
+    st_make_valid() %>%
+    st_transform_utm() 
 
-#--- field parameters ---#
-field_data <- jsonlite::fromJSON(
-  file.path(
-    here("Data", "CommonData"),
-    "fp_new_DSB.json"
-  ),
-  flatten = TRUE
-) %>%
-data.table() %>%
-.[, field_year := paste(farm, field, year, sep = "_")] %>% 
-.[field_year == ffy, ]
+  ab_line <- get_ab_line(past_aa_input) 
+}
 
-```   
+```
 
 ```{r }
 tm_shape(field) +
@@ -90,120 +139,300 @@ tm_shape(field) +
   tm_lines(col = "red")
 ```
 
-## Set parameters
+
+## Option parameters
 
 ```{r }
-#--- temporary ---#
-planter_width <- 60 %>%
-  conv_unit(., "ft", "m")
-planter_section_num <- 2
-harvester_width <- 30 %>%
-  conv_unit("ft", "m")
-# applicator_width <- w_field_data[, a_width] %>%
-#   conv_unit("ft", "m")
-# applicator_section_num <- w_field_data[, a_section_no] %>%
-#   conv_unit("ft", "m")
-
-applicator_width <- 0
-
-#--- headland length ---#
-headland_length <- max(planter_width, harvester_width, applicator_width) * 2
+trial_data_rh <- trial_data %>% 
+  #=== user-specified list of experimental rates ===#
+  mutate(rates = rates) %>% 
+  #=== headland length ===#
+  # if only one number is supplied, it is applied for both inputs in a two-input case
+  mutate(headland_length = conv_unit(head_dist, "ft", "m")) %>% 
+  #=== cell height ===#
+  mutate(cell_height = conv_unit(10, "ft", "m"))
 
 ```
 
 # Create Trial Design
 
-## Set parameters
-
-```{r }
-cell_height <- conv_unit(10, "ft", "m")
-
-#--- this should be defined above  ---#
-plot_width <- conv_unit(30, "ft", "m")
-```
-
 ## Make experiment grids
 
 ```{r }
-whole_field <- make_trial_grids(
-  field = field, 
-  ab_line = ab_line, 
-  plot_width = plot_width, 
-  cell_height = cell_height,
-  headland_length = headland_length
-)
 
-experiment_plots <- whole_field$experiment
+#/*----------------------------------*/
+#' ## Create experimental plots
+#/*----------------------------------*/
 
-headland <- whole_field$headland
+num_unique_plot_width <- 
+unique(trial_data_rh$input_plot_width) %>% 
+length()
+
+if (num_unique_plot_width > 1) {
+  trial_data_e <- 
+  trial_data_rh %>% 
+  mutate(experiment_plots = list(
+    make_trial_grids(
+      field = field_sf, 
+      #--- by default uses the first one ---#
+      ab_line = ab_line, 
+      plot_width = input_plot_width, 
+      cell_height = cell_height,
+      headland_length = headland_length
+    )  
+  ))
+} else {
+
+  #=== get the first one of the two if more than one ===#
+  trial_data_temp <- trial_data_rh[1, ]
+
+  experiment_plots <-
+  make_trial_grids(
+    field = field_sf, 
+    #--- by default uses the first one ---#
+    ab_line = trial_data_temp$ab_line, 
+    plot_width = trial_data_temp$input_plot_width, 
+    cell_height = cell_height,
+    headland_length = trial_data_temp$headland_length
+  )  
+
+  trial_data_e <- trial_data_rh %>% 
+    mutate(experiment_plots = list(
+      experiment_plots
+    ))
+}
+
+``` 
+
+```{r }
+trial_data_eh <-
+trial_data_e %>% 
+#=== dissolve the experimental plots as a single polygon ===#
+mutate(experiment_plots_dissolved = list(
+  experiment_plots %>% 
+    st_snap_to_grid(size = 0.0001) %>%
+    st_make_valid() %>% 
+    summarize(plot_id = min(plot_id)) 
+)) %>% 
+#=== Create headland ===#
+mutate(headland = list(
+  st_difference(field_sf, experiment_plots_dissolved) %>%
+    dplyr::select(geometry) %>% 
+    #--- assign grower-chosen rate to the headland ---#
+    mutate(rate = gc_rate) 
+)) %>% 
+mutate(tm_exp_head = list(
+  tm_shape(field_sf) +
+    tm_borders(col = "black") + 
+  tm_shape(headland) +
+    tm_fill(
+      col = "red", 
+      alpha = 0.3, 
+      title = "Headland"
+    ) +
+  tm_shape(experiment_plots) +
+    tm_fill(
+      col = "strip_id", 
+      palette = "Spectral", 
+      style = "order"
+    )  +
+  tm_layout_to_add 
+))
 
 ```
 
 ```{r }
-tm_shape(field) +
-  tm_borders(col = "black") + 
-tm_shape(headland) +
-  tm_fill(col = "red", alpha = 0.3) +
-tm_shape(experiment_plots) +
-  tm_fill(
-    col = "strip_id", 
-    palette = "Spectral", 
-    style = "order"
-  )  +
-tm_layout_to_add
+trial_data_e$tm_exp_head
 
 ```
 
 ## Assigning rates
 
-```{r }
-rate_ls <- seq(90, 240, by = 30)
-
-experiment_design <- assign_rates(
-  data_sf = experiment_plots, 
-  rates_ls = rate_ls
-)  %>% 
-select(rate)
-
-grower_chosen_rate <- 180
-
-headland <- mutate(
-  headland, 
-  rate = grower_chosen_rate
-)
-
-trial_design <- rbind(
-  experiment_design,
-  headland
-)
-
-```
 
 ```{r }
-tm_td <- tm_shape(trial_design) +
-  tm_fill(
-    col = "rate", 
-    palette = "YlGn", 
-    style = "cat"
-  ) + 
-tm_shape(field) +
-  tm_borders() +
-tm_layout_to_add
 
-tmap_save(tm_td, file = paste0(here("Data", "Disposable/TD_"), ffy, ".pdf"))
+if (!is.na(rates_ls)) {
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### If rates are provided by the user
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+  experiment_design <- assign_rates(
+    data_sf = experiment_plots, 
+    rates_ls = rates_ls,
+    # pattern = "block_randomized"
+    pattern = "fixed-latin-square"
+    # pattern = "sequential"
+  )  %>% 
+  #--- keep cell_id here for orthogonality check later ---#
+  dplyr::select(rate)
 
+  trial_design <- rbind(
+    experiment_design,
+    headland
+  )
+
+} else {
+
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+#' ### If rate are NOT provided by the use
+#/*~~~~~~~~~~~~~~~~~~~~~~*/
+  trial_designs <- tibble(
+    rates = list(
+      c(0.5, 0.65, 0.8, 1, 1.15),
+      c(0.5, 0.65, 0.8, 1, 1.15, 1.3),
+      c(0.6, 0.75, 0.9, 1, 1.2),
+      c(0.6, 0.75, 0.9, 1, 1.15, 1.3),
+      seq(0.7, 1.2, by = 0.1),
+      seq(0.7, 1.3, by = 0.15)   
+    )
+  ) %>% 
+  rowwise() %>% 
+  mutate(
+    rates = list(
+      rates * gc_rate
+    )
+  ) %>% 
+  mutate(
+    trial_design = list(
+       assign_rates(
+        data_sf = experiment_plots, 
+        rates_ls = rates
+      )  %>% 
+      dplyr::select(rate) %>% 
+      rbind(., headland)
+    ) 
+  ) %>% 
+  mutate(
+    td_map = list(
+      tm_shape(trial_design) +
+        tm_fill(
+          col = "rate", 
+          palette = "YlGn", 
+          style = "cat"
+        ) + 
+      tm_shape(headland) +
+        tm_borders(
+          lwd = 4
+        ) +
+      tm_shape(ab_line) +
+        tm_lines(
+          col = "red",
+          lwd = 4
+        ) +
+      tm_layout_to_add
+    )
+  )
+
+  #--- show the designs ---#
+  pluck(trial_designs, "td_map")
+
+}
+
+``` 
+
+# Save the trial design
+
+```{r eval = !is.na(rates_ls), echo = !is.na(rates_ls)}
+
+trial_design_ll <- st_transform(trial_design, 4326)
+
+time_user <- paste0(
+  Sys.time(), 
+  "-",
+  Sys.getenv("USER")
+) %>% 
+gsub(" ", "-", .) %>% 
+gsub("_", "-", .)  
+
+dsn_name <- here("Data", "Growers", ffy, "TrialDesign")
+
+st_write(
+  trial_design_ll, 
+  dsn = dsn_name,
+  layer = paste0("trial-design-", time_user),
+  driver = "ESRI Shapefile"
+)
+
+writeLines(
+  paste0(
+    "The trial design was named, trial-design-",
+    time_user,
+    ".shp"
+  )
+)
 ```
 
 # Orthogonality check
 
-```{r }
-topography <- file.path(here("Data", "Growers", ffy), "Intermediate/topography.rds") %>% 
+Checking if the assigned rates are orthogonal to the soil and field characteristics. 
+
+```{r results = "hide", eval = F}
+
+topo <- file.path(here("Data", "Growers", ffy), "Intermediate/topography.rds") %>% 
   readRDS()
 
 ssurgo <- file.path(here("Data", "Growers", ffy), "Intermediate/ssurgo.rds") %>% 
   readRDS()
 
-trial_design
+topo_values <- topo %>%
+  stars_to_stack() %>%
+  exact_extract(., st_transform(experiment_design, st_crs(.))) %>%
+  rbindlist(idcol = "rowid") %>%
+  .[,
+    lapply(.SD, weighted.mean, w = coverage_fraction),
+    by = rowid,
+    .SDcols = paste0("layer.", 1:length(topo))
+  ] %>%
+  .[, rowid := NULL] %>%
+  setnames(names(.), names(topo))
+
+experiment_design <- cbind(experiment_design, topo_values)
+
+ssurgo_values <- dplyr::select(experiment_design, cell_id) %>%
+  st_intersection(., ssurgo) %>%
+  mutate(area = as.numeric(st_area(.))) %>%
+  data.table() %>%
+  .[, area_pct := area / sum(area), by = cell_id] %>%
+  .[,
+    lapply(.SD, weighted.mean, w = area_pct),
+    by = cell_id,
+    .SDcols = c("clay", "sand", "silt", "water_storage")
+  ]
+
+experiment_design <- left_join(experiment_design, ssurgo_values, by = "cell_id")
   
 ```
 
+```{r eval = F}
+#--- plot level ---#
+experiment_design %>% 
+  dplyr::select(where(is.numeric)) %>% 
+  st_drop_geometry() %>% 
+  data.table() %>% 
+  .[, lapply(.SD, mean), by = .(plot_id, strip_id)] %>% 
+  .[,`:=`(
+    plot_id = NULL,
+    strip_id = NULL
+  )] %>% 
+  cor() %>% 
+  .[, "rate"] 
+
+#--- cell-level ---#
+experiment_design %>% 
+  dplyr::select(where(is.numeric)) %>% 
+  st_drop_geometry() %>% 
+  data.table() %>% 
+  .[, cell_id := NULL] %>% 
+  cor() %>% 
+  .[, "rate"] 
+
+```
+
+
+# Things to do 
+
++ allow the design to be dependent on spatial variables
+
+## Setting parameters
+
++ optimal plot width
++ change the plot width in the middle 
