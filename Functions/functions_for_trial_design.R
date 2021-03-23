@@ -1331,4 +1331,57 @@ function(
 
 }
 
+#/*=================================================*/
+#' # Get experiment rates
+#/*=================================================*/
+
+# min_rate <- 80
+# max_rate <- 180
+# gc_rate <- 140
+# num_level <- 5
+
+get_rates <- 
+function(
+  min_rate, 
+  max_rate, 
+  gc_rate, 
+  num_levels
+) {
+
+  dif_min <- gc_rate - min_rate 
+  dif_max <- max_rate - gc_rate
+
+  num_levels_temp <- num_levels + 1
+
+  if (dif_max > dif_min) {
+    if (num_levels_temp %% 2 == 1) {
+      num_high <- num_levels_temp %/% 2 + 1
+      num_low <- num_levels_temp %/% 2
+    } else if ((dif_max / dif_min) > 1.5){ 
+      num_high <- num_levels_temp %/% 2 + 1
+      num_low <- num_levels_temp %/% 2 - 1
+    } else { 
+      num_high <- num_levels_temp %/% 2
+      num_low <- num_levels_temp %/% 2
+    }
+  } else {
+    if (num_levels_temp %% 2 == 1) {
+      num_high <- num_levels_temp %/% 2 
+      num_low <- num_levels_temp %/% 2 + 1
+    } else if ((dif_min / dif_max) > 1.5){ 
+      num_high <- num_levels_temp %/% 2 - 1
+      num_low <- num_levels_temp %/% 2 + 1
+    } else {
+      num_high <- num_levels_temp %/% 2
+      num_low <- num_levels_temp %/% 2
+    }
+  }
+
+  rates_low <- seq(min_rate, gc_rate, length = num_low) %>% round()
+  rates_high <- seq(gc_rate, max_rate, length = num_high) %>% round()
+
+  rates <- c(rates_low, rates_high) %>% unique()
+
+  return(rates)
+}
 

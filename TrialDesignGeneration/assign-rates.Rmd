@@ -3,91 +3,57 @@
 ## Assigning rates
 
 ```{r }
-num_levels <- _num_levels_here_
 
-if (!is.na(rates_ls)) {
-#/*~~~~~~~~~~~~~~~~~~~~~~*/
-#' ### If rates are provided by the user
-#/*~~~~~~~~~~~~~~~~~~~~~~*/
-  experiment_design <- assign_rates(
-    data_sf = experiment_plots, 
-    rates_ls = rates_ls,
-    # pattern = "block_randomized"
-    pattern = "fixed-latin-square"
-    # pattern = "sequential"
-  )  %>% 
-  #--- keep cell_id here for orthogonality check later ---#
-  dplyr::select(rate)
+# trial_data_r$experiment_design
+# trial_data_r$headland
 
-  trial_design <- rbind(
-    experiment_design,
-    headland
-  )
-
-} else {
-
-#/*~~~~~~~~~~~~~~~~~~~~~~*/
-#' ### If rate are NOT provided by the use
-#/*~~~~~~~~~~~~~~~~~~~~~~*/
-  trial_designs <- tibble(
-    rates = list(
-      c(0.5, 0.65, 0.8, 1, 1.15),
-      c(0.5, 0.65, 0.8, 1, 1.15, 1.3),
-      c(0.6, 0.75, 0.9, 1, 1.2),
-      c(0.6, 0.75, 0.9, 1, 1.15, 1.3),
-      seq(0.7, 1.2, by = 0.1),
-      seq(0.7, 1.3, by = 0.15)   
+#=== user-specified number of levels ===#
+trial_data_r <- trial_data_eh %>% 
+  mutate(num_levles = _num_levels_here_) %>% 
+  mutate(rates = list(
+    get_rates(
+      min_rate = min_rate, 
+      max_rate = max_rate, 
+      gc_rate = gc_rate, 
+      num_levels = num_levels
     )
-  ) %>% 
-  rowwise() %>% 
-  mutate(
-    rates = list(
-      rates * gc_rate
+  )) %>% 
+  mutate(headland = list(
+    mutate(headland, rate = gc_rate) %>% 
+    dplyr::select(rate)
+  )) %>% 
+  mutate(experiment_design = list(
+    assign_rates(
+      data_sf = exp_plots, 
+      rates_ls = rates,
+      pattern = "fixed-latin-square"
+    ) %>% 
+    dplyr::select(rate)
+  )) %>% 
+  mutate(trial_design = list(
+    rbind(
+      experiment_design,
+      headland
+    ) %>% 
+    setnames(
+      "rate",
+      case_when(
+        form == "seed" ~ "tgts",
+        form %in% c("uan28", "uan32", "urea") ~ "tgtn",
+        #=== needs to change this ===#
+        form == c("potash") ~ "tgtk"
+      )
     )
-  ) %>% 
-  mutate(
-    trial_design = list(
-       assign_rates(
-        data_sf = experiment_plots, 
-        rates_ls = rates
-      )  %>% 
-      dplyr::select(rate) %>% 
-      rbind(., headland)
-    ) 
-  ) %>% 
-  mutate(
-    td_map = list(
-      tm_shape(trial_design) +
-        tm_fill(
-          col = "rate", 
-          palette = "YlGn", 
-          style = "cat"
-        ) + 
-      tm_shape(headland) +
-        tm_borders(
-          lwd = 4
-        ) +
-      tm_shape(ab_line) +
-        tm_lines(
-          col = "red",
-          lwd = 4
-        ) +
-      tm_layout_to_add
-    )
-  )
-
-  #--- show the designs ---#
-  pluck(trial_designs, "td_map")
-
-}
+  ))
 
 ``` 
 
 # Save the trial design
 
-```{r eval = !is.na(rates_ls), echo = !is.na(rates_ls)}
+```{r }
 
-trial_design_ll <- st_transform(trial_design, 4326)
+trial_design_g <- st_transform(trial_data_r$trial_design, 4326)
+ab_line_g <- st_transform(trial_data_r$ab_lines, 4326)
 
 time_user <- paste0(
   Sys.time(), 
@@ -99,10 +65,19 @@ gsub("_", "-", .)
 
 dsn_name <- here("Data", "Growers", ffy, "TrialDesign")
 
+#=== write the trial design as a shape file ===#
 st_write(
-  trial_design_ll, 
+  trial_design_g, 
   dsn = dsn_name,
   layer = paste0("trial-design-", time_user),
+  driver = "ESRI Shapefile"
+)
+
+#=== write the ab-lines as a shape file ===#
+st_write(
+  ab_line_g, 
+  dsn = dsn_name,
+  layer = paste0("ab-lines-", time_user),
   driver = "ESRI Shapefile"
 )
 
