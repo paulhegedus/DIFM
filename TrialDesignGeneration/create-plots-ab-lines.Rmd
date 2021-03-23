@@ -115,7 +115,7 @@ trial_data_e %>%
 rowwise() %>% 
 #=== dissolve the experimental plots as a single polygon ===#
 mutate(experiment_plots_dissolved = list(
-  experiment_plots %>% 
+  experiment_plots$exp_plots %>% 
     st_snap_to_grid(size = 0.0001) %>%
     st_make_valid() %>% 
     summarize(plot_id = min(plot_id)) 
@@ -134,7 +134,7 @@ mutate(tm_exp_head = list(
       alpha = 0.3, 
       title = "Headland"
     ) +
-  tm_shape(experiment_plots) +
+  tm_shape(experiment_plots$exp_plots) +
     tm_fill(
       col = "strip_id", 
       palette = "Spectral", 

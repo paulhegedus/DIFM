@@ -208,7 +208,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #/*----------------------------------*/
   # Calculate the distance between a strip of polygons and the ab_line
 
-  cal_dist_to_ab <- function(data_sf, ab_int_group) {
+  cal_dist_to_ab <- function(data_sf, ab_line) {
 
     centroids <- data_sf %>% 
       st_centroid() %>% 
@@ -223,6 +223,21 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
       as.numeric()
 
     return(correction_dist)
+  }
+
+  get_line_through_centroids <- function(data_sf) {
+
+    centroids <- data_sf %>% 
+      st_centroid() %>% 
+      .[c(1, nrow(.)), ] %>% 
+      st_geometry()
+
+    line <- list(st_linestring(c(centroids[[1]], centroids[[2]]))) %>% 
+      st_as_sfc() %>% 
+      st_set_crs(st_crs(field))
+
+    return(line)
+
   }
  
   # /*=================================================*/
@@ -333,18 +348,25 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   int_group <- filter(plots, group == ab_int_group)
 
   #=== the distance between the ab-line and the line that connect the centroids of the intersecting sf ===#
-  correction_dist <- cal_dist_to_ab(int_group, ab_int_group)
+  correction_dist <- cal_dist_to_ab(int_group, ab_line)
 
   #=== shift the intersecting sf  ===#
   int_group_corrected <- st_shift(int_group, correction_dist * ab_xy_nml_p90)
 
-  if (cal_dist_to_ab(int_group_corrected, ab_int_group) > correction_dist) {
+  # ggplot() +
+  #   geom_sf(data = int_group, fill = "blue", color = NA) +
+  #   geom_sf(data = ab_line, color = "red")   
+  # ggplot() +
+  #   geom_sf(data = int_group_corrected, fill = "blue", color = NA) +
+  #   geom_sf(data = ab_line, color = "red") 
+
+  if (cal_dist_to_ab(int_group_corrected, ab_line) > correction_dist) {
     #--- if moved further away ---#
-    plots_shifted <- st_shift(plots, - (plot_width/2 + correction_dist) * ab_xy_nml_p90) %>% 
+    plots_shifted <- st_shift(plots, - correction_dist * ab_xy_nml_p90) %>% 
       mutate(unique_id := paste0(group, "_", id))
   } else {
     #--- if get close ---#
-    plots_shifted <- st_shift(plots, (plot_width/2 + correction_dist) * ab_xy_nml_p90) %>% 
+    plots_shifted <- st_shift(plots, correction_dist * ab_xy_nml_p90) %>% 
       mutate(unique_id := paste0(group, "_", id))
   }
   
@@ -384,7 +406,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
 
   # ggplot() +
   #   # geom_sf(data = filter(plots_intersecting, group == 47), aes(fill = type)) +
-  #   geom_sf(data = plots_intersecting, aes(fill = type)) +
+  #   geom_sf(data = plots_intersecting, aes(fill = type), color = NA) +
   #   # geom_sf(data = plots_intersecting) +
   #   geom_sf(data = field, fill = NA) +
   #   geom_sf(data = ab_line, col = "red")
@@ -409,8 +431,35 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
 
   # ggplot() +
   #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = exp_plots_all, aes(fill = type)) +
+  #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
   #   geom_sf(data = ab_line, col = "red")
+
+  #/*----------------------------------*/
+  #' ## Get the ab-line
+  #/*----------------------------------*/
+  ab_1_group <- min(exp_plots_all$group) - 1
+  ab_2_group <- max(exp_plots_all$group) + 1
+
+  ab_lines <- 
+  rbind(
+    get_line_through_centroids(
+      filter(
+        polygons_in_headlands, 
+        group == ab_1_group)
+    ) %>% st_as_sf(),
+    get_line_through_centroids(
+      filter(
+        polygons_in_headlands, 
+        group == ab_2_group)
+    ) %>% st_as_sf()
+  ) %>% 
+  mutate(ab_id = seq_len(nrow(.)))
+
+  # ggplot() +
+  #   geom_sf(data = field, fill = NA) +
+  #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
+  #   geom_sf(data = ab_line_1, col = "red") +
+  #   geom_sf(data = ab_line_2, col = "darkgreen")
 
   # /*----------------------------------*/
   #' ## Reassign plot id
@@ -480,7 +529,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #   dplyr::select(geometry) %>% 
   #   rbind(., filter(exp_plots_pid, type == "headland") %>% dplyr::select(geometry))
 
-  return(final_exp_plots)
+  return(list(exp_plots = final_exp_plots, ab_lines = ab_lines))
   # return(list(experiment = final_exp_plots, headland = final_headland))
 
 }
