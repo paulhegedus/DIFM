@@ -591,7 +591,7 @@ make_trial_design <-
   function(
     ffy, 
     json_file,
-    rates = NA, 
+    num_levels, 
     head_dist = NA, 
     use_ab = TRUE, 
     assign_rates = TRUE,

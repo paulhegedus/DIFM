@@ -31,7 +31,7 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[3]
+ffy <- field_year_ls[5]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
@@ -40,10 +40,7 @@ get_td_parameters(ffy, "fp_2021_TD.json")
 make_trial_design(
   ffy, 
   json_file = "fp_2021_TD.json", 
-  rates = list(
-    #=== include the gc_rate ===#
-    c(80, 100, 120, 140, 160, 180)
-  ), 
+  num_levels = 5, 
   head_dist = c(120), 
   use_ab = TRUE,
   assign_rates = FALSE,

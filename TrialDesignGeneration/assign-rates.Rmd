@@ -1,12 +1,5 @@
 # Assign rates
 
-```{r }
-trial_data_r <- trial_data_eh %>% 
-#=== user-specified list of experimental rates ===#
-  mutate(rates = rates) 
- 
-```
- 
 ## Assigning rates
 
 ```{r }

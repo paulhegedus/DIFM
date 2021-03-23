@@ -69,7 +69,7 @@ library(purrr)
 
 ```{r preparations, cache = F}
 #--- local functions ---#
-source(file.path(here("Codes", "Functions"), "functions_for_trial_design.R"))
+source(here("Codes", "Functions", "functions_for_trial_design.R"))
 
 #--- github ---#
 source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
