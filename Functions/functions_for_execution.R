@@ -716,6 +716,12 @@ make_trial_design <-
       locally_run = locally_run
     )
     td_rmd <- c(td_rmd, assign_rates_rmd)
+
+    td_rmd <- gsub(
+      "_num_levels_here_",
+      num_levels,
+      td_rmd
+    )
   }
 
   #/*=================================================*/

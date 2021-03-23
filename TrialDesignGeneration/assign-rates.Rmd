@@ -3,6 +3,7 @@
 ## Assigning rates
 
 ```{r }
+num_levels <- _num_levels_here_
 
 if (!is.na(rates_ls)) {
 #/*~~~~~~~~~~~~~~~~~~~~~~*/
