@@ -9,7 +9,7 @@
 
 #=== user-specified number of levels ===#
 trial_data_r <- trial_data_eh %>% 
-  mutate(num_levles = _num_levels_here_) %>% 
+  mutate(num_levles = _num-levels-here_) %>% 
   mutate(rates = list(
     get_rates(
       min_rate = min_rate, 
