@@ -696,7 +696,7 @@ make_trial_design <-
       locally_run = locally_run
     ) %>% 
     gsub("_side-plots-num-here_", side_plots_num, .) %>% 
-    gsub("_cell-height-here_", cell_height, .)  
+    gsub("_cell-height-here_", conv_unit(cell_height, "ft", "m"), .)  
     
     td_rmd <- c(td_rmd, create_plots_rmd)
 

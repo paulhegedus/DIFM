@@ -20,7 +20,7 @@ function(
   # /*----------------------------------*/
   #' ## make polygons
   # /*----------------------------------*/
-  make_polygon <- function(strt_point_new, multiplier, dir_p, dir_v) {
+  make_polygon <- function(strt_point_new, multiplier, dir_p, dir_v, cell_height) {
 
     point_1 <- strt_point_new + cell_height * dir_v * ab_xy_nml * (multiplier - 1)
     point_2 <- point_1 - plot_width * dir_p * ab_xy_nml_p90
@@ -55,7 +55,14 @@ function(
   #/*----------------------------------*/
   #' ## Create plots
   #/*----------------------------------*/
-  detect_directions <- function(strt_point, dir_p, dir_v, plot_width, num_subplots) {
+  detect_directions <- 
+  function(
+    strt_point, 
+    dir_p, dir_v, 
+    plot_width, 
+    num_subplots,
+    cell_height
+  ) {
 
     is_intersecting <- rep(TRUE, 100)
     
@@ -73,7 +80,8 @@ function(
             strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
             x,
             dir_p,
-            dir_v
+            dir_v,
+            cell_height
           )
         }
       ) %>%
@@ -95,7 +103,15 @@ function(
     }
   }
 
-  create_plots <- function(strt_point, dir_p, dir_v, plot_width, num_subplots){
+  create_plots <- 
+  function(
+    strt_point,
+    dir_p,
+    dir_v,
+    plot_width,
+    num_subplots,
+    cell_height
+  ){
 
     is_intersecting <- rep(TRUE, 1000)
     
@@ -113,7 +129,8 @@ function(
             strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
             x,
             dir_p,
-            dir_v
+            dir_v,
+            cell_height
           )
         }
       ) %>%
@@ -295,7 +312,8 @@ function(
         dir_p = .x,
         dir_v = .y,
         plot_width = plot_width,
-        num_subplots = 100
+        num_subplots = 100,
+        cell_height = cell_height
       )
     )
   ] %>% 
@@ -314,7 +332,8 @@ function(
     dir_p = dir_p,
     dir_v = dir_v,
     plot_width = plot_width,
-    num_subplots = num_subplots_in_a_strip
+    num_subplots = num_subplots_in_a_strip,
+    cell_height = cell_height
   ) 
 
   # ggplot() +
