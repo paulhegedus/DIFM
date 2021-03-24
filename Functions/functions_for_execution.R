@@ -722,9 +722,18 @@ make_trial_design <- function(
 
     td_rmd <- gsub(
       "_num-levels-here_",
-      num_levels,
+      paste0("c(", paste0(num_levels, collapse = ", "), ")"),
       td_rmd
     )
+
+    if (length(num_levels) == 1 & nrow(trial_data) == 2) {
+      print("You provided only 1 num_level value even though there are two inputs.")
+      print("The num_level value you provided will be used for both the inputs.")
+    } else if ((length(num_levels) == 2 & nrow(trial_data) == 1)) {
+      print("You provided 2 num_level values even though there is only one input.")
+      print("Only the first value will be used.")
+    }
+
   }
 
   #/*=================================================*/

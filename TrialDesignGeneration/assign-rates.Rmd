@@ -3,20 +3,20 @@
 ## Assigning rates
 
 ```{r }
+num_levels <- _num-levels-here_
 
-num_level_data <- trial_data %>% 
+if (nrow(trial_data) > 1) {
+  num_level_data <- trial_data %>% 
   dplyr::select(form) %>% 
-  mutate(num_levels = num_levels) %>% 
-  mutate(push = c(FALSE, TRUE))
-
-# trial_data_r$experiment_design
-# trial_data_r$headland
-
-# assign_rates(
-#       data_sf = trial_data_r$exp_plots[[1]], 
-#       rates_ls = trial_data_r$rates[[1]],
-#       pattern = "fixed-latin-square"
-#     )
+  mutate(push = c(FALSE, TRUE)) %>% 
+  mutate(num_levels = num_levels)  
+} else {
+  num_level_data <- trial_data %>% 
+  dplyr::select(form) %>% 
+  mutate(push = FALSE) %>% 
+  #=== use only the first in case two are provided ===#
+  mutate(num_levels = num_levels[1])  
+}
 
 #=== user-specified number of levels ===#
 
