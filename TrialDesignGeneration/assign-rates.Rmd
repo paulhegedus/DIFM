@@ -47,7 +47,8 @@ trial_data_r <- trial_data_eh %>%
       experiment_design,
       headland
     ) %>% 
-    mutate(rate_tm = rate) %>% 
+    #=== only for mapping ===#
+    mutate(rate_tm = factor(rate)) %>% 
     setnames(
       "rate",
       case_when(
@@ -74,8 +75,10 @@ mutate(map_design = list(
   tm_shape(trial_design) +
     tm_fill(
       col = "rate_tm",
-      title = "form"
-    )
+      title = form,
+      palette = "Greens"
+    ) +
+  tm_layout_to_add
 )) %>% 
 pluck("map_design")
 
