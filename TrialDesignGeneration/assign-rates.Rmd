@@ -4,13 +4,25 @@
 
 ```{r }
 
+num_level_data <- trial_data %>% 
+  dplyr::select(form) %>% 
+  mutate(num_levels = num_levels) %>% 
+  mutate(push = c(FALSE, TRUE))
+
 # trial_data_r$experiment_design
 # trial_data_r$headland
 
+# assign_rates(
+#       data_sf = trial_data_r$exp_plots[[1]], 
+#       rates_ls = trial_data_r$rates[[1]],
+#       pattern = "fixed-latin-square"
+#     )
+
 #=== user-specified number of levels ===#
+
 trial_data_r <- trial_data_eh %>% 
-  mutate(num_levles = _num-levels-here_) %>% 
-  mutate(rates = list(
+  left_join(., num_level_data, by = "form") %>% 
+  mutate(rates_ls = list(
     get_rates(
       min_rate = min_rate, 
       max_rate = max_rate, 
@@ -18,16 +30,16 @@ trial_data_r <- trial_data_eh %>%
       num_levels = num_levels
     )
   )) %>% 
-  mutate(headland = list(
-    mutate(headland, rate = gc_rate) %>% 
+  mutate(experiment_design = list(
+    assign_rates_latin(
+      data_sf = exp_plots,
+      rates_ls = rates_ls,
+      push = push,
+    ) %>% 
     dplyr::select(rate)
   )) %>% 
-  mutate(experiment_design = list(
-    assign_rates(
-      data_sf = exp_plots, 
-      rates_ls = rates,
-      pattern = "fixed-latin-square"
-    ) %>% 
+  mutate(headland = list(
+    mutate(headland, rate = gc_rate) %>% 
     dplyr::select(rate)
   )) %>% 
   mutate(trial_design = list(
@@ -35,6 +47,7 @@ trial_data_r <- trial_data_eh %>%
       experiment_design,
       headland
     ) %>% 
+    mutate(rate_tm = rate) %>% 
     setnames(
       "rate",
       case_when(
@@ -45,9 +58,28 @@ trial_data_r <- trial_data_eh %>%
       )
     ) %>% 
     st_transform(4326) 
-  ))
+  )) %>% 
+  dplyr::select(
+    - exp_plots, - experiment_plots_dissolved,
+    - headland, - tm_exp_head, - experiment_design
+  )
 
 ``` 
+
+# Trial Design Maps
+
+```{r }
+trial_data_r %>% 
+mutate(map_design = list(
+  tm_shape(trial_design) +
+    tm_fill(
+      col = "rate_tm",
+      title = "form"
+    )
+)) %>% 
+pluck("map_design")
+
+```
 
 # Save the trial design
 
@@ -63,112 +95,34 @@ gsub("_", "-", .)
 dsn_name <- here("Data", "Growers", ffy, "TrialDesign")
 
 #=== write the trial design as a shape file ===#
-st_write(
-  trial_data_r$trial_design[[1]], 
-  dsn = dsn_name,
-  layer = paste0("trial-design-", time_user),
-  driver = "ESRI Shapefile"
-)
+trial_data_r %>% 
+summarise(list(
+  st_write(
+    trial_data_r$trial_design[[1]] %>% dplyr::select(- rate_tm), 
+    dsn = dsn_name,
+    layer = paste0(
+      "trial-design-", form, "-", 
+      ifelse(is.na(line_edge_id), "", line_edge_id)
+    ),
+    driver = "ESRI Shapefile",
+    append = FALSE
+  )
+)) 
+
 
 #=== write the ab-lines as a shape file ===#
-st_write(
-  trial_data_r$ab_lines[[1]], 
-  dsn = dsn_name,
-  layer = paste0("ab-lines-", time_user),
-  driver = "ESRI Shapefile"
-)
-
-writeLines(
-  paste0(
-    "The trial design was named, trial-design-",
-    time_user,
-    ".shp"
+trial_data_r %>% 
+summarise(list(
+  st_write(
+    trial_data_r$ab_lines[[1]], 
+    dsn = dsn_name,
+    layer = paste0("ab-lines-", form, 
+      ifelse(is.na(line_edge_id), "", line_edge_id)
+    ),
+    driver = "ESRI Shapefile",
+    append = FALSE
   )
-)
-```
-
-```{r }
-trial_plot <- trial_data_r$trial_design[[1]] %>% 
-  setnames(names(.)[1], "rate")
-ab_line_plot <- trial_data_r$ab_lines[[1]] 
-
-ggplot() +
-  geom_sf(
-    data = trial_plot, 
-    aes(fill = factor(rate)),
-    color = NA
-  ) +
-  scale_fill_brewer(palette = "Greens") + 
-  geom_sf(
-    data = ab_line_plot, 
-    color = "red"
-  ) 
- 
-```
-
-# Orthogonality check
-
-Checking if the assigned rates are orthogonal to the soil and field characteristics. 
-
-```{r results = "hide", eval = F}
-
-topo <- file.path(here("Data", "Growers", ffy), "Intermediate/topography.rds") %>% 
-  readRDS()
-
-ssurgo <- file.path(here("Data", "Growers", ffy), "Intermediate/ssurgo.rds") %>% 
-  readRDS()
-
-topo_values <- topo %>%
-  stars_to_stack() %>%
-  exact_extract(., st_transform(experiment_design, st_crs(.))) %>%
-  rbindlist(idcol = "rowid") %>%
-  .[,
-    lapply(.SD, weighted.mean, w = coverage_fraction),
-    by = rowid,
-    .SDcols = paste0("layer.", 1:length(topo))
-  ] %>%
-  .[, rowid := NULL] %>%
-  setnames(names(.), names(topo))
-
-experiment_design <- cbind(experiment_design, topo_values)
-
-ssurgo_values <- dplyr::select(experiment_design, cell_id) %>%
-  st_intersection(., ssurgo) %>%
-  mutate(area = as.numeric(st_area(.))) %>%
-  data.table() %>%
-  .[, area_pct := area / sum(area), by = cell_id] %>%
-  .[,
-    lapply(.SD, weighted.mean, w = area_pct),
-    by = cell_id,
-    .SDcols = c("clay", "sand", "silt", "water_storage")
-  ]
-
-experiment_design <- left_join(experiment_design, ssurgo_values, by = "cell_id")
-  
-```
-
-```{r eval = F}
-#--- plot level ---#
-experiment_design %>% 
-  dplyr::select(where(is.numeric)) %>% 
-  st_drop_geometry() %>% 
-  data.table() %>% 
-  .[, lapply(.SD, mean), by = .(plot_id, strip_id)] %>% 
-  .[,`:=`(
-    plot_id = NULL,
-    strip_id = NULL
-  )] %>% 
-  cor() %>% 
-  .[, "rate"] 
-
-#--- cell-level ---#
-experiment_design %>% 
-  dplyr::select(where(is.numeric)) %>% 
-  st_drop_geometry() %>% 
-  data.table() %>% 
-  .[, cell_id := NULL] %>% 
-  cor() %>% 
-  .[, "rate"] 
+)) 
 
 ```
 

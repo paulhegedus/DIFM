@@ -60,7 +60,7 @@ trial_data_rh <- trial_data %>%
   # if only one number is supplied, it is applied for both inputs in a two-input case
   mutate(headland_length = conv_unit(head_dist, "ft", "m")) %>% 
   #=== cell height ===#
-  mutate(cell_height = conv_unit(10, "ft", "m"))
+  mutate(cell_height = conv_unit(cell_height, "ft", "m"))
 
 ```
 
@@ -88,7 +88,7 @@ mutate(experiment_plots = list(
     field = field_sf, 
     #--- by default uses the first one ---#
     # ab_line = trial_data_first$ab_line, 
-    ab_line = ab_line[1, ], 
+    ab_line = ab_line[6, ], 
     plot_width = input_plot_width, 
     cell_height = cell_height,
     headland_length = headland_length,

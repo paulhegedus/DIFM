@@ -587,8 +587,7 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 #/*=================================================*/
 # Create plots and ab-lines
 
-make_trial_design <- 
-  function(
+make_trial_design <- function(
     ffy, 
     json_file,
     num_levels, 
@@ -696,7 +695,7 @@ make_trial_design <-
       locally_run = locally_run
     ) %>% 
     gsub("_side-plots-num-here_", side_plots_num, .) %>% 
-    gsub("_cell-height-here_", conv_unit(cell_height, "ft", "m"), .)  
+    gsub("_cell-height-here_", cell_height, .)  
     
     td_rmd <- c(td_rmd, create_plots_rmd)
 

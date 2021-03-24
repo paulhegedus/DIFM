@@ -614,14 +614,27 @@ function(
 # data_sf <- st_as_sf(data)
 # rates_ls <- N_levels 
 
-assign_rates <- function(data_sf, rates_ls, pattern = "fixed-latin-square", merge = TRUE) {
+assign_rates <- 
+function(
+  data_sf,
+  rates_ls,
+  pattern = "fixed-latin-square",
+  push,
+  merge = TRUE
+) {
 
-  gen_sequence <- function(length) {
-    if (length %% 2 == 0) {
+  gen_sequence <- function(length, push) {
+
+    if (length %% 2 == 0) { # even 
       seq_r <- c(seq(1, length, by = 2), seq(length, 2, by = -2))
-    } else {
+    } else { # odd
       seq_r <- c(seq(1, length, by = 2), seq(length - 1, 2, by = -2))
     }
+
+    if (push) {
+      seq_r <- c(seq_r[-1], seq_r[1])
+    }
+
     return(seq_r)
   }
 
@@ -688,7 +701,7 @@ assign_rates <- function(data_sf, rates_ls, pattern = "fixed-latin-square", merg
   rates_len <- nrow(rates_data)
 
   #--- create a sequence of rate ranks ---#
-  rate_ranks_seq <- gen_sequence(rates_len)
+  rate_ranks_seq <- gen_sequence(rates_len, push = push)
 
   data_dt <- data.table(data_sf)
 
@@ -752,6 +765,127 @@ assign_rates <- function(data_sf, rates_ls, pattern = "fixed-latin-square", merg
     design_data <- left_join(design_data, rates_data, by = "rate_rank")
     return(design_data)
   }
+
+}
+
+#/*=================================================*/
+#' # Assign rates (latin and jump-rate-conscious)
+#/*=================================================*/
+assign_rates_latin <- function(
+  data_sf,
+  rates_ls,
+  push,
+  merge = TRUE
+) {
+
+  gen_sequence <- function(length, push = FALSE) {
+
+    if (length %% 2 == 0) { # even 
+      seq_r <- c(seq(1, length, by = 2), seq(length, 2, by = -2))
+    } else { # odd
+      seq_r <- c(seq(1, length, by = 2), seq(length - 1, 2, by = -2))
+    }
+
+    if (push) {
+      seq_r <- c(seq_r[-1], seq_r[1])
+    }
+
+    return(seq_r)
+  }
+
+  get_seq_start <- function(rate_rank, basic_seq, full_seq) {
+
+    max_rank <- length(basic_seq)
+    start_position <- which(basic_seq == rate_rank)
+    
+    f_seq <- start_position:max_rank
+    s_seq <- 1:start_position
+
+    return(c(f_seq, s_seq) %>% unique())
+    
+  }
+
+  get_starting_rank_across_strips <- function(num_levels) {
+
+    temp_seq <- 2:(num_level - 1)
+    return_seq <- rep(1, num_levels)
+
+    i <- 1
+    while (i <= num_levels - 2) {
+
+      if (i %% 2 == 1) { # odd
+        temp_value <- max(temp_seq)
+      } else {
+        temp_value <- min(temp_seq)
+      }
+
+      return_seq[i + 1] <- temp_value
+
+      temp_seq <- temp_seq[-which(temp_seq == temp_value)]
+
+      i <- i + 1
+
+    }
+
+    return_seq[length(return_seq)] <- num_levels
+
+    return(return_seq)
+  }
+
+  num_levels <- length(rates_ls)
+
+  rates_data_base <- 
+  data.table(
+    rate = rates_ls,
+    rate_rank = 1:num_levels
+  )
+
+  #=== get the rate sequence within a strip ===#
+  basic_seq <- gen_sequence(num_levels)
+  if (push) {
+    basic_seq <- c(basic_seq[2:num_levels], basic_seq[1])
+  }
+  max_plot_id <- max(data_sf$plot_id)
+
+  #=== get the starting ranks across strips for the field ===#
+  max_strip_id <- max(data_sf$strip_id)
+  full_start_seq <- rep(
+    get_starting_rank_across_strips(num_levels),
+    ceiling(max_strip_id / num_levels)
+  ) %>% 
+  .[1:max_strip_id]
+  
+  rates_data <- 
+  data.table(
+    strip_id = 1:max_strip_id,
+    start_rank = full_start_seq
+  ) %>% 
+  rowwise() %>% 
+  mutate(rate_rank = list(
+    rep(
+      get_seq_start(start_rank, basic_seq),
+      ceiling(max_plot_id / num_levels)
+    )
+  )) %>% 
+  unnest(rate_rank) %>% 
+  data.table() %>% 
+  .[, dummy := 1] %>% 
+  .[, plot_id := cumsum(dummy), by = strip_id] %>% 
+  rates_data_base[., on = "rate_rank"] %>% 
+  .[, .(strip_id, plot_id, rate) ]  
+
+  return_data <- 
+  left_join(
+    data_sf, 
+    rates_data, 
+    by = c("strip_id", "plot_id")
+  )
+
+  # ggplot() +
+  #   geom_sf(data = return_data, aes(fill = factor(rate)), color = NA) +
+  #   scale_fill_viridis_d()
+
+  return(return_data)
 
 }
 
