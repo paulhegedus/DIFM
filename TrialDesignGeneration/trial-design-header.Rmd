@@ -68,8 +68,13 @@ library(purrr)
 ```
 
 ```{r preparations, cache = F}
-#--- local functions ---#
-source(here("Codes", "Functions", "functions_for_trial_design.R"))
+source(
+  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
+  local = TRUE
+)
+
+#--- github ---#
+source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
 
 #--- github ---#
 source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
