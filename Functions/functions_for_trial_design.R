@@ -152,7 +152,7 @@ make_trial_grids_second <- function(field, ab_line, plot_width, dir, starting_po
     return(data[, .(id, plot_id, group, group_in_group, geometry, type)])
   }
 
-  get_line_through_centroids <- function(data_sf) {
+  get_line_through_centroids <- function(data_sf, field) {
 
     centroids <- data_sf %>% 
       st_centroid() %>% 
@@ -279,12 +279,14 @@ make_trial_grids_second <- function(field, ab_line, plot_width, dir, starting_po
     get_line_through_centroids(
       filter(
         polygons_in_headlands, 
-        group == ab_1_group)
+        group == ab_1_group),
+      field
     ) %>% st_as_sf(),
     get_line_through_centroids(
       filter(
         polygons_in_headlands, 
-        group == ab_2_group)
+        group == ab_2_group),
+      field
     ) %>% st_as_sf()
   ) %>% 
   mutate(ab_id = seq_len(nrow(.)))
@@ -596,7 +598,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
     return(correction_dist)
   }
 
-  get_line_through_centroids <- function(data_sf) {
+  get_line_through_centroids <- function(data_sf, field) {
 
     centroids <- data_sf %>% 
       st_centroid() %>% 
@@ -765,6 +767,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Cut off the plots on the sides that are perpendicular to the machine direction
   #/*~~~~~~~~~~~~~~~~~~~~~~*/ 
+
   headland_buffer <- st_buffer(field, - side_plots_num * plot_width) %>% 
     st_difference(field, .)
 
@@ -782,6 +785,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
 
   # ggplot() +
   #   geom_sf(data = field, fill = NA) +
+  #   geom_sf(data = headland_buffer, fill = "green", alpha = 0.4) +
   #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
   #   geom_sf(data = ab_line, col = "red")
 
@@ -794,13 +798,15 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
       filter(
         exp_plots_all, 
         group == min(group)
-      )
+      ),
+      field
     ) %>% st_as_sf(),
     get_line_through_centroids(
       filter(
         exp_plots_all, 
         group == max(group)
-      )
+      ),
+      field
     ) %>% st_as_sf()
   ) %>% 
   mutate(ab_id = seq_len(nrow(.)))
@@ -808,8 +814,8 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   # ggplot() +
   #   geom_sf(data = field, fill = NA) +
   #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
-  #   geom_sf(data = ab_line_1, col = "red") +
-  #   geom_sf(data = ab_line_2, col = "darkgreen")
+  #   geom_sf(data = ab_lines[1, ], col = "red") +
+  #   geom_sf(data = ab_lines[2, ], col = "darkgreen")
 
   #/*----------------------------------*/
   #' ## starting point for the second input
@@ -1174,7 +1180,7 @@ function(
     dplyr::select(form, sq_rate, min_rate, max_rate, input_plot_width) %>% 
     rename(gc_rate = sq_rate) %>% 
     #=== the input with shorter plot length comes first ===#
-    arrange(input_plot_width)
+    arrange(desc(input_plot_width))
 
   return(input_data)
 

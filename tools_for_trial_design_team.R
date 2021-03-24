@@ -31,7 +31,7 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[5]
+ffy <- field_year_ls[2]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
@@ -44,7 +44,7 @@ make_trial_design(
   head_dist = c(120), 
   side_plots_num = 1,
   use_ab = TRUE,
-  assign_rates = TRUE,
+  assign_rates = FALSE,
   rerun = TRUE,
   locally_run = TRUE
 )
