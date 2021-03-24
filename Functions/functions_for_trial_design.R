@@ -267,15 +267,14 @@ function(
   f_bbox <- st_bbox(field)
 
   #--- maximum distance ---#
-  max_dist <- sqrt(
+  max_dist <- 
+  sqrt(
     (f_bbox["xmax"] - f_bbox["xmin"])^2 +
     (f_bbox["ymax"] - f_bbox["ymin"])^2
   ) + 50
 
-  max_dist_cover <- ceiling(max_dist / 10) * 10
-
   #--- number of subplots to create ---#
-  num_subplots_in_a_strip <- ceiling(max_dist_cover / cell_height)
+  num_subplots_in_a_strip <- ceiling(max_dist / cell_height)
 
   # /*----------------------------------*/
   #' ## Detect which direction to go

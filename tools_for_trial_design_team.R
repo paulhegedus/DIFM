@@ -45,6 +45,7 @@ make_trial_design(
   side_plots_num = 1,
   use_ab = TRUE,
   assign_rates = FALSE,
+  cell_height = 30,
   rerun = TRUE,
   locally_run = TRUE
 )

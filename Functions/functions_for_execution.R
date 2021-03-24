@@ -596,6 +596,7 @@ make_trial_design <-
     side_plots_num = 1,
     use_ab = TRUE, 
     assign_rates = TRUE,
+    cell_height = 10,
     rerun = FALSE, 
     locally_run = FALSE
   ) 
@@ -694,11 +695,8 @@ make_trial_design <-
       "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
       locally_run = locally_run
     ) %>% 
-    gsub(
-      "_side-plots-num-here_", 
-      side_plots_num,
-      .
-    )
+    gsub("_side-plots-num-here_", side_plots_num, .) %>% 
+    gsub("_cell-height-here_", cell_height, .)  
     
     td_rmd <- c(td_rmd, create_plots_rmd)
 

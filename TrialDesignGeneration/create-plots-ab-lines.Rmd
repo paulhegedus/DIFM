@@ -3,7 +3,8 @@
 ## Set parameters
 
 ```{r }
-side_plots_num <-_side-plots-num-here_ 
+side_plots_num <- _side-plots-num-here_ 
+cell_height <- _cell-height-here_ 
 ```
 ## Read boundary and ab-line
 
@@ -18,7 +19,8 @@ field_sf <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp") %>%
   st_read() %>% 
   st_set_4326() %>% 
   st_make_valid() %>%
-  st_transform_utm()
+  st_transform_utm() %>% 
+  st_combine()
 
 #--- ab-line ---#
 if (use_ab) {
@@ -79,14 +81,14 @@ length()
 #=== get the first one of the two if more than one ===#
 trial_data_first <- 
 trial_data_rh[1, ] %>% 
-mutate(line_edge_id = NA)
+mutate(line_edge_id = NA) %>% 
 rowwise() %>% 
 mutate(experiment_plots = list(
   make_trial_grids(
     field = field_sf, 
     #--- by default uses the first one ---#
     # ab_line = trial_data_first$ab_line, 
-    ab_line = ab_line[6, ], 
+    ab_line = ab_line[1, ], 
     plot_width = input_plot_width, 
     cell_height = cell_height,
     headland_length = headland_length,
