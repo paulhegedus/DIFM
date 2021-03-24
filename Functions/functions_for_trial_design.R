@@ -599,12 +599,18 @@ function(
   #   dplyr::select(geometry) %>% 
   #   rbind(., filter(exp_plots_pid, type == "headland") %>% dplyr::select(geometry))
 
-  return(list(
-    exp_plots = final_exp_plots, 
-    ab_lines = ab_lines,
-    line_edges = line_edges
-  ))
-  # return(list(experiment = final_exp_plots, headland = final_headland))
+  if (second_input == FALSE) {
+    return(list(
+      exp_plots = final_exp_plots, 
+      ab_lines = ab_lines,
+      line_edges = line_edges
+    ))
+  } else {
+    return(list(
+      exp_plots = final_exp_plots, 
+      ab_lines = ab_lines
+    ))
+  }
 
 }
 
