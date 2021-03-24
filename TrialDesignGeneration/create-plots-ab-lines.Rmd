@@ -77,34 +77,55 @@ unique(trial_data_rh$input_plot_width) %>%
 length()
 
 #=== get the first one of the two if more than one ===#
-trial_data_temp <- trial_data_rh[1, ]
-
-experiment_plots_f <-
-make_trial_grids(
-  field = field_sf, 
-  #--- by default uses the first one ---#
-  # ab_line = trial_data_temp$ab_line, 
-  ab_line = ab_line, 
-  plot_width = trial_data_temp$input_plot_width, 
-  cell_height = trial_data_temp$cell_height,
-  headland_length = trial_data_temp$headland_length,
-  side_plots_num = side_plots_num
-)  
+trial_data_first <- 
+trial_data_rh[1, ] %>% 
+mutate(line_edge_id = NA)
+rowwise() %>% 
+mutate(experiment_plots = list(
+  make_trial_grids(
+    field = field_sf, 
+    #--- by default uses the first one ---#
+    # ab_line = trial_data_first$ab_line, 
+    ab_line = ab_line[1, ], 
+    plot_width = input_plot_width, 
+    cell_height = cell_height,
+    headland_length = headland_length,
+    side_plots_num = side_plots_num
+  )
+))
 
 if (num_unique_plot_width == 1) {
 
-  trial_data_e <- trial_data_rh %>% 
-    mutate(experiment_plots = list(
-      experiment_plots_f
-    ))
+  trial_data_e <- trial_data_first 
 
 } else {
+
+  trial_data_second <- 
+  trial_data_rh[2, ] %>% 
+  slice(rep(1, 2)) %>% 
+  mutate(line_edge_id = 1:2) %>% 
+  rowwise() %>% 
+  mutate(experiment_plots = list(
+    make_trial_grids(
+      field = field_sf, 
+      #--- by default uses the first one ---#
+      ab_line = trial_data_first$experiment_plots[[1]]$line_edges[line_edge_id, ], 
+      plot_width = input_plot_width, 
+      cell_height = cell_height,
+      headland_length = headland_length,
+      side_plots_num = side_plots_num,
+      second_input = TRUE
+    )   
+  )) 
+
+  trial_data_e <- rbind(trial_data_first, trial_data_second)
 
 }
 
 ``` 
 
 ```{r }
+
 trial_data_eh <-
 trial_data_e %>% 
 rowwise() %>% 
@@ -115,7 +136,7 @@ mutate(ab_lines = list(
 mutate(exp_plots = list(
   experiment_plots$exp_plots
 )) %>% 
-dplyr::select(-experiment_plots) %>% 
+dplyr::select(- experiment_plots) %>% 
 #=== dissolve the experimental plots as a single polygon ===#
 mutate(experiment_plots_dissolved = list(
   exp_plots %>% 
@@ -126,6 +147,8 @@ mutate(experiment_plots_dissolved = list(
 #=== Create headland ===#
 mutate(headland = list(
   st_difference(field_sf, experiment_plots_dissolved) %>%
+    st_as_sf() %>% 
+    rename(geometry = x) %>% 
     dplyr::select(geometry)
 )) %>% 
 mutate(tm_exp_head = list(
