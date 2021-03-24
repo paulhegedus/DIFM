@@ -86,7 +86,7 @@ mutate(experiment_plots = list(
     field = field_sf, 
     #--- by default uses the first one ---#
     # ab_line = trial_data_first$ab_line, 
-    ab_line = ab_line[1, ], 
+    ab_line = ab_line[6, ], 
     plot_width = input_plot_width, 
     cell_height = cell_height,
     headland_length = headland_length,

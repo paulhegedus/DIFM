@@ -41,7 +41,7 @@ make_trial_design(
   ffy, 
   json_file = "fp_2021_TD.json", 
   num_levels = 5, 
-  head_dist = c(120), 
+  head_dist = c(120, 120), 
   side_plots_num = 1,
   use_ab = TRUE,
   assign_rates = FALSE,
