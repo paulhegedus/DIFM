@@ -14,6 +14,7 @@ aa_input <- here("Data/Growers", ffy, "Raw") %>%
   .[str_detect(., "shp")] %>%
   .[!str_detect(., "xml")] %>%
   .[str_detect(., "as-applied-file-name-here")] %>% 
+  # .[str_detect(., "as-applied-s")] %>% 
   #--- read the data ---#
   st_read() %>% 
   st_set_4326() %>% 

@@ -43,7 +43,8 @@ trial_data_r <- trial_data_eh %>%
         #=== needs to change this ===#
         form == c("potash") ~ "tgtk"
       )
-    )
+    ) %>% 
+    st_transform(4326) 
   ))
 
 ``` 
@@ -51,10 +52,6 @@ trial_data_r <- trial_data_eh %>%
 # Save the trial design
 
 ```{r }
-
-trial_design_g <- st_transform(trial_data_r$trial_design, 4326)
-ab_line_g <- st_transform(trial_data_r$ab_lines, 4326)
-
 time_user <- paste0(
   Sys.time(), 
   "-",
@@ -67,7 +64,7 @@ dsn_name <- here("Data", "Growers", ffy, "TrialDesign")
 
 #=== write the trial design as a shape file ===#
 st_write(
-  trial_design_g, 
+  trial_data_r$trial_design[[1]], 
   dsn = dsn_name,
   layer = paste0("trial-design-", time_user),
   driver = "ESRI Shapefile"
@@ -75,7 +72,7 @@ st_write(
 
 #=== write the ab-lines as a shape file ===#
 st_write(
-  ab_line_g, 
+  trial_data_r$ab_lines[[1]], 
   dsn = dsn_name,
   layer = paste0("ab-lines-", time_user),
   driver = "ESRI Shapefile"
@@ -88,6 +85,25 @@ writeLines(
     ".shp"
   )
 )
+```
+
+```{r }
+trial_plot <- trial_data_r$trial_design[[1]] %>% 
+  setnames(names(.)[1], "rate")
+ab_line_plot <- trial_data_r$ab_lines[[1]] 
+
+ggplot() +
+  geom_sf(
+    data = trial_plot, 
+    aes(fill = factor(rate)),
+    color = NA
+  ) +
+  scale_fill_brewer(palette = "Greens") + 
+  geom_sf(
+    data = ab_line_plot, 
+    color = "red"
+  ) 
+ 
 ```
 
 # Orthogonality check

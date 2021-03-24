@@ -3,7 +3,7 @@
 # /*=================================================*/
 # This codes relies on ab_line
 
-make_trial_grids_two <- function(field, ab_line, plot_width, cell_height, headland_length) {
+make_trial_grids_second <- function(field, ab_line, plot_width, dir, starting_point, cell_height, headland_length) {
 
   # /*=================================================*/
   #' # Define functions
@@ -42,50 +42,7 @@ make_trial_grids_two <- function(field, ab_line, plot_width, cell_height, headla
     ),
     nrow = 2
   )
-
-  #/*----------------------------------*/
-  #' ## Create plots
-  #/*----------------------------------*/
-  detect_directions <- function(strt_point, dir_p, dir_v, plot_width, num_subplots) {
-
-    is_intersecting <- rep(TRUE, 100)
-    
-    exp_sf_ls <- list()
-
-    # group <- 1
-    for (group in 1:100) {
-
-      # print(group)
-
-      exp_sf_ls[[paste(group)]] <- lapply(
-        1:num_subplots,
-        function(x) {
-          make_polygon(
-            strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
-            x,
-            dir_p,
-            dir_v
-          )
-        }
-      ) %>%
-      st_as_sfc() %>%
-      st_set_crs(st_crs(field)) %>%
-      st_as_sf() %>%
-      mutate(
-        group = group,
-        id = 1:nrow(.)
-      )
-
-      is_intersecting[group] <- st_intersects(exp_sf_ls[[paste(group)]], field, sparse = F)[, 1] %>% any()
-
-      if (is_intersecting[group]) {
-        return(TRUE)
-      } else if (all(!is_intersecting[1:50])) {
-        return(FALSE)
-      }
-    }
-  }
-
+ 
   create_plots <- function(strt_point, dir_p, dir_v, plot_width, num_subplots){
 
     is_intersecting <- rep(TRUE, 1000)
@@ -131,14 +88,6 @@ make_trial_grids_two <- function(field, ab_line, plot_width, cell_height, headla
         }
       }
     } 
-  }
-
-  # /*----------------------------------*/
-  #' ## vector of points of sf of points
-  # /*----------------------------------*/
-  vect_to_sf_point <- function(vec) {
-    st_as_sfc(list(st_point(vec))) %>%
-      st_set_crs(st_crs(field))
   }
 
   # /*----------------------------------*/
@@ -203,28 +152,6 @@ make_trial_grids_two <- function(field, ab_line, plot_width, cell_height, headla
     return(data[, .(id, plot_id, group, group_in_group, geometry, type)])
   }
 
-  #/*----------------------------------*/
-  #' ## Calculate the distance 
-  #/*----------------------------------*/
-  # Calculate the distance between a strip of polygons and the ab_line
-
-  cal_dist_to_ab <- function(data_sf, ab_line) {
-
-    centroids <- data_sf %>% 
-      st_centroid() %>% 
-      .[c(1, nrow(.)), ] %>% 
-      st_geometry()
-
-    line <- list(st_linestring(c(centroids[[1]], centroids[[2]]))) %>% 
-      st_as_sfc() %>% 
-      st_set_crs(st_crs(field))
-
-    correction_dist <- st_distance(line, ab_line) %>% 
-      as.numeric()
-
-    return(correction_dist)
-  }
-
   get_line_through_centroids <- function(data_sf) {
 
     centroids <- data_sf %>% 
@@ -268,34 +195,6 @@ make_trial_grids_two <- function(field, ab_line, plot_width, cell_height, headla
   #--- number of subplots to create ---#
   num_subplots_in_a_strip <- ceiling(max_dist_cover / cell_height)
 
-  # /*----------------------------------*/
-  #' ## Detect which direction to go
-  # /*----------------------------------*/
-  starting_point <- c(f_bbox["xmin"] - 100, f_bbox["ymin"] - 100) 
-
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### which direction (perpendicular to the ab-line) 
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  print("Detecting the direction to go in")
-
-  plots_ls <- expand.grid(dir_p = c(-1, 1), dir_v = c(-1, 1)) %>% 
-  data.table() %>% 
-  .[,
-    keep := map2(dir_p, dir_v, ~
-      detect_directions(
-        strt_point = starting_point,
-        dir_p = .x,
-        dir_v = .y,
-        plot_width = plot_width,
-        num_subplots = 100
-      )
-    )
-  ] %>% 
-  .[keep == TRUE, ]  
-
-  dir_p <- plots_ls[, dir_p]
-  dir_v <- plots_ls[, dir_v]
-
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Create the full plots
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
@@ -303,78 +202,11 @@ make_trial_grids_two <- function(field, ab_line, plot_width, cell_height, headla
 
   plots <- create_plots(
     strt_point = starting_point,
-    dir_p = dir_p,
-    dir_v = dir_v,
+    dir_p = dir$dir_p,
+    dir_v = dir$dir_v,
     plot_width = plot_width,
     num_subplots = num_subplots_in_a_strip
   ) 
-
-  # ggplot() +
-  #   geom_sf(data = plots, fill = "blue", color = NA) +
-  #   geom_sf(data = vect_to_sf_point(starting_point), col = "green", size = 2) +
-  #   geom_sf(data = field, col = "black", fill = NA) +
-  #   geom_sf(data = ab_line, col = "red", size = 2)
-
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### Cut off unnecessary parts
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  
-  # min_group <- min(plots$group)
-  # max_group <- max(plots$group)
-
-  # keep_to_the_left <- (ab_int_group - min_group) > (max_group- ab_int_group) 
-
-  # if (keep_to_the_left) {
-  #   plots_kept <- filter(plots, group <= ab_int_group) %>% 
-  #     mutate(group = max(group) - group + 1) %>% 
-  #     mutate(unique_id := paste0(group, "_", id))
-  # } else {
-  #   plots_kept <- filter(plots, group >= ab_int_group) %>% 
-  #     mutate(group = group - min(group) + 1) %>% 
-  #     mutate(unique_id := paste0(group, "_", id))
-  # }
-
-  # ggplot() +
-  #   geom_sf(data = plots_kept, col = "blue") +
-  #   geom_sf(data = ab_line, col = "red")
-
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### Shift the polygons for the right starting point
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/   
-  print("Shifting the polygons for the right starting point")
-
-  #=== find the group id for the cells that are intersecting with the ab-line  ===#
-  ab_int_group <- st_intersection(plots, ab_line) %>% 
-    pull(group) %>% unique()
-  #=== get the sf of the intersecting group ===# 
-  int_group <- filter(plots, group == ab_int_group)
-
-  #=== the distance between the ab-line and the line that connect the centroids of the intersecting sf ===#
-  correction_dist <- cal_dist_to_ab(int_group, ab_line)
-
-  #=== shift the intersecting sf  ===#
-  int_group_corrected <- st_shift(int_group, correction_dist * ab_xy_nml_p90)
-
-  # ggplot() +
-  #   geom_sf(data = int_group, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line, color = "red")   
-  # ggplot() +
-  #   geom_sf(data = int_group_corrected, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line, color = "red") 
-
-  if (cal_dist_to_ab(int_group_corrected, ab_line) > correction_dist) {
-    #--- if moved further away ---#
-    plots_shifted <- st_shift(plots, - correction_dist * ab_xy_nml_p90) %>% 
-      mutate(unique_id := paste0(group, "_", id))
-  } else {
-    #--- if get close ---#
-    plots_shifted <- st_shift(plots, correction_dist * ab_xy_nml_p90) %>% 
-      mutate(unique_id := paste0(group, "_", id))
-  }
-  
-  # ggplot() +
-  #   geom_sf(data = plots_shifted, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line, col = "red")
 
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Remove all the non-intersecting (or almost)
@@ -542,7 +374,7 @@ make_trial_grids_two <- function(field, ab_line, plot_width, cell_height, headla
 # /*=================================================*/
 # This codes relies on ab_line
 
-make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_length) {
+make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_length, side_plots_num = 1) {
 
   # /*=================================================*/
   #' # Define functions
@@ -855,29 +687,6 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #   geom_sf(data = ab_line, col = "red", size = 2)
 
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### Cut off unnecessary parts
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  
-  # min_group <- min(plots$group)
-  # max_group <- max(plots$group)
-
-  # keep_to_the_left <- (ab_int_group - min_group) > (max_group- ab_int_group) 
-
-  # if (keep_to_the_left) {
-  #   plots_kept <- filter(plots, group <= ab_int_group) %>% 
-  #     mutate(group = max(group) - group + 1) %>% 
-  #     mutate(unique_id := paste0(group, "_", id))
-  # } else {
-  #   plots_kept <- filter(plots, group >= ab_int_group) %>% 
-  #     mutate(group = group - min(group) + 1) %>% 
-  #     mutate(unique_id := paste0(group, "_", id))
-  # }
-
-  # ggplot() +
-  #   geom_sf(data = plots_kept, col = "blue") +
-  #   geom_sf(data = ab_line, col = "red")
-
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Shift the polygons for the right starting point
   #/*~~~~~~~~~~~~~~~~~~~~~~*/   
   print("Shifting the polygons for the right starting point")
@@ -885,6 +694,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #=== find the group id for the cells that are intersecting with the ab-line  ===#
   ab_int_group <- st_intersection(plots, ab_line) %>% 
     pull(group) %>% unique()
+
   #=== get the sf of the intersecting group ===# 
   int_group <- filter(plots, group == ab_int_group)
 
@@ -955,7 +765,7 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Cut off the plots on the sides that are perpendicular to the machine direction
   #/*~~~~~~~~~~~~~~~~~~~~~~*/ 
-  headland_buffer <- st_buffer(field, - plot_width) %>% 
+  headland_buffer <- st_buffer(field, - side_plots_num * plot_width) %>% 
     st_difference(field, .)
 
   headland_ids <- st_intersection(plots_intersecting, headland_buffer) %>% 
@@ -978,29 +788,18 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #/*----------------------------------*/
   #' ## Get the ab-line
   #/*----------------------------------*/
-  ab_1_group <- 
-  max(
-    min(exp_plots_all$group) - 1,
-    min(plots_intersecting$group)
-  )
-  ab_2_group <- 
-  min(
-    max(exp_plots_all$group) + 1, 
-    max(plots_intersecting$group)
-  )
-
   ab_lines <- 
   rbind(
     get_line_through_centroids(
       filter(
-        plots_intersecting, 
-        group == ab_1_group
+        exp_plots_all, 
+        group == min(group)
       )
     ) %>% st_as_sf(),
     get_line_through_centroids(
       filter(
-        plots_intersecting, 
-        group == ab_2_group
+        exp_plots_all, 
+        group == max(group)
       )
     ) %>% st_as_sf()
   ) %>% 
@@ -1011,6 +810,26 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
   #   geom_sf(data = ab_line_1, col = "red") +
   #   geom_sf(data = ab_line_2, col = "darkgreen")
+
+  #/*----------------------------------*/
+  #' ## starting point for the second input
+  #/*----------------------------------*/
+  strt_point_second <- 
+  (
+  #=== the original starting point ===#
+  starting_point + 
+  #=== shift (perpendicular) ===#
+  (min(exp_plots_all$group) - 1) * ab_xy_nml_p90 * plot_width * dir_p
+  ) %>% 
+  st_point() %>% 
+  list() %>% 
+  st_as_sfc() %>% 
+  st_set_crs(st_crs(field))
+
+  # ggplot() +
+  #   geom_sf(data = field, fill = NA) +
+  #   geom_sf(data = exp_plots_all, fill = "red", color = NA, alpha = 0.3) +
+  #   geom_sf(data = strt_point_second, col = "black", size = 2) 
 
   # /*----------------------------------*/
   #' ## Reassign plot id
@@ -1080,7 +899,11 @@ make_trial_grids <- function(field, ab_line, plot_width, cell_height, headland_l
   #   dplyr::select(geometry) %>% 
   #   rbind(., filter(exp_plots_pid, type == "headland") %>% dplyr::select(geometry))
 
-  return(list(exp_plots = final_exp_plots, ab_lines = ab_lines))
+  return(list(
+    exp_plots = final_exp_plots, 
+    ab_lines = ab_lines,
+    strt_point_second = strt_point_second
+  ))
   # return(list(experiment = final_exp_plots, headland = final_headland))
 
 }
@@ -1279,10 +1102,12 @@ st_shift <- function(data_sf, shift) {
 #' # Get an ab-line
 #/*=================================================*/
 
-get_ab_line <- function(past_aa_input) {
+make_ab_line <- function(past_aa_input, field) {
+
+  temp_sf <- dplyr::select(past_aa_input, geometry)
 
   # tm_shape(past_aa_input) +
-  #   tm_fill(col = "Potash")
+  #   tm_dots()
 
   #=== polygons? ===#
   inlude_polygon <- "POLYGON" %in% st_geometry_type(past_aa_input)
@@ -1290,10 +1115,34 @@ get_ab_line <- function(past_aa_input) {
   if (inlude_polygon) {
     return(NULL)
   } else {
-    past_aa_input %>% 
-    dplyr::select(geometry) %>% 
-    cbind(., st_coordinates(.))
+
+    dominant_slope <- group_points_sc(temp_sf, angle_threshold = 30) %>% 
+      nest_by(group) %>% 
+      rowwise() %>% 
+      mutate(slope = 
+        lm(Y ~ X, data = data)$coef[2]
+      ) %>% 
+      filter(!is.na(slope)) %>% 
+      unnest() %>% 
+      mutate(cluster = kmeans(slope, 6)$cluster) %>% 
+      data.table() %>% 
+      .[, .(slope, cluster)] %>% 
+      .[, num_obs := .N, by = cluster] %>% 
+      .[num_obs == max(num_obs), ] %>% 
+      .[, mean(slope)]
   }
+
+  ab_start <- st_geometry(st_centroid(field))[[1]]
+  ab_end <- ab_start + c(1, dominant_slope)
+
+  ab_line <- 
+  list(
+    st_linestring(c(ab_start, ab_end))
+  ) %>% 
+  st_as_sfc() %>% 
+  st_set_crs(st_crs(field))
+
+  return(ab_line)
 
 }
 

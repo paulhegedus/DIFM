@@ -593,6 +593,7 @@ make_trial_design <-
     json_file,
     num_levels, 
     head_dist = NA, 
+    side_plots_num = 1,
     use_ab = TRUE, 
     assign_rates = TRUE,
     rerun = FALSE, 
@@ -692,8 +693,13 @@ make_trial_design <-
     read_rmd(
       "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
       locally_run = locally_run
+    ) %>% 
+    gsub(
+      "_side-plots-num-here_", 
+      side_plots_num,
+      .
     )
-
+    
     td_rmd <- c(td_rmd, create_plots_rmd)
 
     #=== if ab-line does not exist ===#
@@ -718,7 +724,7 @@ make_trial_design <-
     td_rmd <- c(td_rmd, assign_rates_rmd)
 
     td_rmd <- gsub(
-      "_num_levels_here_",
+      "_num-levels-here_",
       num_levels,
       td_rmd
     )

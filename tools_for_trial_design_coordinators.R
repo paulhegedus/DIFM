@@ -58,11 +58,22 @@ add_inputs(
 #--- add field parameter templates ---#
 
 gen_fp_template(
-  farm = "Rohrscheib",
-  field = "AlmyMain",
+  farm = "Bohnhoff",
+  field = "Tims",
   year = "2021",
-  crop = "",
-  input_ls = c("seed"),
-  strategy_ls = c("trial"),
+  crop = "corn",
+  input_ls = c("seed", "urea"),
+  strategy_ls = c("trial", "trial"),
   json_file = "fp_2021_TD.json"
 )
+
+field_data <- jsonlite::fromJSON(
+  here("Data", "CommonData", "fp_2021_TD.json"),
+  flatten = TRUE
+) %>%
+data.table() %>%
+.[, field_year := paste(farm, field, year, sep = "_")]
+
+make_grower_folders(field_data)
+
+

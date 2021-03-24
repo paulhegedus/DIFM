@@ -1,5 +1,10 @@
 # Preparation for Creating Plots and ab-lines
 
+## Set parameters
+
+```{r }
+side_plots_num <-_side-plots-num-here_ 
+```
 ## Read boundary and ab-line
 
 ```{r }
@@ -32,7 +37,7 @@ if (use_ab) {
     st_make_valid() %>%
     st_transform_utm() 
 
-  ab_line <- get_ab_line(past_aa_input) 
+  ab_line <- make_ab_line(past_aa_input) 
 }
 
 ```
@@ -82,7 +87,8 @@ if (num_unique_plot_width > 1) {
       ab_line = ab_line, 
       plot_width = input_plot_width, 
       cell_height = cell_height,
-      headland_length = headland_length
+      headland_length = headland_length,
+      side_plots_num = side_plots_num
     )  
   ))
 } else {
@@ -98,7 +104,8 @@ if (num_unique_plot_width > 1) {
     ab_line = ab_line, 
     plot_width = trial_data_temp$input_plot_width, 
     cell_height = trial_data_temp$cell_height,
-    headland_length = trial_data_temp$headland_length
+    headland_length = trial_data_temp$headland_length,
+    side_plots_num = side_plots_num
   )  
 
   trial_data_e <- trial_data_rh %>% 
@@ -114,7 +121,8 @@ trial_data_eh <-
 trial_data_e %>% 
 rowwise() %>% 
 mutate(ab_lines = list(
-  experiment_plots$ab_lines
+  experiment_plots$ab_lines %>% 
+    st_transform(4326)
 )) %>% 
 mutate(exp_plots = list(
   experiment_plots$exp_plots
