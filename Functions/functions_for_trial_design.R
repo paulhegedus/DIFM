@@ -813,7 +813,7 @@ assign_rates_latin <- function(
 
   get_starting_rank_across_strips <- function(num_levels) {
 
-    temp_seq <- 2:(num_level - 1)
+    temp_seq <- 2:(num_levels - 1)
     return_seq <- rep(1, num_levels)
 
     i <- 1

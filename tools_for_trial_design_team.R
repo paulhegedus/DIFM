@@ -40,7 +40,7 @@ get_td_parameters(ffy, "fp_2021_TD.json")
 make_trial_design(
   ffy, 
   json_file = "fp_2021_TD.json", 
-  head_dist = c(120, 120), 
+  head_dist = 120, 
   side_plots_num = 1,
   use_ab = TRUE,
   assign_rates = TRUE,
@@ -48,6 +48,22 @@ make_trial_design(
   # cell_height = 10,
   rerun = TRUE,
   locally_run = TRUE
+)
+
+ffy <- field_year_ls[5]
+
+get_td_parameters(ffy, "fp_2021_TD.json")
+
+make_trial_design(
+  ffy, 
+  json_file = "fp_2021_TD.json", 
+  head_dist = 120, 
+  side_plots_num = 1,
+  use_ab = TRUE,
+  assign_rates = TRUE,
+  num_levels = c(5, 5), 
+  # cell_height = 10,
+  rerun = TRUE
 )
 
 
