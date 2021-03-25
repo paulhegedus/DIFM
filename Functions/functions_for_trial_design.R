@@ -469,47 +469,6 @@ function(
   #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
   #   geom_sf(data = ab_line, col = "red")
 
-  #/*----------------------------------*/
-  #' ## Get the ab-line
-  #/*----------------------------------*/
-  ab_lines <- 
-  rbind(
-    get_line_through_centroids(
-      filter(
-        exp_plots_all, 
-        group == min(group)
-      ),
-      field
-    ) %>% st_as_sf(),
-    get_line_through_centroids(
-      filter(
-        exp_plots_all, 
-        group == max(group)
-      ),
-      field
-    ) %>% st_as_sf()
-  ) %>% 
-  mutate(ab_id = seq_len(nrow(.)))
-
-  if (second_input == FALSE) {
-    line_edges <- 
-    rbind(
-      line_edge_f = st_shift(ab_lines[1, ], - dir_p * ab_xy_nml_p90 * plot_width / 2),
-      line_edge_s = st_shift(ab_lines[2, ], dir_p * ab_xy_nml_p90 * plot_width / 2)
-    )
-  }
-
-  # ggplot() +
-  #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
-  #   geom_sf(data = line_edge_f, col = "red", size = 1) +
-  #   geom_sf(data = line_edge_s, col = "darkgreen", size = 1)
-
-  # ggplot() +
-  #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
-  #   geom_sf(data = ab_lines[1, ], col = "red", size = 1) +
-  #   geom_sf(data = ab_lines[2, ], col = "darkgreen", size = 1)
 
   #/*----------------------------------*/
   #' ## starting point for the second input
@@ -598,6 +557,52 @@ function(
   #   st_intersection(., field) %>% 
   #   dplyr::select(geometry) %>% 
   #   rbind(., filter(exp_plots_pid, type == "headland") %>% dplyr::select(geometry))
+
+  #/*----------------------------------*/
+  #' ## Get the ab-line
+  #/*----------------------------------*/
+  ab_lines <- 
+  rbind(
+    get_line_through_centroids(
+      filter(
+        final_exp_plots, 
+        strip_id == min(strip_id)
+      ),
+      field
+    ) %>% st_as_sf(),
+    get_line_through_centroids(
+      filter(
+        final_exp_plots, 
+        strip_id == max(strip_id)
+      ),
+      field
+    ) %>% st_as_sf()
+  ) %>% 
+  mutate(ab_id = seq_len(nrow(.)))
+
+  if (second_input == FALSE) {
+    line_edges <- 
+    rbind(
+      line_edge_f = st_shift(ab_lines[1, ], - dir_p * ab_xy_nml_p90 * plot_width / 2),
+      line_edge_s = st_shift(ab_lines[2, ], dir_p * ab_xy_nml_p90 * plot_width / 2)
+    )
+  }
+
+  # ggplot() +
+  #   geom_sf(data = field, fill = NA) +
+  #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
+  #   geom_sf(data = line_edge_f, col = "red", size = 1) +
+  #   geom_sf(data = line_edge_s, col = "darkgreen", size = 1)
+
+  # ggplot() +
+  #   geom_sf(data = field, fill = NA) +
+  #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
+  #   geom_sf(data = ab_lines[1, ], col = "red", size = 1) +
+  #   geom_sf(data = ab_lines[2, ], col = "darkgreen", size = 1)
+
+  #/*----------------------------------*/
+  #' ## Save
+  #/*----------------------------------*/  
 
   if (second_input == FALSE) {
     return(list(
