@@ -619,166 +619,6 @@ function(
 
 }
 
-# /*=================================================*/
-#' # Assign rates to the trial design data
-# /*=================================================*/
-# data_sf <- st_as_sf(data)
-# rates_ls <- N_levels 
-
-assign_rates <- 
-function(
-  data_sf,
-  rates_ls,
-  pattern = "fixed-latin-square",
-  push,
-  merge = TRUE
-) {
-
-  gen_sequence <- function(length, push) {
-
-    if (length %% 2 == 0) { # even 
-      seq_r <- c(seq(1, length, by = 2), seq(length, 2, by = -2))
-    } else { # odd
-      seq_r <- c(seq(1, length, by = 2), seq(length - 1, 2, by = -2))
-    }
-
-    if (push) {
-      seq_r <- c(seq_r[-1], seq_r[1])
-    }
-
-    return(seq_r)
-  }
-
-  gen_rd_seq <- function(seq_element, num) {
-    for (i in 1:num) {
-      if (i == 1) {
-        seq_return <- seq_element
-      } else {
-        if (runif(1) < 0.5) {
-          # seq_return <- c(seq_return, rev(seq_element))
-          seq_return <- c(seq_return, seq_element)
-        } else {
-          seq_return <- c(seq_return, seq_element)
-        }
-      }
-    }
-    return(seq_return)
-  }
-
-  get_seq_for_strip <- function(pattern, rate_ranks_seq, num_seq, exclude_ls = NULL) {
-
-    seq_possible <- gen_rd_seq(rate_ranks_seq, num_seq)
-
-    position_ls <- 1:rates_len
-    remaining_positions <- position_ls[!(position_ls %in% exclude_ls)]
-
-    if (pattern == "block_randomized"){
-      if (length(remaining_positions) == 1){
-        position <- remaining_positions
-      } else {
-        position <- sample(remaining_positions, 1)
-      }
-    } else if (pattern == "sequential") {
-      if (all(exclude_ls != 0)){
-        previous_position <- exclude_ls[length(exclude_ls)]
-      } else {
-        previous_position <- 0
-      }
-      position <- previous_position + 1
-    } else if (pattern == "fixed-latin-square") {
-
-      if (all(exclude_ls != 0)){
-        previous_position <- exclude_ls[length(exclude_ls)]
-        which_furthest <- which.max(abs(rate_ranks_seq[remaining_positions] - rate_ranks_seq[previous_position]))
-        position <- remaining_positions[which_furthest]
-      } else {
-        position <- 1
-      }
-    }
-
-    return(seq_possible[position:(position + max_plot_id - 1)])
-
-  }
-
-  # /*=================================================*/
-  #' # Assign rates
-  # /*=================================================*/
-
-  rates_data <- data.table(
-    rate = rates_ls,
-    rate_rank = seq_len(length(rates_ls))
-  )
-
-  rates_len <- nrow(rates_data)
-
-  #--- create a sequence of rate ranks ---#
-  rate_ranks_seq <- gen_sequence(rates_len, push = push)
-
-  data_dt <- data.table(data_sf)
-
-  strip_ls <- data_dt[, strip_id] %>% unique() %>% 
-    .[order(.)]
-
-  design_data_ls <- list()
-
-  # i <- 12
-  for (i in strip_ls) {
-  # for (i in 1:10) {
-
-    max_plot_id <- data_dt[strip_id == i, max(plot_id)]
-    num_seq <- ceiling(max_plot_id / rates_len + 1)
-
-    if ((i %% rates_len) == 1) {
-      if (i == 1) {
-        #--- the very first ---#
-        rates_seq <- get_seq_for_strip(pattern, rate_ranks_seq, num_seq, 0)
-        init_rate_memeory <- c(which(rates_seq[1] == rate_ranks_seq))
-      } else {
-        rates_seq <- get_seq_for_strip(
-          pattern = pattern,
-          rate_ranks_seq = rate_ranks_seq,
-          num_seq = num_seq,
-          #--- avoid having the same rate right next to it in the previous block ---#
-          exclude_ls = init_rate_memeory[rates_len]
-        )
-        init_rate_memeory <- c(which(rates_seq[1] == rate_ranks_seq))
-      }
-    } else {
-      rates_seq <- get_seq_for_strip(
-        pattern = pattern,
-        rate_ranks_seq = rate_ranks_seq,
-        num_seq = num_seq,
-        exclude_ls = init_rate_memeory
-      )
-      init_rate_memeory <- c(init_rate_memeory, which(rates_seq[1] == rate_ranks_seq))
-    }
-
-    design_data_ls[[i]] <- data.table(
-      plot_id = seq_len(max_plot_id),
-      strip_id = i,
-      rate_rank = rates_seq
-    )
-
-    # print(rates_seq)
-    # print(init_rate_memeory)
-
-  }
-
-  design_data <- rbindlist(design_data_ls)
-
-  # design_data[, .N, by = rate_rank]
-
-  if (merge == TRUE) {
-    data <- left_join(data_sf, design_data, by = c("plot_id", "strip_id")) %>%
-      left_join(., rates_data, by = "rate_rank")
-    return(data)
-  } else {
-    design_data <- left_join(design_data, rates_data, by = "rate_rank")
-    return(design_data)
-  }
-
-}
-
 #/*=================================================*/
 #' # Assign rates (latin and jump-rate-conscious)
 #/*=================================================*/
@@ -1045,6 +885,11 @@ assign_rates <- function(
     #=== num_levels internally determined ===#
     num_levels <- seq(min_rate, max_rate, by = max_jump * 0.8) %>% 
       length()
+
+    if (num_levels < 5) {
+      num_levels <- 8 
+      print("max jump rate is too high. setting the number of levels to 8")
+    }
 
     rates_ls <- get_rates(min_rate, max_rate, gc_rate, num_levels)
 

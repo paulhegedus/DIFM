@@ -97,9 +97,21 @@ mutate(experiment_plots = list(
   )
 ))
 
-if (num_unique_plot_width == 1) {
+if (num_unique_plot_width == 1 & nrow(trial_data_rh) == 1) {
 
   trial_data_e <- trial_data_first 
+
+} else if(num_unique_plot_width == 1 & nrow(trial_data_rh) == 2) {
+
+  trial_data_second <- 
+  trial_data_rh[2, ] %>% 
+  mutate(experiment_plots = list(
+    trial_data_first$experiment_plots[[1]]
+  )) %>% 
+  mutate(line_edge_id = NA)
+
+  trial_data_e <- rbind(trial_data_first, trial_data_second)
+  # trial_data_e$experiment_plots
 
 } else {
 
