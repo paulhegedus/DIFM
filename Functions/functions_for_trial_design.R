@@ -1169,13 +1169,11 @@ get_td_parameters <- function(
       mutate(
         min_rate = min_rate - base_rate, 
         max_rate = max_rate - base_rate, 
-        gc_rate = gc_rate - base_rate, 
         .keep = "unused"
       ) %>%
       mutate(
         min_rate = convert_N_unit(form, unit, min_rate, "Imperial", conversion_type = "to_n_form"),
-        max_rate = convert_N_unit(form, unit,  max_rate, "Imperial", conversion_type = "to_n_form"),
-        gc_rate = convert_N_unit(form, unit,  gc_rate, "Imperial", conversion_type = "to_n_form"),
+        max_rate = convert_N_unit(form, unit,  max_rate, "Imperial", conversion_type = "to_n_form")
       )
 
     input_data <- rbind(td_parameters[form == "seed"], n_parameters)

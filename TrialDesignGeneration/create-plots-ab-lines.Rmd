@@ -5,6 +5,7 @@
 ```{r }
 side_plots_num <- _side-plots-num-here_ 
 cell_height <- _cell-height-here_ 
+head_dist <- _head-dist-here_
 ```
 ## Read boundary and ab-line
 

@@ -76,9 +76,6 @@ source(
 #--- github ---#
 source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
 
-#--- github ---#
-source("https://raw.githubusercontent.com/brittanikedge/DIFM/main/Functions.R")
-
 #--- define field-year ---#
 ffy <- "_field-year-here_"  
 json_file <- "_json-file-here_"
