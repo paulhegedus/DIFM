@@ -1027,6 +1027,51 @@ function(
 }
 
 #/*=================================================*/
+#' # Convert min and max trial parameters for N into form units
+#/*=================================================*/
+convert_trial_N <- 
+function(ffy, json_file, input_data){
+td_parameters <- input_data
+
+#--- bring in field data ---#
+field_data <- jsonlite::fromJSON(
+  here("Data", "CommonData", json_file),
+  flatten = TRUE
+) %>%
+  data.table() %>%
+  .[, field_year := paste(farm, field, year, sep = "_")] %>%
+  .[field_year == ffy, ]
+  
+#--- find base rate from input data ---#
+inputs <- dplyr::select(field_data, starts_with(
+  "input")) %>%  map(1) %>% 
+  rbindlist(fill = TRUE) %>%
+  as.data.frame()
+if ("base" %in% inputs$strategy){
+  base_rate <- inputs %>%
+  filter(strategy == "base") %>%
+  select("rate")
+}else{
+  base_rate <- 0
+}
+
+#--- convert min_rate and max_rate into n_form units ---#
+n_parameters <- td_parameters[form != "seed"] 
+n_parameters <- n_parameters %>%
+  rowwise() %>%
+  mutate(min_rate = min_rate - base_rate,
+         max_rate = max_rate - base_rate, 
+         .keep = "unused") %>%
+  mutate(min_rate = convert_N_unit(form, unit, min_rate, "Imperial", conversion_type = "to_n_form"),
+         max_rate = convert_N_unit(form, unit,  max_rate, "Imperial", conversion_type = "to_n_form"),
+         )
+input_data <- rbind(td_parameters[form == "seed"], n_parameters)
+
+return(input_data)
+}
+
+
+#/*=================================================*/
 #' # Get experiment rates
 #/*=================================================*/
 
