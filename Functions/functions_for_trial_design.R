@@ -804,7 +804,7 @@ assign_rates_latin <- function(
     return(seq_r)
   }
 
-  get_seq_start <- function(rate_rank, basic_seq, full_seq) {
+  get_seq_start <- function(rate_rank, basic_seq) {
 
     max_rank <- length(basic_seq)
     start_position <- which(basic_seq == rate_rank)
@@ -812,7 +812,7 @@ assign_rates_latin <- function(
     f_seq <- start_position:max_rank
     s_seq <- 1:start_position
 
-    return(c(f_seq, s_seq) %>% unique())
+    return(basic_seq[c(f_seq, s_seq) %>% unique()])
     
   }
 
@@ -844,6 +844,8 @@ assign_rates_latin <- function(
   }
 
   num_levels <- length(rates_ls)
+  max_plot_id <- max(data_sf$plot_id)
+  max_strip_id <- max(data_sf$strip_id)
 
   rates_data_base <- 
   data.table(
@@ -856,16 +858,17 @@ assign_rates_latin <- function(
   if (push) {
     basic_seq <- c(basic_seq[2:num_levels], basic_seq[1])
   }
-  max_plot_id <- max(data_sf$plot_id)
 
   #=== get the starting ranks across strips for the field ===#
-  max_strip_id <- max(data_sf$strip_id)
   full_start_seq <- rep(
     get_starting_rank_across_strips(num_levels),
     ceiling(max_strip_id / num_levels)
   ) %>% 
   .[1:max_strip_id]
   
+# rates_data$rate_rank
+# get_seq_start(1, basic_seq)
+
   rates_data <- 
   data.table(
     strip_id = 1:max_strip_id,
@@ -892,9 +895,9 @@ assign_rates_latin <- function(
     by = c("strip_id", "plot_id")
   )
 
-  # ggplot() +
-  #   geom_sf(data = return_data, aes(fill = factor(rate)), color = NA) +
-  #   scale_fill_viridis_d()
+  ggplot() +
+    geom_sf(data = return_data, aes(fill = factor(rate)), color = NA) +
+    scale_fill_brewer(palette = "Greens")
 
   return(return_data)
 
