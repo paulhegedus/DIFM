@@ -1038,7 +1038,10 @@ get_td_parameters <- function(
   #--- convert min_rate and max_rate into n_form units ---#
   # min_rate, max_rate, and base_rate are all in N-equivalent (lbs)
   n_parameters <- td_parameters[form != "seed"] 
-  n_parameters <- n_parameters %>%
+  
+  # need if statement for S only trials 
+  if (nrow(n_parameters) > 0){
+    n_parameters <- n_parameters %>%
     rowwise() %>%
     mutate(
       min_rate = min_rate - base_rate, 
@@ -1051,8 +1054,11 @@ get_td_parameters <- function(
       max_rate = convert_N_unit(form, unit,  max_rate, "Imperial", conversion_type = "to_n_form"),
       gc_rate = convert_N_unit(form, unit,  gc_rate, "Imperial", conversion_type = "to_n_form"),
     )
-
-  input_data <- rbind(td_parameters[form == "seed"], n_parameters)
+    
+    input_data <- rbind(td_parameters[form == "seed"], n_parameters)
+  }else{
+    input_data <- td_parameters
+  }
 
   return(input_data)
 
