@@ -56,7 +56,7 @@ make_trial_design(
   max_jumps = c(NA, 20),
   #=== if TRUE, create experiment plots again ===#
   # if TRUE, ignore the existence of exp_plots.rds
-  start_from_scratch = FALSE,
+  start_from_scratch = TRUE,
   # cell_height = 10,
   rerun = TRUE,
   locally_run = TRUE

@@ -740,14 +740,14 @@ make_trial_design <- function(
     #=== design type ===#
     gsub(
       "_design-type-here_",
-      paste0("c(\"", paste0(design_type, collapse = "\", \""), "\")"),
-      td_rmd
+      paste0("c(\'", paste0(design_type, collapse = "\', \'"), "\')"),
+      .
     ) %>% 
     #=== max jumps ===#
     gsub(
       "_max-jumps-here_",
       paste0("c(", paste0(max_jumps, collapse = ", "), ")"),
-      td_rmd
+      .
     )
 
     if (length(num_levels) == 1 & nrow(trial_data) == 2) {
