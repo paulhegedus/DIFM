@@ -603,6 +603,8 @@ make_trial_design <- function(
 
   print(paste0("Generating a trial-design for ", ffy))
 
+  trial_data <- get_td_parameters(ffy, json_file)
+
   #/*=================================================*/
   #' # Header Rmd
   #/*=================================================*/
