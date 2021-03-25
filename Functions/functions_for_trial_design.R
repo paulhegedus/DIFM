@@ -812,7 +812,9 @@ assign_rates_latin <- function(
     f_seq <- start_position:max_rank
     s_seq <- 1:start_position
 
-    return(basic_seq[c(f_seq, s_seq) %>% unique()])
+    return_rank <- basic_seq[c(f_seq, s_seq) %>% unique()]
+
+    return(return_rank)
     
   }
 
@@ -866,9 +868,6 @@ assign_rates_latin <- function(
   ) %>% 
   .[1:max_strip_id]
   
-# rates_data$rate_rank
-# get_seq_start(1, basic_seq)
-
   rates_data <- 
   data.table(
     strip_id = 1:max_strip_id,
