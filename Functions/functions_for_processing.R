@@ -1134,12 +1134,23 @@ make_var_name_consistent <- function(data, dictionary) {
 # unit <- "lbs"
 # rate <- 130
 
-convert_N_unit <- function(form, unit, rate, reporting_unit, conversion_type = "to_n_equiv") {
-  conv_table <- fromJSON(file.path(here("Data", "CommonData"), "nitrogen_conversion.json"), flatten = TRUE) %>%
-    data.table() %>%
-    .[, conv_factor := as.numeric(conv_factor)] %>%
-    .[, form_unit := paste(type, unit, sep = "_")] %>%
-    as.data.frame()
+convert_N_unit <- function(
+  form,
+  unit,
+  rate,
+  reporting_unit,
+  conversion_type = "to_n_equiv"
+) {
+  
+  conv_table <- 
+  fromJSON(
+    here("Data", "CommonData", "nitrogen_conversion.json"), 
+    flatten = TRUE
+  ) %>%
+  data.table() %>%
+  .[, conv_factor := as.numeric(conv_factor)] %>%
+  .[, form_unit := paste(type, unit, sep = "_")] %>%
+  as.data.frame()
 
   if (form == "N_equiv") {
     conv_factor_n <- 1

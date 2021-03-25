@@ -50,9 +50,10 @@ make_trial_design(
   locally_run = TRUE
 )
 
-ffy <- field_year_ls[5]
+ffy <- field_year_ls[2]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
+convert_trial_N
 
 make_trial_design(
   ffy, 
@@ -63,7 +64,8 @@ make_trial_design(
   assign_rates = TRUE,
   num_levels = c(5, 5), 
   # cell_height = 10,
-  rerun = TRUE
+  rerun = TRUE,
+  locally_run = TRUE
 )
 
 

@@ -996,81 +996,67 @@ make_ab_line <- function(past_aa_input, field) {
 #' # Get field parameters for trial design
 #/*=================================================*/
 
-get_td_parameters <- 
-function(
-  ffy, # ffy = "Sasse_JensenWest_2021"
-  json_file # json_file = "fp_2021_TD.json"
-) {
+get_td_parameters <- function(
+  ffy, 
+  json_file, 
+  input_data
+){
 
+  #--- bring in field data ---#
   field_data <- jsonlite::fromJSON(
     here("Data", "CommonData", json_file),
     flatten = TRUE
   ) %>%
   data.table() %>%
-  .[, field_year := paste(farm, field, year, sep = "_")]
+  .[, field_year := paste(farm, field, year, sep = "_")] %>%
+  .[field_year == ffy, ]
 
-  #--- get field parameters for the field-year ---#
-  w_field_data <- field_data[field_year == ffy, ]
-
-  #--- get input data ---#
-  input_data <- dplyr::select(w_field_data, starts_with(
+  trial_info <- dplyr::select(field_data, starts_with(
     "input")) %>%  map(1) %>% 
-    rbindlist(fill = TRUE) %>% 
+    rbindlist(fill = TRUE)  
+
+  #=== trial information (N base not included) ===#
+  td_parameters <-  trial_info %>% 
     filter(strategy == "trial") %>% 
-    dplyr::select(form, sq_rate, unit, min_rate, max_rate, input_plot_width) %>% 
+    dplyr::select(
+      form, sq_rate, unit, min_rate,
+      max_rate, input_plot_width
+    ) %>% 
     rename(gc_rate = sq_rate) %>% 
     #=== the input with shorter plot length comes first ===#
     arrange(desc(input_plot_width))
+  
+  #=== check if there are N base rate entries ===#  
+  if ("base" %in% trial_info$strategy){
+    base_rate <- trial_info %>%
+    filter(strategy == "base") %>%
+    dplyr::select("rate")
+  }else{
+    base_rate <- 0
+  }
+
+  #--- convert min_rate and max_rate into n_form units ---#
+  # min_rate, max_rate, and base_rate are all in N-equivalent (lbs)
+  n_parameters <- td_parameters[form != "seed"] 
+  n_parameters <- n_parameters %>%
+    rowwise() %>%
+    mutate(
+      min_rate = min_rate - base_rate, 
+      max_rate = max_rate - base_rate, 
+      gc_rate = gc_rate - base_rate, 
+      .keep = "unused"
+    ) %>%
+    mutate(
+      min_rate = convert_N_unit(form, unit, min_rate, "Imperial", conversion_type = "to_n_form"),
+      max_rate = convert_N_unit(form, unit,  max_rate, "Imperial", conversion_type = "to_n_form"),
+      gc_rate = convert_N_unit(form, unit,  gc_rate, "Imperial", conversion_type = "to_n_form"),
+    )
+
+  input_data <- rbind(td_parameters[form == "seed"], n_parameters)
 
   return(input_data)
 
 }
-
-
-#/*=================================================*/
-#' # Convert min and max trial parameters for N into form units
-#/*=================================================*/
-convert_trial_N <- 
-function(ffy, json_file, input_data){
-td_parameters <- input_data
-
-#--- bring in field data ---#
-field_data <- jsonlite::fromJSON(
-  here("Data", "CommonData", json_file),
-  flatten = TRUE
-) %>%
-  data.table() %>%
-  .[, field_year := paste(farm, field, year, sep = "_")] %>%
-  .[field_year == ffy, ]
-  
-#--- find base rate from input data ---#
-inputs <- dplyr::select(field_data, starts_with(
-  "input")) %>%  map(1) %>% 
-  rbindlist(fill = TRUE) %>%
-  as.data.frame()
-if ("base" %in% inputs$strategy){
-  base_rate <- inputs %>%
-  filter(strategy == "base") %>%
-  select("rate")
-}else{
-  base_rate <- 0
-}
-
-#--- convert min_rate and max_rate into n_form units ---#
-n_parameters <- td_parameters[form != "seed"] 
-n_parameters <- n_parameters %>%
-  rowwise() %>%
-  mutate(min_rate = min_rate - base_rate,
-         max_rate = max_rate - base_rate, 
-         .keep = "unused") %>%
-  mutate(min_rate = convert_N_unit(form, unit, min_rate, "Imperial", conversion_type = "to_n_form"),
-         max_rate = convert_N_unit(form, unit,  max_rate, "Imperial", conversion_type = "to_n_form"),
-         )
-input_data <- rbind(td_parameters[form == "seed"], n_parameters)
-
-return(input_data)
-}
-
 
 #/*=================================================*/
 #' # Get experiment rates
