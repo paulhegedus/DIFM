@@ -78,7 +78,9 @@ mutate(map_design = list(
       title = form,
       palette = "Greens"
     ) +
-  tm_layout_to_add
+  tm_layout_to_add +
+  tm_shape(ab_lines) +
+    tm_lines(col = "red")
 )) %>% 
 pluck("map_design")
 
