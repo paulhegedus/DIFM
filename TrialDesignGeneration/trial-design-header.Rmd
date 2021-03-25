@@ -102,6 +102,7 @@ trial_data <- get_td_parameters(ffy, json_file) %>%
 
 ```{r }
 exp_plots_exists <- _exp-plots-statement_
+
 if (exp_plots_exists) {
   trial_data_eh <- readRDS(here("Data", "Growers", ffy, "TrialDesign/exp_plots.rds"))
 }

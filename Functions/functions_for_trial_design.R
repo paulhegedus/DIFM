@@ -914,16 +914,21 @@ assign_rates_latin <- function(
 
 # rates_ls <- seq(min_rate, max_rate, length = 9)
 
-assign_rates_latin_2 <- function(
+assign_rates <- function(
   data_sf,
+  design_type = "jcl",
   max_jump,
   gc_rate,
   min_rate,
   max_rate,
+  num_levels,
   push,
   merge = TRUE
 ) {
 
+#/*----------------------------------*/
+#' ## Define functions
+#/*----------------------------------*/
   gen_sequence <- function(length, push = FALSE) {
 
     if (length %% 2 == 0) { # even 
@@ -939,77 +944,182 @@ assign_rates_latin_2 <- function(
     return(seq_r)
   }
 
-  total_num_levels <- length(rates_ls)
-  max_plot_id <- max(data_sf$plot_id)
-  max_strip_id <- max(data_sf$strip_id)
+  get_seq_start <- function(rate_rank, basic_seq) {
 
-  rates_data_base <- 
-  data.table(
-    rate = rates_ls,
-    rate_rank = 1:total_num_levels
-  ) %>% 
-  .[, tier := ifelse(rate_rank < median(rate_rank), 1, 2)] %>% 
-  .[, rank_in_tier := rowid(tier)]
+    max_rank <- length(basic_seq)
+    start_position <- which(basic_seq == rate_rank)
+    
+    f_seq <- start_position:max_rank
+    s_seq <- 1:start_position
 
-  rates_data <- rates_data_base %>% 
-    nest_by(tier) %>% 
-    mutate(num_levels = nrow(data)) %>% 
-    mutate(basic_seq = list(
-      gen_sequence(num_levels)
-    )) %>% 
-    mutate(basic_seq = list(
-      if (push) {
-        c(basic_seq[2:num_levels], basic_seq[1])
+    return_rank <- basic_seq[c(f_seq, s_seq) %>% unique()]
+
+    return(return_rank)
+    
+  }
+
+  get_starting_rank_across_strips <- function(num_levels) {
+
+    temp_seq <- 2:(num_levels - 1)
+    return_seq <- rep(1, num_levels)
+
+    i <- 1
+    while (i <= num_levels - 2) {
+
+      if (i %% 2 == 1) { # odd
+        temp_value <- max(temp_seq)
       } else {
-        basic_seq
+        temp_value <- min(temp_seq)
       }
+
+      return_seq[i + 1] <- temp_value
+
+      temp_seq <- temp_seq[-which(temp_seq == temp_value)]
+
+      i <- i + 1
+
+    }
+
+    return_seq[length(return_seq)] <- num_levels
+
+    return(return_seq)
+  }
+
+#/*----------------------------------*/
+#' ## Assign rates
+#/*----------------------------------*/
+
+  if (design_type == "jcl") {
+  
+    rates_ls <- get_rates(min_rate, max_rate, gc_rate, num_levels)
+    max_plot_id <- max(data_sf$plot_id)
+    max_strip_id <- max(data_sf$strip_id)
+
+    rates_data_base <- 
+    data.table(
+      rate = rates_ls,
+      rate_rank = 1:num_levels
+    )
+
+    #=== get the rate sequence within a strip ===#
+    basic_seq <- gen_sequence(num_levels)
+    if (push) {
+      basic_seq <- c(basic_seq[2:num_levels], basic_seq[1])
+    }
+
+    #=== get the starting ranks across strips for the field ===#
+    full_start_seq <- rep(
+      get_starting_rank_across_strips(num_levels),
+      ceiling(max_strip_id / num_levels)
+    ) %>% 
+    .[1:max_strip_id]
+    
+    rates_data <- 
+    data.table(
+      strip_id = 1:max_strip_id,
+      start_rank = full_start_seq
+    ) %>% 
+    rowwise() %>% 
+    mutate(rate_rank = list(
+      rep(
+        get_seq_start(start_rank, basic_seq),
+        ceiling(max_plot_id / num_levels)
+      )
     )) %>% 
-    mutate(strip_plot_data = list(
-      if (tier == 1) {
-        filter(data_sf, (strip_id %% 2) == 1) %>% 
-          data.table() %>% 
-          .[, .(strip_id, plot_id)] %>% 
-          unique(by = c("strip_id", "plot_id"))
-      } else {
-        filter(data_sf, (strip_id %% 2) == 0) %>% 
-          data.table() %>% 
-          .[, .(strip_id, plot_id)] %>% 
-          unique(by = c("strip_id", "plot_id"))
-      }
-    )) %>% 
-    mutate(strip_plot_data = list(
-      strip_plot_data[, group_in_strip := .GRP, by = strip_id]
-    )) %>% 
-    mutate(strip_plot_data = list(
-      lapply(
-        unique(strip_plot_data$strip_id),
-        function (x) {
-          temp_data <- strip_plot_data[strip_id == x, ]
-          if ((unique(temp_data$group_in_strip) %% 2) == 0) {
-            temp_data <- temp_data[order(rev(plot_id)), ]
-          } 
-          return(temp_data)
-        }  
-      ) %>% 
+    unnest(rate_rank) %>% 
+    data.table() %>% 
+    .[, dummy := 1] %>% 
+    .[, plot_id := cumsum(dummy), by = strip_id] %>% 
+    rates_data_base[., on = "rate_rank"] %>% 
+    .[, .(strip_id, plot_id, rate) ]  
+
+    return_data <- 
+    left_join(
+      data_sf, 
+      rates_data, 
+      by = c("strip_id", "plot_id")
+    )
+
+  } else if (design_type == "ejca") { # Extra jump-conscious alternate
+
+    #=== num_levels internally determined ===#
+    num_levels <- seq(min_rate, max_rate, by = max_jump * 0.8) %>% 
+      length()
+
+    rates_ls <- get_rates(min_rate, max_rate, gc_rate, num_levels)
+
+    total_num_levels <- length(rates_ls)
+    max_plot_id <- max(data_sf$plot_id)
+    max_strip_id <- max(data_sf$strip_id)
+
+    rates_data_base <- 
+    data.table(
+      rate = rates_ls,
+      rate_rank = 1:total_num_levels
+    ) %>% 
+    .[, tier := ifelse(rate_rank < median(rate_rank), 1, 2)] %>% 
+    .[, rank_in_tier := rowid(tier)]
+
+    rates_data <- rates_data_base %>% 
+      nest_by(tier) %>% 
+      mutate(num_levels = nrow(data)) %>% 
+      mutate(basic_seq = list(
+        gen_sequence(num_levels)
+      )) %>% 
+      mutate(basic_seq = list(
+        if (push) {
+          c(basic_seq[2:num_levels], basic_seq[1])
+        } else {
+          basic_seq
+        }
+      )) %>% 
+      mutate(strip_plot_data = list(
+        if (tier == 1) {
+          filter(data_sf, (strip_id %% 2) == 1) %>% 
+            data.table() %>% 
+            .[, .(strip_id, plot_id)] %>% 
+            unique(by = c("strip_id", "plot_id"))
+        } else {
+          filter(data_sf, (strip_id %% 2) == 0) %>% 
+            data.table() %>% 
+            .[, .(strip_id, plot_id)] %>% 
+            unique(by = c("strip_id", "plot_id"))
+        }
+      )) %>% 
+      mutate(strip_plot_data = list(
+        strip_plot_data[, group_in_strip := .GRP, by = strip_id]
+      )) %>% 
+      mutate(strip_plot_data = list(
+        lapply(
+          unique(strip_plot_data$strip_id),
+          function (x) {
+            temp_data <- strip_plot_data[strip_id == x, ]
+            if ((unique(temp_data$group_in_strip) %% 2) == 0) {
+              temp_data <- temp_data[order(rev(plot_id)), ]
+            } 
+            return(temp_data)
+          }  
+        ) %>% 
+        rbindlist()
+      )) %>% 
+      mutate(strip_plot_data = list(
+        strip_plot_data[, rank_in_tier :=
+          rep(basic_seq, ceiling(nrow(strip_plot_data) / num_levels))[1:nrow(strip_plot_data)]
+        ]
+      )) %>% 
+      mutate(rate_data = list(
+        data.table(data)[strip_plot_data[, .(strip_id, plot_id, rank_in_tier)], on = "rank_in_tier"]
+      )) %>% 
+      pluck("rate_data") %>% 
       rbindlist()
-    )) %>% 
-    mutate(strip_plot_data = list(
-      strip_plot_data[, rank_in_tier :=
-        rep(basic_seq, ceiling(nrow(strip_plot_data) / num_levels))[1:nrow(strip_plot_data)]
-      ]
-    )) %>% 
-    mutate(rate_data = list(
-      data.table(data)[strip_plot_data[, .(strip_id, plot_id, rank_in_tier)], on = "rank_in_tier"]
-    )) %>% 
-    pluck("rate_data") %>% 
-    rbindlist()
 
-  return_data <- 
-  left_join(
-    data_sf, 
-    rates_data, 
-    by = c("strip_id", "plot_id")
-  ) 
+    return_data <- 
+    left_join(
+      data_sf, 
+      rates_data, 
+      by = c("strip_id", "plot_id")
+    )
+  }
 
   # ggplot() +
   #   geom_sf(data = return_data, aes(fill = factor(rate)), color = NA) +

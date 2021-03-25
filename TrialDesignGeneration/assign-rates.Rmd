@@ -4,35 +4,39 @@
 
 ```{r }
 num_levels <- _num-levels-here_
+design_type <- _design-type-here_ 
+max_jumps <- _max-jumps-here_
 
 if (nrow(trial_data) > 1) {
-  num_level_data <- trial_data %>% 
+  design_parameter_data <- trial_data %>% 
   dplyr::select(form) %>% 
   mutate(push = c(FALSE, TRUE)) %>% 
-  mutate(num_levels = num_levels)  
+  mutate(num_levels = num_levels) %>% 
+  mutate(design_type = design_type) %>% 
+  mutate(max_jump = max_jumps)  
+
 } else {
-  num_level_data <- trial_data %>% 
+  design_parameter_data <- trial_data %>% 
   dplyr::select(form) %>% 
   mutate(push = FALSE) %>% 
   #=== use only the first in case two are provided ===#
-  mutate(num_levels = num_levels[1])  
+  mutate(num_levels = num_levels[1]) %>% 
+  mutate(design_type = design_type[1]) %>% 
+  mutate(max_jump = max_jumps[1])   
 }
 
 #=== user-specified number of levels ===#
 trial_data_r <- trial_data_eh %>% 
-  left_join(., num_level_data, by = "form") %>% 
-  mutate(rates_ls = list(
-    get_rates(
-      min_rate = min_rate, 
-      max_rate = max_rate, 
-      gc_rate = gc_rate, 
-      num_levels = num_levels
-    )
-  )) %>% 
+  left_join(., design_parameter_data, by = "form") %>% 
   mutate(experiment_design = list(
-    assign_rates_latin(
+    assign_rates(
       data_sf = exp_plots,
-      rates_ls = rates_ls,
+      design_type = "jcl",
+      max_jump = max_jump,
+      gc_rate = gc_rate,
+      min_rate = min_rate,
+      max_rate = max_rate,
+      num_levels = num_levels, # ignored 
       push = push,
     ) %>% 
     dplyr::select(rate)

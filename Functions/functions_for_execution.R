@@ -590,11 +590,14 @@ make_grower_report <- function(ffy, rerun = TRUE, locally_run = FALSE){
 make_trial_design <- function(
     ffy, 
     json_file,
-    num_levels, 
     head_dist = NA, 
     side_plots_num = 1,
     use_ab = TRUE, 
     assign_rates = TRUE,
+    design_type = c("jcl", "jcl"),
+    num_levels = c(5, 5), 
+    max_jumps,
+    start_from_scratch = FALSE,
     cell_height = 10,
     rerun = FALSE, 
     locally_run = FALSE
@@ -636,7 +639,7 @@ make_trial_design <- function(
   )
 
   #=== if plots and ab-liens have not been created yet ===#
-  if (!exp_plots_exists) {
+  if (!exp_plots_exists | start_from_scratch) {
     #/*----------------------------------*/
     #' ## Boundary file
     #/*----------------------------------*/
@@ -727,9 +730,23 @@ make_trial_design <- function(
     )
     td_rmd <- c(td_rmd, assign_rates_rmd)
 
-    td_rmd <- gsub(
+    td_rmd <- 
+    #=== number of levels ===#
+    gsub(
       "_num-levels-here_",
       paste0("c(", paste0(num_levels, collapse = ", "), ")"),
+      td_rmd
+    ) %>% 
+    #=== design type ===#
+    gsub(
+      "_design-type-here_",
+      paste0("c(\"", paste0(design_type, collapse = "\", \""), "\")"),
+      td_rmd
+    ) %>% 
+    #=== max jumps ===#
+    gsub(
+      "_max-jumps-here_",
+      paste0("c(", paste0(max_jumps, collapse = ", "), ")"),
       td_rmd
     )
 

@@ -169,6 +169,8 @@ mutate(tm_exp_head = list(
       palette = "Spectral", 
       style = "order"
     )  +
+  tm_shape(field_sf) +
+    tm_borders() +
   tm_layout_to_add 
 ))
 
