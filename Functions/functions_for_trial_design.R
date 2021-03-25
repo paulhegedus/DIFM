@@ -1017,7 +1017,7 @@ function(
     "input")) %>%  map(1) %>% 
     rbindlist(fill = TRUE) %>% 
     filter(strategy == "trial") %>% 
-    dplyr::select(form, sq_rate, min_rate, max_rate, input_plot_width) %>% 
+    dplyr::select(form, sq_rate, unit, min_rate, max_rate, input_plot_width) %>% 
     rename(gc_rate = sq_rate) %>% 
     #=== the input with shorter plot length comes first ===#
     arrange(desc(input_plot_width))
