@@ -41,6 +41,14 @@ trial_data_r <- trial_data_eh %>%
     mutate(headland, rate = gc_rate) %>% 
     dplyr::select(rate)
   )) %>% 
+  mutate(input_type = list(
+    case_when(
+      form == "seed" ~ "S",
+      form %in% c("uan28", "uan32", "urea", "NH3") ~ "N",
+      #=== needs to change this ===#
+      form == c("potash") ~ "K"
+    )
+  )) %>% 
   mutate(trial_design = list(
     rbind(
       experiment_design,
@@ -96,13 +104,13 @@ pluck("map_design")
 # Save the trial design
 
 ```{r }
-time_user <- paste0(
-  Sys.time(), 
-  "-",
-  Sys.getenv("USER")
-) %>% 
-gsub(" ", "-", .) %>% 
-gsub("_", "-", .)  
+# time_user <- paste0(
+#   Sys.time(), 
+#   "-",
+#   Sys.getenv("USER")
+# ) %>% 
+# gsub(" ", "-", .) %>% 
+# gsub("_", "-", .)  
 
 dsn_name <- here("Data", "Growers", ffy, "TrialDesign")
 
@@ -113,7 +121,7 @@ summarise(list(
     trial_data_r$trial_design[[1]] %>% dplyr::select(- rate_tm), 
     dsn = dsn_name,
     layer = paste0(
-      "trial-design-", form, "-", 
+      "trial-design-", tolower(input_type), 
       ifelse(is.na(line_edge_id), "", line_edge_id)
     ),
     driver = "ESRI Shapefile",
@@ -128,7 +136,7 @@ summarise(list(
   st_write(
     trial_data_r$ab_lines[[1]], 
     dsn = dsn_name,
-    layer = paste0("ab-lines-", form, 
+    layer = paste0("ab-lines-", tolower(input_type), 
       ifelse(is.na(line_edge_id), "", line_edge_id)
     ),
     driver = "ESRI Shapefile",
