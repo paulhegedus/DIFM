@@ -590,15 +590,15 @@ function(
 
   # ggplot() +
   #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
+  #   geom_sf(data = final_exp_plots, aes(fill = type), color = NA) +
   #   geom_sf(data = line_edge_f, col = "red", size = 1) +
   #   geom_sf(data = line_edge_s, col = "darkgreen", size = 1)
 
-  # ggplot() +
-  #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
-  #   geom_sf(data = ab_lines[1, ], col = "red", size = 1) +
-  #   geom_sf(data = ab_lines[2, ], col = "darkgreen", size = 1)
+  ggplot() +
+    geom_sf(data = field, fill = NA) +
+    geom_sf(data = final_exp_plots, aes(fill = type), color = NA) +
+    geom_sf(data = ab_lines[1, ], col = "red", size = 1) +
+    geom_sf(data = ab_lines[2, ], col = "darkgreen", size = 1)
 
   #/*----------------------------------*/
   #' ## Save
@@ -1181,7 +1181,7 @@ get_td_parameters <- function(
   } else {
 
     input_data <- td_parameters 
-    
+
   }
   
   return(input_data)
