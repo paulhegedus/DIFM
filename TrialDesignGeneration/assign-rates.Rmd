@@ -19,7 +19,6 @@ if (nrow(trial_data) > 1) {
 }
 
 #=== user-specified number of levels ===#
-
 trial_data_r <- trial_data_eh %>% 
   left_join(., num_level_data, by = "form") %>% 
   mutate(rates_ls = list(
@@ -52,13 +51,21 @@ trial_data_r <- trial_data_eh %>%
     setnames(
       "rate",
       case_when(
-        form == "seed" ~ "tgts",
+        form == "seed" ~ "tgts_K",
         form %in% c("uan28", "uan32", "urea") ~ "tgtn",
         #=== needs to change this ===#
         form == c("potash") ~ "tgtk"
       )
     ) %>% 
     st_transform(4326) 
+  )) %>% 
+  mutate(trial_design = list(
+    if ("tgts_K" %in% names(trial_design)) {
+      mutate(trial_design, tgts = trial_design$tgts_K * 1000) %>% 
+        relocate(tgts_K, tgts)
+    } else {
+      trial_design
+    }
   )) %>% 
   dplyr::select(
     - exp_plots, - experiment_plots_dissolved,
