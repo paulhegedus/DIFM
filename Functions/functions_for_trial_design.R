@@ -896,6 +896,123 @@ assign_rates_latin <- function(
 }
 
 #/*=================================================*/
+#' # Assign rates (latin and jump-rate-conscious)
+#/*=================================================*/
+# data_sf <- trial_data_eh$exp_plots[[1]]
+# min_rate <- trial_data_eh$min_rate[[1]]
+# max_rate <- trial_data_eh$max_rate[[1]]
+# gc_rate <- trial_data_eh$gc_rate[[1]]
+# max_jump <- 4
+#
+
+# rates_ls <- seq(min_rate, max_rate, length = 9)
+
+assign_rates_latin_2 <- function(
+  data_sf,
+  max_jump,
+  gc_rate,
+  min_rate,
+  max_rate,
+  push,
+  merge = TRUE
+) {
+
+  gen_sequence <- function(length, push = FALSE) {
+
+    if (length %% 2 == 0) { # even 
+      seq_r <- c(seq(1, length, by = 2), seq(length, 2, by = -2))
+    } else { # odd
+      seq_r <- c(seq(1, length, by = 2), seq(length - 1, 2, by = -2))
+    }
+
+    if (push) {
+      seq_r <- c(seq_r[-1], seq_r[1])
+    }
+
+    return(seq_r)
+  }
+
+  total_num_levels <- length(rates_ls)
+  max_plot_id <- max(data_sf$plot_id)
+  max_strip_id <- max(data_sf$strip_id)
+
+  rates_data_base <- 
+  data.table(
+    rate = rates_ls,
+    rate_rank = 1:total_num_levels
+  ) %>% 
+  .[, tier := ifelse(rate_rank < median(rate_rank), 1, 2)] %>% 
+  .[, rank_in_tier := rowid(tier)]
+
+  rates_data <- rates_data_base %>% 
+    nest_by(tier) %>% 
+    mutate(num_levels = nrow(data)) %>% 
+    mutate(basic_seq = list(
+      gen_sequence(num_levels)
+    )) %>% 
+    mutate(basic_seq = list(
+      if (push) {
+        c(basic_seq[2:num_levels], basic_seq[1])
+      } else {
+        basic_seq
+      }
+    )) %>% 
+    mutate(strip_plot_data = list(
+      if (tier == 1) {
+        filter(data_sf, (strip_id %% 2) == 1) %>% 
+          data.table() %>% 
+          .[, .(strip_id, plot_id)] %>% 
+          unique(by = c("strip_id", "plot_id"))
+      } else {
+        filter(data_sf, (strip_id %% 2) == 0) %>% 
+          data.table() %>% 
+          .[, .(strip_id, plot_id)] %>% 
+          unique(by = c("strip_id", "plot_id"))
+      }
+    )) %>% 
+    mutate(strip_plot_data = list(
+      strip_plot_data[, group_in_strip := .GRP, by = strip_id]
+    )) %>% 
+    mutate(strip_plot_data = list(
+      lapply(
+        unique(strip_plot_data$strip_id),
+        function (x) {
+          temp_data <- strip_plot_data[strip_id == x, ]
+          if ((unique(temp_data$group_in_strip) %% 2) == 0) {
+            temp_data <- temp_data[order(rev(plot_id)), ]
+          } 
+          return(temp_data)
+        }  
+      ) %>% 
+      rbindlist()
+    )) %>% 
+    mutate(strip_plot_data = list(
+      strip_plot_data[, rank_in_tier :=
+        rep(basic_seq, ceiling(nrow(strip_plot_data) / num_levels))[1:nrow(strip_plot_data)]
+      ]
+    )) %>% 
+    mutate(rate_data = list(
+      data.table(data)[strip_plot_data[, .(strip_id, plot_id, rank_in_tier)], on = "rank_in_tier"]
+    )) %>% 
+    pluck("rate_data") %>% 
+    rbindlist()
+
+  return_data <- 
+  left_join(
+    data_sf, 
+    rates_data, 
+    by = c("strip_id", "plot_id")
+  ) 
+
+  # ggplot() +
+  #   geom_sf(data = return_data, aes(fill = factor(rate)), color = NA) +
+  #   scale_fill_viridis_d()
+
+  return(return_data)
+
+}
+
+#/*=================================================*/
 #' # Tilt the field
 #/*=================================================*/
 
