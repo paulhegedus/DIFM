@@ -31,7 +31,7 @@ trial_data_r <- trial_data_eh %>%
   mutate(experiment_design = list(
     assign_rates(
       data_sf = exp_plots,
-      design_type = "jcl",
+      design_type = design_type,
       max_jump = max_jump,
       gc_rate = gc_rate,
       min_rate = min_rate,
