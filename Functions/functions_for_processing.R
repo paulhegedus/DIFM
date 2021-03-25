@@ -1134,7 +1134,7 @@ make_var_name_consistent <- function(data, dictionary) {
 # unit <- "lbs"
 # rate <- 130
 
-convert_N_unit <- function(form, unit, rate, reporting_unit) {
+convert_N_unit <- function(form, unit, rate, reporting_unit, conversion_type = "to_n_equiv") {
   conv_table <- fromJSON(file.path(here("Data", "CommonData"), "nitrogen_conversion.json"), flatten = TRUE) %>%
     data.table() %>%
     .[, conv_factor := as.numeric(conv_factor)] %>%
@@ -1152,9 +1152,13 @@ convert_N_unit <- function(form, unit, rate, reporting_unit) {
     conv_factor_n <- conv_factor_n * conv_unit(1, "lbs", "kg") * conv_unit(1, "hectare", "acre")
   }
 
-  converted_rate <- conv_factor_n * rate
+  if (conversion_type == "to_n_equiv") {
+    converted_rate <- (conv_factor_n)*rate
+  } else {
+    converted_rate <- (1/conv_factor_n)*rate
+  }
 
-  return(converted_rate)
+  return(as.numeric(converted_rate))
 }
 
 # /*=================================================*/
