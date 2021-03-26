@@ -1222,6 +1222,45 @@ make_ab_line <- function(past_aa_input, field) {
 }
 
 #/*=================================================*/
+#' # Get mean_Rx value on a field
+#/*=================================================*/
+  mean_Rx <- function(ffy, input){
+    dictionary <- jsonlite::fromJSON(
+      here("Data", "CommonData", "variable_name_dictionary.json"),
+      flatten = TRUE) %>%
+      data.table()
+    
+    dict_rx <- dictionary[type == paste0("Rx-", input), ]
+
+    rx <- st_read(here("Data/Growers", ffy, paste0("Raw/Rx-", input, ".shp"))) %>%
+     setnames(names(.), tolower(names(.))) %>%
+     mutate(area = as.numeric(st_area(.)))
+    
+    rx <- make_var_name_consistent(
+     rx, 
+     dict_rx)
+    
+    rx <- rx %>%
+      mutate(area_weight = area/sum(rx$area)) %>%
+      mutate(weighted_tgt = tgti*area_weight) 
+      
+    gc_rate <- sum(rx$weighted_tgt)
+    return(gc_rate)
+  }
+
+#/*=================================================*/
+#' # Get input type for bringing in Rx (need to add more inputs)
+#/*=================================================*/
+find_input <- function(form){
+    if(form == "seed"){
+      input = "s"
+    }else{
+      input = "n"
+    }
+    return(input)
+  }
+
+#/*=================================================*/
 #' # Get field parameters for trial design
 #/*=================================================*/
 
@@ -1254,6 +1293,17 @@ get_td_parameters <- function(
     rename(gc_rate = sq_rate) %>% 
     #=== the input with shorter plot length comes first ===#
     arrange(desc(input_plot_width))
+  
+  #=== For those with an Rx we need to find mean Rx value ===#
+  if("Rx" %in% td_parameters$gc_rate){
+  td_parameters_rx <- td_parameters %>%
+    filter(gc_rate == "Rx") %>%
+    rowwise() %>%
+    mutate(input = find_input(form)) %>%
+    mutate(gc_rate = mean_Rx(ffy, input))
+  td_parameters <- rbind(td_parameters_rx, td_parameters %>% filter(gc_rate != "Rx")) %>%
+    data.table()
+  }
   
   #=== check if there are N base rate entries ===#  
   if ("base" %in% trial_info$strategy){
