@@ -72,7 +72,17 @@ function(
     for (group in 1:100) {
 
       # print(group)
-
+      # dir_p <- -1
+      # dir_v <- -1
+      # x <- 1
+      # make_polygon(
+      #       strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
+      #       x,
+      #       dir_p,
+      #       dir_v,
+      #       cell_height
+      #     ) %>% plot
+      # plot(exp_sf_ls[[1]])
       exp_sf_ls[[paste(group)]] <- lapply(
         1:num_subplots,
         function(x) {
@@ -103,8 +113,10 @@ function(
     }
   }
 
-  create_plots <- 
-  function(
+  #/*----------------------------------*/
+  #' ## Create plots that covers the entire field
+  #/*----------------------------------*/
+  create_plots <- function(
     strt_point,
     dir_p,
     dir_v,
@@ -273,8 +285,14 @@ function(
   #   geom_sf(data = ab_line) +
   #   geom_sf(data = ab_line_tilted) 
 
+  # ggplot() +
+  #   geom_sf(data = st_point(ab_xy_nml)) +
+  #   geom_sf(data = st_point(ab_xy_nml_p90)) +
+  #   ylim(-1, 1) +
+  #   xlim(-1, 1)
+
   #=== tilt based on harvest angle ===#
-  ab_line_tilted <- st_tilt(ab_line, harvest_angle)
+  ab_line_tilted <- st_tilt(ab_line, harvest_angle, merge = FALSE)
   #--- get the vector (direction machines run)  ---#
   ab_xy <- st_geometry(ab_line_tilted)[[1]][2, ] - st_geometry(ab_line_tilted)[[1]][1, ]  
   #--- distance of the vector ---#
@@ -309,7 +327,7 @@ function(
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   print("Detecting the direction to go in")
 
-  plots_ls <- expand.grid(dir_p = c(-1, 1), dir_v = c(-1, 1)) %>% 
+  directions <- expand.grid(dir_p = c(-1, 1), dir_v = c(-1, 1)) %>% 
   data.table() %>% 
   .[,
     keep := map2(dir_p, dir_v, ~
@@ -324,23 +342,60 @@ function(
     )
   ] %>% 
   .[keep == TRUE, ]  
-
-  dir_p <- plots_ls[, dir_p]
-  dir_v <- plots_ls[, dir_v]
-
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### Create the full plots
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
+  
+  #/*----------------------------------*/
+  #' ## create plots (multiple direction combinations possible)
+  #/*----------------------------------*/
   print("Creating the full polygons")
 
-  plots <- create_plots(
-    strt_point = starting_point,
-    dir_p = dir_p,
-    dir_v = dir_v,
-    plot_width = plot_width,
-    num_subplots = num_subplots_in_a_strip,
-    cell_height = cell_height
-  ) 
+  plots_dt <- directions %>% 
+  mutate(dir_id := seq_len(nrow(.))) %>% 
+  rowwise() %>% 
+  mutate(plots = list(
+    create_plots(
+      strt_point = starting_point,
+      dir_p = dir_p,
+      dir_v = dir_v,
+      plot_width = plot_width,
+      num_subplots = num_subplots_in_a_strip,
+      cell_height = cell_height
+    ) %>% 
+    mutate(dir_id = dir_id)
+  )) %>% 
+  pluck("plots") %>% 
+  reduce(rbind) %>% 
+  data.table()  
+
+  if (nrow(plots_ls) > 1) {
+
+    group_dif <- st_intersection(
+      st_as_sf(plots_dt[dir_id == 1, ]),
+      st_as_sf(plots_dt[dir_id == 2, ])
+    ) %>% 
+    mutate(geometry_type = st_geometry_type(.)) %>% 
+    filter(geometry_type == "LINESTRING") %>% 
+    #=== which group id in the second corresponds to the one in the first ===#
+    mutate(group_dif = group.1 - group) %>% 
+    pull(group_dif) %>% 
+    unique()
+
+    plots_dt[dir_id == 1, group := group + group_dif]
+
+    #=== cell id adjustment ===#
+    plots_dt[dir_id == 1, id := - id + 1] 
+    plots_dt[, id := id - min(id) + 1, by = group] 
+
+    #=== directions to move for later use ===#
+    dir_p <- directions[2, dir_p] 
+    dir_v <- directions[2, dir_v]
+  } else {
+
+    #=== directions to move for later use ===#
+    dir_p <- directions[1, dir_p] 
+    dir_v <- directions[1, dir_v]
+  }
+
+  plots <- st_as_sf(plots_dt)
 
   # ggplot() +
   #   geom_sf(data = plots, fill = "blue", color = NA) +
@@ -354,30 +409,30 @@ function(
   print("Shifting the polygons for the right starting point")
 
   #=== find the group id for the cells that are intersecting with the ab-line  ===#
-  ab_int_group <- st_intersection(plots, ab_line) %>% 
+  ab_int_group <- st_intersection(plots, ab_line_tilted) %>% 
     pull(group) %>% unique()
 
   #=== get the sf of the intersecting group ===# 
   int_group <- filter(plots, group == ab_int_group)
 
   #=== the distance between the ab-line and the line that connect the centroids of the intersecting sf ===#
-  correction_dist <- cal_dist_to_ab(int_group, ab_line)
+  correction_dist <- cal_dist_to_ab(int_group, ab_line_tilted)
 
   #=== shift the intersecting sf  ===#
   int_group_corrected <- st_shift(int_group, correction_dist * ab_xy_nml_p90)
 
   # ggplot() +
   #   geom_sf(data = int_group, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line, color = "red")   
+  #   geom_sf(data = ab_line_tilted, color = "red")   
   # ggplot() +
   #   geom_sf(data = int_group_corrected, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line, color = "red") 
+  #   geom_sf(data = ab_line_tilted, color = "red") 
 
   if (second_input == FALSE) {
     #=== if the first input ===# 
     # Note: for the first input, the cell center is aligned to the 
     # supplied ab-line (which is not the final ab-line)
-    if (cal_dist_to_ab(int_group_corrected, ab_line) > correction_dist) {
+    if (cal_dist_to_ab(int_group_corrected, ab_line_tilted) > correction_dist) {
       #--- if moved further away ---#
       plots_shifted <- st_shift(plots, - correction_dist * ab_xy_nml_p90) %>% 
         mutate(unique_id := paste0(group, "_", id))
@@ -391,7 +446,7 @@ function(
     # Note: line_edge is used as the ab-line for the second input
     # the left (right) edge of the cells is shifted so that it is
     # aligned with the line_edge
-    if (cal_dist_to_ab(int_group_corrected, ab_line) > correction_dist) {
+    if (cal_dist_to_ab(int_group_corrected, ab_line_tilted) > correction_dist) {
       #--- if moved further away ---#
       plots_shifted <- 
       plots %>% 
@@ -411,7 +466,7 @@ function(
   
   # ggplot() +
   #   geom_sf(data = plots_shifted, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line, col = "red")
+  #   geom_sf(data = ab_line_tilted, col = "red")
 
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Remove all the non-intersecting (or almost)
@@ -445,10 +500,10 @@ function(
 
   # ggplot() +
   #   # geom_sf(data = filter(plots_intersecting, group == 47), aes(fill = type)) +
-  #   geom_sf(data = plots_intersecting, aes(fill = type), color = NA) +
+  #   geom_sf(data = plots_intersecting, fill = "red", color = NA, alpha = 0.4) +
   #   # geom_sf(data = plots_intersecting) +
   #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = ab_line, col = "red")
+  #   geom_sf(data = ab_line_tilted, col = "red")
 
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Cut off the plots on the sides that are perpendicular to the machine direction
