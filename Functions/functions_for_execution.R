@@ -594,6 +594,7 @@ make_trial_design <- function(
     side_plots_num = 1,
     use_ab = TRUE, 
     assign_rates = TRUE,
+    harvest_angle = 0,
     design_type = c("jcl", "jcl"),
     num_levels = c(5, 5), 
     max_jumps,
@@ -705,7 +706,8 @@ make_trial_design <- function(
     ) %>% 
     gsub("_side-plots-num-here_", side_plots_num, .) %>% 
     gsub("_cell-height-here_", cell_height, .) %>% 
-    gsub("_head-dist-here_", head_dist, .)  
+    gsub("_head-dist-here_", head_dist, .) %>% 
+    gsub("_harvest-angle-here_", harvest_angle, .)  
     
     td_rmd <- c(td_rmd, create_plots_rmd)
 

@@ -6,6 +6,8 @@
 side_plots_num <- _side-plots-num-here_ 
 cell_height <- _cell-height-here_ 
 head_dist <- _head-dist-here_
+harvest_angle <- _harvest-angle-here_
+
 ```
 ## Read boundary and ab-line
 
@@ -70,7 +72,9 @@ trial_data_rh <- trial_data %>%
   # if only one number is supplied, it is applied for both inputs in a two-input case
   mutate(headland_length = conv_unit(head_dist, "ft", "m")) %>% 
   #=== cell height ===#
-  mutate(cell_height = conv_unit(cell_height, "ft", "m"))
+  mutate(cell_height = conv_unit(cell_height, "ft", "m")) %>% 
+  #=== harvester angler ===#
+  mutate(harvest_angle = harvest_angle) 
 
 ```
 
@@ -102,6 +106,7 @@ mutate(experiment_plots = list(
     plot_width = input_plot_width, 
     cell_height = cell_height,
     headland_length = headland_length,
+    harvest_angle = harvest_angle,
     side_plots_num = side_plots_num
   )
 ))

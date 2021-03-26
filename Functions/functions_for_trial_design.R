@@ -251,7 +251,7 @@ function(
     return(correction_dist)
   }
 
-  get_line_through_centroids <- function(data_sf, field) {
+  get_line_through_centroids <- function(data_sf, crs) {
 
     centroids <- data_sf %>% 
       st_centroid() %>% 
@@ -260,7 +260,7 @@ function(
 
     line <- list(st_linestring(c(centroids[[1]], centroids[[2]]))) %>% 
       st_as_sfc() %>% 
-      st_set_crs(st_crs(field))
+      st_set_crs(crs)
 
     return(line)
 
@@ -269,8 +269,14 @@ function(
   # /*=================================================*/
   #' # Main code
   # /*=================================================*/
+  # ggplot() +
+  #   geom_sf(data = ab_line) +
+  #   geom_sf(data = ab_line_tilted) 
+
+  #=== tilt based on harvest angle ===#
+  ab_line_tilted <- st_tilt(ab_line, harvest_angle)
   #--- get the vector (direction machines run)  ---#
-  ab_xy <- st_geometry(ab_line)[[1]][2, ] - st_geometry(ab_line)[[1]][1, ]
+  ab_xy <- st_geometry(ab_line_tilted)[[1]][2, ] - st_geometry(ab_line_tilted)[[1]][1, ]  
   #--- distance of the vector ---#
   ab_length <- sqrt(sum(ab_xy^2))
   #--- normalize (distance == 1) ---#
@@ -561,24 +567,55 @@ function(
   #/*----------------------------------*/
   #' ## Get the ab-line
   #/*----------------------------------*/
-  ab_lines <- 
-  rbind(
-    get_line_through_centroids(
-      filter(
-        final_exp_plots, 
-        strip_id == min(strip_id)
-      ),
-      field
-    ) %>% st_as_sf(),
-    get_line_through_centroids(
-      filter(
-        final_exp_plots, 
-        strip_id == max(strip_id)
-      ),
-      field
-    ) %>% st_as_sf()
-  ) %>% 
-  mutate(ab_id = seq_len(nrow(.)))
+  if (harvest_angle == 0) {
+
+    ab_lines <- 
+    rbind(
+      get_line_through_centroids(
+        filter(final_exp_plots, strip_id == min(strip_id)),
+        st_crs(field)
+      ) %>% st_as_sf(),
+      get_line_through_centroids(
+        filter(final_exp_plots, strip_id == max(strip_id)),
+        st_crs(field)
+      ) %>% st_as_sf()
+    ) %>% 
+    mutate(ab_id = seq_len(nrow(.)))
+
+  } else { # if harvest angle is non-zero
+
+    ab_line <- get_line_through_centroids(
+      #=== any line that goes through the centroids of a strip will do ===#
+      filter(final_exp_plots, strip_id == min(strip_id)),
+      crs
+    ) %>%  
+    st_tilt(., - harvest_angle, merge = FALSE)
+
+    # Create ab-lines at bunch of places
+    cell_coordinates <- st_coordinates(st_centroid(data_sf)) %>% 
+      data.table() %>% 
+      .[, cell_index := 1:.N]
+
+    cells_to_use <- c(
+      cell_coordinates[X == min(X), cell_index],
+      cell_coordinates[X == max(X), cell_index],
+      cell_coordinates[Y == min(Y), cell_index],
+      cell_coordinates[Y == max(Y), cell_index]
+    )
+
+    ab_lines <- cell_coordinates[cells_to_use, ] %>% 
+      rowwise() %>% 
+      mutate(shift_X = X - ab_line[[1]][1]) %>% 
+      mutate(shift_Y = Y - ab_line[[1]][3]) %>% 
+      mutate(ab_lines_shifted = list(
+        st_shift(ab_line, c(shift_X, shift_Y), merge = FALSE)
+      )) %>% 
+      pluck("ab_lines_shifted") %>% 
+      reduce(c) %>% 
+      st_as_sf() %>% 
+      mutate(ab_id = seq_len(nrow(.)))
+
+  }
 
   if (second_input == FALSE) {
     line_edges <- 
@@ -977,8 +1014,10 @@ assign_rates <- function(
 #/*=================================================*/
 #' # Tilt the field
 #/*=================================================*/
+# data_sf = ab_line
+# angle = harvest_angle
 
-st_tilt <- function(data_sf, angle) {
+st_tilt <- function(data_sf, angle, merge = TRUE) {
 
   rot <- function(a) matrix(c(cos(a), sin(a), -sin(a), cos(a)), 2, 2)
 
@@ -992,9 +1031,12 @@ st_tilt <- function(data_sf, angle) {
   data_tilted <- ((data_geom - base_point) * rot(angle / 180 * pi) + base_point) %>%
     st_set_crs(st_crs(data_sf)) 
 
-  data_sf$geometry <- data_tilted 
-
-  return(data_sf)
+  if (merge == TRUE) {
+    data_sf$geometry <- data_tilted 
+    return(data_sf)
+  } else {
+    return(data_tilted)
+  }
 
 }
 
@@ -1003,11 +1045,11 @@ st_tilt <- function(data_sf, angle) {
 #/*=================================================*/
 
 # data_sf <- ab_lines[1, ]
-# # shift <- dir_p * ab_xy_nml_p90 * plot_width / 2
+# shift <- dir_p * ab_xy_nml_p90 * plot_width / 2
 
-st_shift <- function(data_sf, shift) {
+st_shift <- function(data_sf, shift, merge = TRUE) {
 
-  data_geom <- st_geometry(data_sf)
+  data_geom <- st_geometry(data_sf) 
   temp_crs <- st_crs(data_sf) 
 
   shift_sfc <- st_point(shift) %>% st_sfc()
@@ -1015,11 +1057,13 @@ st_shift <- function(data_sf, shift) {
   geom_shifted <- (data_geom + shift_sfc) %>% 
     st_set_crs(temp_crs)
 
-  data_sf <- st_drop_geometry(data_sf) 
-
-  data_sf$geometry <- geom_shifted
-
-  return(st_as_sf(data_sf))
+  if (merge == TRUE){
+    data_sf <- st_drop_geometry(data_sf) 
+    data_sf$geometry <- geom_shifted
+    return(st_as_sf(data_sf))
+  } else {
+    return(geom_shifted)
+  }
 
 }
 
