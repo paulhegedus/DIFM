@@ -11,6 +11,7 @@ function(
   machine_width,
   cell_height, 
   headland_length, 
+  harvest_angle,
   side_plots_num = 1,
   second_input = FALSE
 ) {
