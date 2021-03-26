@@ -657,10 +657,17 @@ make_trial_design <- function(
     #/*----------------------------------*/
 
     if (use_ab) { # if ab-line exists and can be readily used 
-      ab_line_file <- here("Data", "Growers", ffy, "TrialDesign/ab-line.shp")
+      ab_line_file <- here("Data", "Growers", ffy, "TrialDesign") %>% 
+        list.files(recursive = TRUE, full.names = TRUE) %>%
+        #--- search for as-applied-s file ---#
+        .[str_detect(., "shp")] %>%
+        .[!str_detect(., "xml")] %>%
+        .[str_detect(., "ab-line")] 
 
-      if (!file.exists(ab_line_file)) {
+      if (length(ab_line_file) == 0) {
         return(print("No ab-line file exists or an ab-line cannot be created based on the past as-applied data"))
+      } else {
+        print(paste0(length(ab_line_file), "ab-line files are found. Only the first one is used. Make sure this is the ab-line you want to use."))
       }
 
     } else { # if ab-line does not exist and needs to create one

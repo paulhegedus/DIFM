@@ -31,9 +31,17 @@ field_sf <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp") %>%
   st_transform_utm() %>% 
   st_combine()
 
+# plot(ab_line)
 #--- ab-line ---#
 if (use_ab) {
-  ab_line <- here("Data", "Growers", ffy, "TrialDesign/ab-line.shp") %>% 
+  ab_line <- here("Data", "Growers", ffy, "TrialDesign") %>% 
+    list.files(recursive = TRUE, full.names = TRUE) %>%
+    #--- search for as-applied-s file ---#
+    .[str_detect(., "shp")] %>%
+    .[!str_detect(., "xml")] %>%
+    .[str_detect(., "ab-line")] %>% 
+    #=== use only the first one ===#
+    .[1] %>% 
     #--- read the data ---#
     st_read() %>% 
     st_set_4326() %>% 

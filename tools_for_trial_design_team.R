@@ -65,7 +65,7 @@ make_trial_design(
 )
 
 make_trial_design(
-  ffy = field_year_ls[5], 
+  ffy = field_year_ls[17], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_plots_num = 1,
@@ -73,7 +73,7 @@ make_trial_design(
   assign_rates = TRUE,
   #=== angled harvesting ===#
   # harvest angle relative to the planter/applicator
-  harvest_angle = 0, 
+  harvest_angle = 90, 
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
