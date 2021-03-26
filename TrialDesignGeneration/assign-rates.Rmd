@@ -64,7 +64,7 @@ trial_data_r <- trial_data_eh %>%
       "rate",
       case_when(
         form == "seed" ~ "tgts_K",
-        form %in% c("uan28", "uan32", "urea") ~ "tgtn",
+        form %in% c("uan28", "uan32", "urea", "NH3") ~ "tgtn",
         #=== needs to change this ===#
         form == c("potash") ~ "tgtk"
       )
