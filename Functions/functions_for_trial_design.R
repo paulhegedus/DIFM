@@ -8,6 +8,7 @@ function(
   field, 
   ab_line, 
   plot_width, 
+  machine_width,
   cell_height, 
   headland_length, 
   side_plots_num = 1,
@@ -622,6 +623,9 @@ function(
   #/*----------------------------------*/
   #' ## Get the ab-line
   #/*----------------------------------*/
+  # plot_width
+  # machine_width <- conv_unit(90, "ft","m")
+
   if (harvest_angle == 0) {
 
     ab_lines <- 
@@ -644,10 +648,12 @@ function(
       filter(final_exp_plots, strip_id == min(strip_id)),
       crs
     ) %>%  
-    st_tilt(., - harvest_angle, merge = FALSE)
+    #=== normalize ===#
+    st_extend_line(., as.numeric(1 / st_length(.))) %>%
+    st_tilt(., - harvest_angle, merge = FALSE)  
 
     # Create ab-lines at bunch of places
-    cell_coordinates <- st_coordinates(st_centroid(data_sf)) %>% 
+    cell_coordinates <- st_coordinates(st_centroid(final_exp_plots)) %>% 
       data.table() %>% 
       .[, cell_index := 1:.N]
 
@@ -660,15 +666,55 @@ function(
 
     ab_lines <- cell_coordinates[cells_to_use, ] %>% 
       rowwise() %>% 
-      mutate(shift_X = X - ab_line[[1]][1]) %>% 
-      mutate(shift_Y = Y - ab_line[[1]][3]) %>% 
+      mutate(shift_X = X - ab_line[[1]][1, 1]) %>% 
+      mutate(shift_Y = Y - ab_line[[1]][1, 2]) %>% 
       mutate(ab_lines_shifted = list(
         st_shift(ab_line, c(shift_X, shift_Y), merge = FALSE)
       )) %>% 
-      pluck("ab_lines_shifted") %>% 
+      mutate(ab_lines_shifted_extended = list(
+        #=== 50 meter ===#
+        st_extend_line(ab_lines_shifted, 50)
+      )) %>% 
+      pluck("ab_lines_shifted_extended") %>% 
       reduce(c) %>% 
       st_as_sf() %>% 
       mutate(ab_id = seq_len(nrow(.)))
+
+  }
+
+  #=== ab-line re-centering when machine width > plot_width ===#
+  if (machine_width > plot_width) {
+
+    ab_lines <- 
+    expand_grid_df(tibble(dir_p = c(-1, 1)), ab_lines) %>% 
+    rowwise() %>% 
+    mutate(geometry = list(x)) %>% 
+    #=== normalize the length ===#
+    mutate(ab_norm = list(
+      st_extend_line(geometry, as.numeric(1 / st_length(geometry)))
+    )) %>% 
+    mutate(ab_line_for_direction_check = list(
+      st_shift(
+        ab_norm, 
+        dir_p * ab_xy_nml_p90 * (2 * plot_width), 
+        merge = FALSE
+      )
+    )) %>% 
+    mutate(int_check = 
+      length(ab_line_for_direction_check[final_exp_plots, ])
+    ) %>% 
+    filter(int_check == 1) %>% 
+    mutate(ab_recentered = list(
+      st_shift(
+        geometry, 
+        dir_p * ab_xy_nml_p90 * (machine_width - plot_width) / 2,
+        merge = FALSE
+      )
+    )) %>% 
+    pluck("ab_recentered") %>% 
+    reduce(c) %>% 
+    st_as_sf() %>% 
+    mutate(ab_id = seq_len(nrow(.)))
 
   }
 
@@ -686,11 +732,15 @@ function(
   #   geom_sf(data = line_edge_f, col = "red", size = 1) +
   #   geom_sf(data = line_edge_s, col = "darkgreen", size = 1)
 
-  ggplot() +
-    geom_sf(data = field, fill = NA) +
-    geom_sf(data = final_exp_plots, aes(fill = type), color = NA) +
-    geom_sf(data = ab_lines[1, ], col = "red", size = 1) +
-    geom_sf(data = ab_lines[2, ], col = "darkgreen", size = 1)
+  # ggplot() +
+  #   geom_sf(data = field, fill = NA) +
+  #   geom_sf(data = final_exp_plots, fill = "blue", color = NA) +
+  #   geom_sf(data = ab_lines, aes(col = factor(ab_id)), size = 1)
+
+  # ggplot() +
+  #   geom_sf(data = field, fill = NA) +
+  #   geom_sf(data = final_exp_plots, fill = "blue", color = NA) +
+  #   geom_sf(data = ab_line, size = 1)
 
   #/*----------------------------------*/
   #' ## Save
@@ -1198,7 +1248,7 @@ get_td_parameters <- function(
     filter(strategy == "trial") %>% 
     dplyr::select(
       form, sq_rate, unit, min_rate,
-      max_rate, input_plot_width
+      max_rate, input_plot_width, machine_width
     ) %>% 
     rename(gc_rate = sq_rate) %>% 
     #=== the input with shorter plot length comes first ===#
@@ -1294,5 +1344,26 @@ function(
   rates <- c(rates_low, rates_high) %>% unique()
 
   return(rates)
+}
+
+#/*=================================================*/
+#' # Extend a line
+#/*=================================================*/
+
+line <- ab_line_recentered$geometry[[1]]
+multiplier <- 3
+st_extend_line(line, multiplier)
+
+st_extend_line <- function(line, multiplier) {
+
+  new_line <- st_geometry(line)[[1]]
+  strt <- new_line[1, ]
+  vec <- new_line[2, ] - new_line[1, ]
+  new_line[2, ] <- strt + multiplier * vec
+
+  return_line <- st_sfc(new_line) %>% 
+    st_set_crs(st_crs(line))
+
+  return(return_line)
 }
 

@@ -104,6 +104,7 @@ mutate(experiment_plots = list(
     # ab_line = trial_data_first$ab_line, 
     ab_line = ab_line[1, ], 
     plot_width = input_plot_width, 
+    machine_width = machine_width, 
     cell_height = cell_height,
     headland_length = headland_length,
     harvest_angle = harvest_angle,
