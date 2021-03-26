@@ -667,7 +667,7 @@ make_trial_design <- function(
       if (length(ab_line_file) == 0) {
         return(print("No ab-line file exists or an ab-line cannot be created based on the past as-applied data"))
       } else {
-        print(paste0(length(ab_line_file), "ab-line files are found. Only the first one is used. Make sure this is the ab-line you want to use."))
+        print(paste0(length(ab_line_file), "ab-line files are found. Only the first one (", ab_line_file[1], ") is used. Make sure this is the ab-line you want to use."))
       }
 
     } else { # if ab-line does not exist and needs to create one

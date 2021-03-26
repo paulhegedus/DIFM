@@ -46,7 +46,7 @@ make_trial_design(
   assign_rates = TRUE,
   #=== angled harvesting ===#
   # harvest angle relative to the planter/applicator
-  harvest_angle = 20, 
+  harvest_angle = 0, 
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
