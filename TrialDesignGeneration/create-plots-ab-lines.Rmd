@@ -15,11 +15,17 @@ head_dist <- _head-dist-here_
 # ffy <- "Bohnhoff_Adams_2018"
 # ffy <- "Holzwart_Holzwart_2021"
 
+
 #--- field boundary ---#
 field_sf <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp") %>% 
   st_read() %>% 
+  #=== assign 4326 when CRS is missing ===#
   st_set_4326() %>% 
   st_make_valid() %>%
+  #=== force WGS84 ===#
+  # Note: you could have different CRS when field and ab_line 
+  # are in different datum without this
+  st_transform(4326) %>% 
   st_transform_utm() %>% 
   st_combine()
 
@@ -30,6 +36,8 @@ if (use_ab) {
     st_read() %>% 
     st_set_4326() %>% 
     st_make_valid() %>%
+    #=== force WGS84 ===#
+    st_transform(4326) %>% 
     st_transform_utm() 
 } else {
   past_aa_input <- "_past-aa-input-file-name-here_" %>% 
@@ -38,6 +46,8 @@ if (use_ab) {
     st_read() %>% 
     st_set_4326() %>% 
     st_make_valid() %>%
+    #=== force WGS84 ===#
+    st_transform(4326) %>% 
     st_transform_utm() 
 
   ab_line <- make_ab_line(past_aa_input) 
@@ -51,7 +61,6 @@ tm_shape(field_sf) +
   tm_shape(ab_line) +
   tm_lines(col = "red")
 ```
-
 
 ## Option parameters
 
