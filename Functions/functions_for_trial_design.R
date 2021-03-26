@@ -684,7 +684,7 @@ function(
   }
 
   #=== ab-line re-centering when machine width > plot_width ===#
-  if (machine_width > plot_width) {
+  if (machine_width != plot_width) {
 
     ab_lines <- 
     expand_grid_df(tibble(dir_p = c(-1, 1)), ab_lines) %>% 
@@ -704,11 +704,13 @@ function(
     mutate(int_check = 
       length(ab_line_for_direction_check[final_exp_plots, ])
     ) %>% 
-    filter(int_check == 1) %>% 
+    #=== which direction to go ===#
+    # Notes: go inward (intersecting) if machine_width > plot_width, otherwise outward
+    filter(int_check == ifelse(machine_width > plot_width, 1, 0)) %>% 
     mutate(ab_recentered = list(
       st_shift(
         geometry, 
-        dir_p * ab_xy_nml_p90 * (machine_width - plot_width) / 2,
+        dir_p * ab_xy_nml_p90 * abs(machine_width - plot_width) / 2,
         merge = FALSE
       )
     )) %>% 
@@ -717,7 +719,7 @@ function(
     st_as_sf() %>% 
     mutate(ab_id = seq_len(nrow(.)))
 
-  }
+  } 
 
   if (second_input == FALSE) {
     line_edges <- 
@@ -1246,7 +1248,7 @@ get_mean_Rx <- function(ffy, input){
     mutate(weighted_tgt = tgti*area_weight) 
     
   gc_rate <- sum(rx$weighted_tgt)
-  
+
   return(gc_rate)
 }
 
@@ -1298,7 +1300,7 @@ get_td_parameters <- function(
   
   #=== For those with an Rx we need to find mean Rx value ===#
   if("Rx" %in% td_parameters$gc_rate){
-    
+
     td_parameters_rx <- td_parameters %>%
       filter(gc_rate == "Rx") %>%
       rowwise() %>%
