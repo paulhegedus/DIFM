@@ -93,6 +93,11 @@ unique(trial_data_rh$input_plot_width) %>%
 length()
 
 #=== get the first one of the two if more than one ===#
+# input_plot_width <- trial_data_first$input_plot_width[[1]]
+# machine_width <- trial_data_first$machine_width[[1]]
+# headland_length <- trial_data_first$headland_length[[1]]
+# harvest_angle <- trial_data_first$harvest_angle[[1]]
+
 trial_data_first <- 
 trial_data_rh[1, ] %>% 
 mutate(line_edge_id = NA) %>% 

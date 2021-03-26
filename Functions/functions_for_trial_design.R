@@ -368,7 +368,7 @@ function(
   reduce(rbind) %>% 
   data.table()  
 
-  if (nrow(plots_ls) > 1) {
+  if (nrow(directions) > 1) {
 
     group_dif <- st_intersection(
       st_as_sf(plots_dt[dir_id == 1, ]),
