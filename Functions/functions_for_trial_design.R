@@ -1350,9 +1350,9 @@ function(
 #' # Extend a line
 #/*=================================================*/
 
-line <- ab_line_recentered$geometry[[1]]
-multiplier <- 3
-st_extend_line(line, multiplier)
+# line <- ab_line_recentered$geometry[[1]]
+# multiplier <- 3
+# st_extend_line(line, multiplier)
 
 st_extend_line <- function(line, multiplier) {
 
