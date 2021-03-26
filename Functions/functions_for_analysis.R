@@ -786,32 +786,6 @@ get_t_value <- function(test_data, w_zone){
     round(digits = 2)
 }  
 
-expand_grid_df <- function(data_1, data_2) {
-
-  expanded_data <- expand.grid(
-    index_1 = seq_len(nrow(data_1)),
-    index_2 = seq_len(nrow(data_2))
-  ) %>% 
-  tibble() %>% 
-  rowwise() %>% 
-  mutate(
-    data = list(
-      cbind(
-        slice(data.table(data_1), index_1),
-        slice(data.table(data_2), index_2)
-      )
-    )
-  ) %>% 
-  select(data) %>% 
-  ungroup() %>% 
-  .$data %>% 
-  rbindlist() %>% 
-  tibble()
-
-  return(expanded_data)
-
-}
-
 #/*=================================================*/
 #' # Assign grower-chosen rate
 #/*=================================================*/ 
