@@ -31,7 +31,7 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[15]
+ffy <- field_year_ls[14]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
