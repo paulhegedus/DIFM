@@ -33,7 +33,12 @@ field_len_cross <- sqrt(
 #/*----------------------------------*/
 #' ## Input ab-line
 #/*----------------------------------*/
-input_ab_line_files <- get_shp_name(ffy, "TrialDesign", "ab-line-i|ab-line-n|ab-line-s|ab-line-k") 
+input_ab_line_files <- get_shp_name(
+  ffy, 
+  "TrialDesign", 
+  "ab-line-i|ab-line-n|ab-line-s|ab-line-k|
+  ab-lines-i|ab-lines-n|ab-lines-s|ab-lines-k"
+) 
 past_input_files <- get_shp_name(ffy, "TrialDesign", "past-a-s|past-a-n|past-a-k") 
 
 if (length(input_ab_line_files) > 0) {
