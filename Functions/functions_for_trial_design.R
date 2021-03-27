@@ -305,9 +305,8 @@ function(
   #--- create a vector that is perpendicular to ab_xy ---#
   ab_xy_nml_p90 <- ab_xy_nml %*% rotate_mat_p90
 
-
   #=== if ab-line is outside of the field boundary ===#
-  if (nrow(st_intersection(field, ab_line_tilted)) == 0) {
+  if (nrow(st_as_sf(st_intersection(field, ab_line_tilted))) == 0) {
 
     b <- t(
       st_coordinates(st_centroid(field)) - 
