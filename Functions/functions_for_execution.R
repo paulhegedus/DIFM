@@ -641,70 +641,7 @@ make_trial_design <- function(
 
   #=== if plots and ab-liens have not been created yet ===#
   if (!exp_plots_exists | start_from_scratch) {
-    #/*----------------------------------*/
-    #' ## Boundary file
-    #/*----------------------------------*/
-
-    #=== read the boundary file ===#
-    boundary_file <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp")
-
-    if (!file.exists(boundary_file)) {
-      return(print("No boundary file exists."))
-    }
-
-    #/*----------------------------------*/
-    #' ## ab-line
-    #/*----------------------------------*/
-
-    if (use_ab) { # if ab-line exists and can be readily used 
-      ab_line_file <- here("Data", "Growers", ffy, "TrialDesign") %>% 
-        list.files(recursive = TRUE, full.names = TRUE) %>%
-        #--- search for as-applied-s file ---#
-        .[str_detect(., "shp")] %>%
-        .[!str_detect(., "xml")] %>%
-        .[str_detect(., "ab-line")] 
-
-      if (length(ab_line_file) == 0) {
-        return(print("No ab-line file exists or an ab-line cannot be created based on the past as-applied data"))
-      } else {
-        print(paste0(length(ab_line_file), "ab-line files are found. Only the first one (", ab_line_file[1], ") is used. Make sure this is the ab-line you want to use."))
-      }
-
-    } else { # if ab-line does not exist and needs to create one
-      past_aa_input_file_ls <- here("Data/Growers", ffy, "TrialDesign") %>% 
-        list.files(recursive = TRUE, full.names = TRUE) %>%
-        #--- search for as-applied-s file ---#
-        .[str_detect(., "shp")] %>%
-        .[!str_detect(., "xml")] %>%
-        .[str_detect(., "past")] 
-
-      if (input_type == "S") {
-        #=== if seed trial ===#
-        past_aa_input_file <- past_aa_input_file_ls %>% 
-          .[str_detect(., "-s")]
-      } else {
-        #=== if N, P, K trial ===#
-        past_aa_input_file <- past_aa_input_file_ls %>% 
-          .[str_detect(., paste0("-", tolower(input_type)))]    
-        if (length(past_aa_input_file) == 0) {
-
-          other_input_ls <- c("p", "n", "k") %>% 
-            .[-which(tolower(input_type) == .)] %>% 
-            paste0("-", ., collapse = "|")
-
-          #=== if the past input file of the very input is not available ===#
-          past_aa_input_file <- past_aa_input_file_ls %>% 
-            .[str_detect(., other_input_ls)] %>% 
-            #=== use the first one matched ===#
-            .[1]
-        }
-      }
-
-      if (length(past_aa_input_file) == 0) {
-        return(print("No past as-applied data available"))
-      }
-    }
-
+ 
     #=== append the Rmd to create plots and ab-lines ===#
     create_plots_rmd <- 
     read_rmd(
@@ -718,14 +655,6 @@ make_trial_design <- function(
     
     td_rmd <- c(td_rmd, create_plots_rmd)
 
-    #=== if ab-line does not exist ===#
-    if (!use_ab) {
-      td_rmd <- gsub(
-        "_past-aa-input-file-name-here_",
-        past_aa_input_file,
-        td_rmd
-      )
-    }  
   } 
 
   #/*=================================================*/

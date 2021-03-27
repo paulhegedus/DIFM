@@ -647,7 +647,7 @@ function(
     ab_line <- get_line_through_centroids(
       #=== any line that goes through the centroids of a strip will do ===#
       filter(final_exp_plots, strip_id == min(strip_id)),
-      crs
+      st_crs(field)
     ) %>%  
     #=== normalize ===#
     st_extend_line(., as.numeric(1 / st_length(.))) %>%
@@ -1423,4 +1423,77 @@ st_extend_line <- function(line, multiplier) {
 
   return(return_line)
 }
+
+
+#/*=================================================*/
+#' # Get shape file name 
+#/*=================================================*/
+
+get_shp_name <- function(ffy, folder, key) {
+
+  file_name <- here("Data", "Growers", ffy, folder) %>% 
+    list.files(recursive = TRUE, full.names = TRUE) %>%
+    #--- search for as-applied-s file ---#
+    .[str_detect(., "shp")] %>%
+    .[!str_detect(., "xml")] %>%
+    .[str_detect(., key)] 
+
+  return(file_name)
+
+}
+
+#/*=================================================*/
+#' # Convert to utm
+#/*=================================================*/
+
+make_sf_utm <- function(data_sf) {
+
+  return_sf <- data_sf %>% 
+    st_set_4326() %>% 
+    st_make_valid() %>%
+    #=== force WGS84 ===#
+    st_transform(4326) %>% 
+    st_transform_utm()  
+
+  return(return_sf)
+
+}
+
+#/*=================================================*/
+#' # Get harvester angle relative to input ab-line
+#/*=================================================*/
+
+get_h_angle <- function(h_ab_line, i_ab_line) {
+
+  rotate <- function(angle) {
+    matrix(
+      c(cos(angle), sin(angle), -sin(angle), cos(angle)), 2, 2
+    )
+  }
+
+  h_mat <- st_geometry(h_ab_line)[[1]]
+  h_vec <- h_mat[2, ] - h_mat[1, ]
+  h_vec_n <- h_vec / sqrt(sum(h_vec ^ 2))
+
+  i_mat <- st_geometry(i_ab_line)[[1]]
+  i_vec <- i_mat[1, ] - i_mat[2, ]
+  i_vec_n <- i_vec / sqrt(sum(i_vec ^ 2))
+
+  angle <- acos(sum(i_vec_n * h_vec_n)) / pi * 180
+
+  angle <- 
+  tibble(angle = c(angle, 180 - angle)) %>% 
+  rowwise() %>% 
+  mutate(i_vect_rotated = list(
+    i_vec_n %*% rotate(angle / 180 * pi) 
+  )) %>% 
+  mutate(dot_product = sum(i_vect_rotated * h_vec_n)) %>% 
+  filter(dot_product > 0.99 & dot_product < 1.01) %>% 
+  pull(angle)
+
+  return(angle)
+
+}
+
+
 

@@ -17,59 +17,121 @@ harvest_angle <- _harvest-angle-here_
 # ffy <- "Bohnhoff_Adams_2018"
 # ffy <- "Holzwart_Holzwart_2021"
 
-
-#--- field boundary ---#
-field_sf <- here("Data", "Growers", ffy, "TrialDesign/boundary.shp") %>% 
+#/*----------------------------------*/
+#' ## field boundary
+#/*----------------------------------*/
+field_sf <- get_shp_name(ffy, "TrialDesign", "boundary") %>% 
   st_read() %>% 
-  #=== assign 4326 when CRS is missing ===#
-  st_set_4326() %>% 
-  st_make_valid() %>%
-  #=== force WGS84 ===#
-  # Note: you could have different CRS when field and ab_line 
-  # are in different datum without this
-  st_transform(4326) %>% 
-  st_transform_utm() %>% 
-  st_combine()
+  make_sf_utm()
 
-# plot(ab_line)
-#--- ab-line ---#
-if (use_ab) {
-  ab_line <- here("Data", "Growers", ffy, "TrialDesign") %>% 
-    list.files(recursive = TRUE, full.names = TRUE) %>%
-    #--- search for as-applied-s file ---#
-    .[str_detect(., "shp")] %>%
-    .[!str_detect(., "xml")] %>%
-    .[str_detect(., "ab-line")] %>% 
-    #=== use only the first one ===#
-    .[1] %>% 
-    #--- read the data ---#
-    st_read() %>% 
-    st_set_4326() %>% 
-    st_make_valid() %>%
-    #=== force WGS84 ===#
-    st_transform(4326) %>% 
-    st_transform_utm() 
+field_bbox <- st_bbox(field_sf) 
+field_len_ew <- field_bbox["xmax"] - field_bbox["xmin"]
+
+#/*----------------------------------*/
+#' ## Input ab-line
+#/*----------------------------------*/
+input_ab_line_files <- get_shp_name(ffy, "TrialDesign", "ab-line-i") 
+past_input_files <- get_shp_name(ffy, "TrialDesign", "past-a-s|past-a-n|past-a-k") 
+
+if (length(input_ab_line_files) > 0) {
+
+  i_ab_line <- 
+  input_ab_line_files[1] %>% 
+  st_read() %>% 
+  make_sf_utm() 
+
+} else if (length(past_input_files) > 0) {
+
+  i_ab_line <- 
+  past_input_files[1] %>% 
+  st_read() %>% 
+  make_sf_utm() %>% 
+  make_ab_line(field_sf) 
+ 
 } else {
-  past_aa_input <- "_past-aa-input-file-name-here_" %>% 
-  # past_aa_input <- past_aa_input_file %>% 
-    #--- read the data ---#
-    st_read() %>% 
-    st_set_4326() %>% 
-    st_make_valid() %>%
-    #=== force WGS84 ===#
-    st_transform(4326) %>% 
-    st_transform_utm() 
 
-  ab_line <- make_ab_line(past_aa_input) 
 }
+
+#=== make ab_line half the width of the field ===#
+i_ab_line <- 
+st_extend_line(
+  st_geometry(i_ab_line), 
+  field_len_ew / 2 / as.numeric(st_length(i_ab_line))
+)
+
+#/*=================================================*/
+#' # Harvester ab-line
+#/*=================================================*/
+if (harvest_angle = TRUE) {
+
+  harvester_ab_line_files <- get_shp_name(ffy, "TrialDesign", "ab-line-h") 
+  past_harvester_files <- get_shp_name(ffy, "TrialDesign", "past-a-h") 
+
+  if (length(harvester_ab_line_files) > 0) {
+    #=== use only the first one ===#
+    h_ab_line <- 
+    harvester_ab_line_files[1] %>% 
+    st_read() %>% 
+    make_sf_utm() 
+
+  } else if (length(past_harvester_files) > 0) {
+
+    h_ab_line <- 
+    past_harvester_files[1] %>% 
+    st_read() %>% 
+    make_sf_utm() %>% 
+    make_ab_line(field_sf)
+
+    # ggplot() +
+    #   geom_sf(data = h_ab_line, size = 2) +
+    #   geom_sf(data = h_ab_line_2, color = "red") 
+  } else {
+
+    cat("No ab-line for harvest data or past harvest data files are available.")
+
+  }
+
+  harvest_angle <- get_h_angle(h_ab_line, i_ab_line)
+    
+} else {
+
+  h_ab_line <- NULL
+
+}
+
+#=== make ab_line half the width of the field ===#
+h_ab_line <- 
+st_extend_line(
+  st_geometry(h_ab_line), 
+  field_len_ew / 2 / as.numeric(st_length(h_ab_line))
+)
 
 ```
 
 ```{r }
-tm_shape(field_sf) +
-  tm_borders() +
-  tm_shape(ab_line) +
-  tm_lines(col = "red")
+
+if (length(h_ab_line) > 0) {
+
+  ab_lines_tmap <- c(i_ab_line, h_ab_line) %>% 
+    st_as_sf() %>% 
+    mutate(ab_id = c("input ab-line", "harvester ab-line"))
+
+  ggplot() +
+    geom_sf(data = field_sf) +
+    geom_sf(data = ab_lines_tmap, aes(col = ab_id)) 
+
+} else {
+
+  ab_lines_tmap <- c(i_ab_line) %>% 
+    st_as_sf() %>% 
+    mutate(ab_id = "input ab-line")
+
+  ggplot() +
+    geom_sf(data = field_sf) +
+    geom_sf(data = ab_lines_tmap, aes(col = ab_id))
+
+}
+
 ```
 
 ## Option parameters
@@ -114,8 +176,7 @@ mutate(experiment_plots = list(
   make_trial_grids(
     field = field_sf, 
     #--- by default uses the first one ---#
-    # ab_line = trial_data_first$ab_line, 
-    ab_line = ab_line[1, ], 
+    ab_line = i_ab_line[1, ], 
     plot_width = input_plot_width, 
     machine_width = machine_width, 
     cell_height = cell_height,
