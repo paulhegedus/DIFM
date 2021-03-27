@@ -1273,7 +1273,7 @@ get_mean_Rx <- function(ffy, input){
    dict_rx)
   
   #--- if input is seed, put in K, not seeds ---#
-    if (input == "s") {
+  if (input == "s") {
     if (any(rx$tgti > 10000)){
       rx <- mutate(rx, tgti = tgti / 1000)
     }
