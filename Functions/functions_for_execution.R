@@ -597,7 +597,7 @@ make_trial_design <- function(
     harvest_angle = 0,
     design_type = c("jcl", "jcl"),
     num_levels = c(5, 5), 
-    max_jumps,
+    max_jumps = NA,
     start_from_scratch = FALSE,
     cell_height = 10,
     rerun = FALSE, 
