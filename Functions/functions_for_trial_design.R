@@ -726,9 +726,10 @@ function(
         merge = FALSE
       )
     )) %>% 
-    mutate(int_check = 
-      nrow(st_as_sf(ab_line_for_direction_check[final_exp_plots, ]))
-    ) %>% 
+    mutate(intersection = list(
+      st_as_sf(ab_line_for_direction_check[final_exp_plots, ])
+    )) %>% 
+    mutate(int_check = nrow(intersection)) %>% 
     #=== which direction to go ===#
     # Notes: go inward (intersecting) if machine_width > plot_width, otherwise outward
     filter(int_check == ifelse(machine_width > plot_width, 1, 0)) %>% 
