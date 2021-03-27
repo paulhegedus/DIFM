@@ -99,7 +99,7 @@ mutate(map_design = list(
     ) +
   tm_layout_to_add +
   tm_shape(ab_lines) +
-    tm_lines(col = "red")
+    tm_lines(col = "ab_id")
 )) %>% 
 pluck("map_design")
 

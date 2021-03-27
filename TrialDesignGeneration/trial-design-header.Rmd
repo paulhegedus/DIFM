@@ -101,7 +101,7 @@ trial_data <- get_td_parameters(ffy, json_file) %>%
 )
 ```   
 
-```{r }
+```{r eval = F}
 exp_plots_exists <- _exp-plots-statement_
 
 if (exp_plots_exists) {
