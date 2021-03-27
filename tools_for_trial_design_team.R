@@ -53,7 +53,7 @@ make_trial_design(
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
-  design_type = c("jcl", "ejca"),
+  design_type = c("jcl", "jcl"),
   #=== number of levels ===#
   # used in "jcl", ignored in "ejca"
   num_levels = c(5, 5), 
@@ -79,12 +79,12 @@ make_trial_design(
   # TRUE: uses both harvester and planter/applicator ab-lines or paste data
   # numeric: uses only planter/applicator ab-line or past data and apply the angle
   # rotation is clockwise 
-  # harvest_angle = 90, 
-  harvest_angle = TRUE, 
+  harvest_angle = 90, 
+  # harvest_angle = TRUE, 
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
-  design_type = c("jcl", "ejca"),
+  design_type = c("jcl", "jcl"),
   #=== number of levels ===#
   # used in "jcl", ignored in "ejca"
   num_levels = c(5, 5), 
