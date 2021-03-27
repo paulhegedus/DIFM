@@ -235,6 +235,7 @@ if (num_unique_plot_width == 1 & nrow(trial_data_rh) == 1) {
       #--- by default uses the first one ---#
       ab_line = trial_data_first$experiment_plots[[1]]$line_edges[line_edge_id, ], 
       plot_width = input_plot_width, 
+      machine_width = machine_width,
       cell_height = cell_height,
       headland_length = headland_length,
       harvest_angle = harvest_angle,
