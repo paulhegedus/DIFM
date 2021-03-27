@@ -62,7 +62,7 @@ st_extend_line(
 #/*=================================================*/
 #' # Harvester ab-line
 #/*=================================================*/
-if (harvest_angle = TRUE) {
+if (harvest_angle == TRUE) {
 
   harvester_ab_line_files <- get_shp_name(ffy, "TrialDesign", "ab-line-h") 
   past_harvester_files <- get_shp_name(ffy, "TrialDesign", "past-a-h") 

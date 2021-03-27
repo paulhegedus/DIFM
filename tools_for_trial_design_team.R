@@ -31,14 +31,14 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[5]
+ffy <- field_year_ls[6]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
 #--- force headland to be 100 feet ---#
 
 make_trial_design(
-  ffy = field_year_ls[2], 
+  ffy = field_year_ls[24], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_plots_num = 1,
@@ -46,7 +46,10 @@ make_trial_design(
   assign_rates = TRUE,
   #=== angled harvesting ===#
   # harvest angle relative to the planter/applicator
-  harvest_angle = 0, 
+  # TRUE: uses both harvester and planter/applicator ab-lines or paste data
+  # numeric: uses only planter/applicator ab-line or past data and apply the angle
+  # rotation is clockwise 
+  harvest_angle = 90, 
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
@@ -73,7 +76,11 @@ make_trial_design(
   assign_rates = TRUE,
   #=== angled harvesting ===#
   # harvest angle relative to the planter/applicator
-  harvest_angle = 90, 
+  # TRUE: uses both harvester and planter/applicator ab-lines or paste data
+  # numeric: uses only planter/applicator ab-line or past data and apply the angle
+  # rotation is clockwise 
+  # harvest_angle = 90, 
+  harvest_angle = TRUE, 
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
@@ -91,5 +98,6 @@ make_trial_design(
   rerun = TRUE,
   locally_run = TRUE
 )
+
 
 
