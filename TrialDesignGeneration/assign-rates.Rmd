@@ -131,7 +131,7 @@ saveRDS(
 trial_data_r %>% 
 summarise(list(
   st_write(
-    trial_data_r$trial_design[[1]] %>% dplyr::select(- rate_tm), 
+    trial_design %>% dplyr::select(- rate_tm), 
     dsn = dsn_name,
     layer = paste0(
       "trial-design-", tolower(input_type), 
@@ -148,7 +148,7 @@ summarise(list(
 trial_data_r %>% 
 summarise(list(
   st_write(
-    trial_data_r$ab_lines[[1]], 
+    ab_lines, 
     dsn = dsn_name,
     layer = paste0(
       "ab-lines-trial-", tolower(input_type), 
