@@ -339,7 +339,7 @@ function(
   sqrt(
     (f_bbox["xmax"] - f_bbox["xmin"])^2 +
     (f_bbox["ymax"] - f_bbox["ymin"])^2
-  ) + 50
+  ) + 150
 
   #--- number of subplots to create ---#
   num_subplots_in_a_strip <- ceiling(max_dist / cell_height)
@@ -722,12 +722,12 @@ function(
     mutate(ab_line_for_direction_check = list(
       st_shift(
         ab_norm, 
-        dir_p * ab_xy_nml_p90 * (4 * plot_width), 
+        dir_p * ab_xy_nml_p90 * (2 * plot_width), 
         merge = FALSE
       )
     )) %>% 
     mutate(int_check = 
-      length(ab_line_for_direction_check[final_exp_plots, ])
+      nrow(st_as_sf(ab_line_for_direction_check[final_exp_plots, ]))
     ) %>% 
     #=== which direction to go ===#
     # Notes: go inward (intersecting) if machine_width > plot_width, otherwise outward
