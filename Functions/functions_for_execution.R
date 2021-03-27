@@ -610,7 +610,7 @@ make_trial_design <- function(
   trial_data <- get_td_parameters(ffy, json_file)
 
   if (is.na(head_dist)) {
-    head_dist <- 2 * max(trial_data$input_plot_width)
+    head_dist <- 2 * max(trial_data$machine_width)
   } 
 
   #/*=================================================*/

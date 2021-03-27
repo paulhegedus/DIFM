@@ -248,10 +248,12 @@ mutate(experiment_plots_dissolved = list(
     summarize(plot_id = min(plot_id)) 
 )) %>% 
 #=== Create headland ===#
+# experiment_plots_dissolved <- trial_data_eh$experiment_plots_dissolved
+# trial_data_eh$headland
 mutate(headland = list(
   st_difference(field_sf, experiment_plots_dissolved) %>%
     st_as_sf() %>% 
-    rename(geometry = x) %>% 
+    rename(., geometry = attr(., "sf_column")) %>% 
     dplyr::select(geometry)
 )) %>% 
 mutate(tm_exp_head = list(
