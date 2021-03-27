@@ -45,7 +45,9 @@ if (length(input_ab_line_files) > 0) {
   i_ab_line <- 
   input_ab_line_files[1] %>% 
   st_read() %>% 
-  make_sf_utm() 
+  make_sf_utm() %>% 
+  #=== use the first one if there are two ===#
+  .[1,]
 
 } else if (length(past_input_files) > 0) {
 
@@ -53,7 +55,9 @@ if (length(input_ab_line_files) > 0) {
   past_input_files[1] %>% 
   st_read() %>% 
   make_sf_utm() %>% 
-  make_ab_line(field_sf) 
+  #=== use the first one if there are two ===#
+  .[1,] %>% 
+  make_ab_line(field_sf)  
  
 } else {
 
@@ -79,7 +83,9 @@ if (harvest_angle == TRUE) {
     h_ab_line <- 
     harvester_ab_line_files[1] %>% 
     st_read() %>% 
-    make_sf_utm() 
+    make_sf_utm() %>% 
+    #=== use the first one if there are two ===#
+    .[1,] 
 
   } else if (length(past_harvester_files) > 0) {
 
@@ -87,7 +93,9 @@ if (harvest_angle == TRUE) {
     past_harvester_files[1] %>% 
     st_read() %>% 
     make_sf_utm() %>% 
-    make_ab_line(field_sf)
+    #=== use the first one if there are two ===#
+    .[1,] %>% 
+    make_ab_line(field_sf) 
 
     # ggplot() +
     #   geom_sf(data = h_ab_line, size = 2) +
