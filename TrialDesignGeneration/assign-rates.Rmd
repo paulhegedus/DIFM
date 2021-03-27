@@ -121,6 +121,12 @@ pluck("map_design")
 
 dsn_name <- here("Data", "Growers", ffy, "TrialDesign")
 
+#=== save as rds ===#
+saveRDS(
+  trial_data_r,
+  here("Data", "Growers", ffy, "TrialDesign/trial_design.rds")
+)
+
 #=== write the trial design as a shape file ===#
 trial_data_r %>% 
 summarise(list(
