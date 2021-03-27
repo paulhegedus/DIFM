@@ -1260,15 +1260,26 @@ get_mean_Rx <- function(ffy, input){
     data.table()
   
   dict_rx <- dictionary[type == paste0("Rx-", input), ]
+  
+  #--- bring in rx for the input ---#
 
   rx <- st_read(here("Data/Growers", ffy, paste0("Raw/Rx-", input, ".shp"))) %>%
    setnames(names(.), tolower(names(.))) %>%
    mutate(area = as.numeric(st_area(.)))
   
+  #--- rename tgt value to tgti ---#
   rx <- make_var_name_consistent(
    rx, 
    dict_rx)
   
+  #--- if input is seed, put in K, not seeds ---#
+    if (input == "s") {
+    if (any(rx$tgti > 10000)){
+      rx <- mutate(rx, tgti = tgti / 1000)
+    }
+  }
+  
+  #--- take weighted average of the tgt rate ---#
   rx <- rx %>%
     mutate(area_weight = area/sum(rx$area)) %>%
     mutate(weighted_tgt = tgti*area_weight) 
