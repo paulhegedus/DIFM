@@ -710,7 +710,7 @@ function(
   }
 
   #=== ab-line re-centering when machine width > plot_width ===#
-  if (machine_width != plot_width) {
+  if (machine_width != plot_width & harvest_angle == 0) {
 
     ab_lines <- 
     expand_grid_df(tibble(dir_p = c(-1, 1)), ab_lines) %>% 
