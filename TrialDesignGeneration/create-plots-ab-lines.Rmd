@@ -52,11 +52,11 @@ if (length(input_ab_line_files) > 0) {
 
 }
 
-#=== make ab_line half the width of the field ===#
+#=== make ab_line the width of the field ===#
 i_ab_line <- 
 st_extend_line(
   st_geometry(i_ab_line), 
-  field_len_ew / 2 / as.numeric(st_length(i_ab_line))
+  field_len_ew / as.numeric(st_length(i_ab_line))
 )
 
 #/*=================================================*/
@@ -104,11 +104,11 @@ if (harvest_angle == TRUE) {
 ```{r }
 
 if (length(h_ab_line) > 0) {
-  #=== make ab_line half the width of the field ===#
+  #=== make ab_line the width of the field ===#
   h_ab_line <- 
   st_extend_line(
     st_geometry(h_ab_line), 
-    field_len_ew / 2 / as.numeric(st_length(h_ab_line))
+    field_len_ew / as.numeric(st_length(h_ab_line))
   )
 
   ab_lines_tmap <- c(i_ab_line, h_ab_line) %>% 
