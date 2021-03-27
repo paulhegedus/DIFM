@@ -101,7 +101,7 @@ mutate(map_design = list(
   tm_shape(ab_lines) +
     tm_lines(
       col = "ab_id",
-      palette = "Set2"
+      palette = "Dark2"
     )
 )) %>% 
 pluck("map_design")
