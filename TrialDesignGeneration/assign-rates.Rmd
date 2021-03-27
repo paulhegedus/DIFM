@@ -129,6 +129,7 @@ summarise(list(
     dsn = dsn_name,
     layer = paste0(
       "trial-design-", tolower(input_type), 
+      "-", year,  
       ifelse(is.na(line_edge_id), "", line_edge_id)
     ),
     driver = "ESRI Shapefile",
