@@ -59,7 +59,7 @@ make_trial_design(
   num_levels = c(5, 5), 
   #=== maximum jump allowed  ===#
   # used in "ejca", ignored in "jcl"
-  max_jumps = c(NA, 20),
+  max_jumps = c(NA, NA),
   #=== if TRUE, create experiment plots again ===#
   # if TRUE, ignore the existence of exp_plots.rds
   start_from_scratch = TRUE,
@@ -90,7 +90,7 @@ make_trial_design(
   num_levels = c(5, 5), 
   #=== maximum jump allowed  ===#
   # used in "ejca", ignored in "jcl"
-  max_jumps = c(NA, 20),
+  max_jumps = c(NA, NA),
   #=== if TRUE, create experiment plots again ===#
   # if TRUE, ignore the existence of exp_plots.rds
   start_from_scratch = TRUE,

@@ -22,7 +22,8 @@ harvest_angle <- _harvest-angle-here_
 #/*----------------------------------*/
 field_sf <- get_shp_name(ffy, "TrialDesign", "boundary") %>% 
   st_read() %>% 
-  make_sf_utm()
+  make_sf_utm() %>% 
+  st_combine()
 
 field_bbox <- st_bbox(field_sf) 
 field_len_cross <- sqrt(
