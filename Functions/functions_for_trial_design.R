@@ -284,6 +284,7 @@ function(
   #' # Main code
   # /*=================================================*/
   # ggplot() +
+  #   geom_sf(data = field) +
   #   geom_sf(data = ab_line) +
   #   geom_sf(data = ab_line_tilted) 
 
@@ -304,6 +305,7 @@ function(
   #--- create a vector that is perpendicular to ab_xy ---#
   ab_xy_nml_p90 <- ab_xy_nml %*% rotate_mat_p90
 
+
   #=== if ab-line is outside of the field boundary ===#
   if (nrow(st_intersection(field, ab_line_tilted)) == 0) {
 
@@ -311,10 +313,11 @@ function(
       st_coordinates(st_centroid(field)) - 
       st_geometry(ab_line_tilted)[[1]][1, ] 
     )
-    a <- rbind(
-      ab_xy_nml_p90,
+    a <- cbind(
+      t(ab_xy_nml_p90),
       ab_xy_nml
     )
+
     multiplier <- solve(a, b)
 
     ab_line_tilted <- 

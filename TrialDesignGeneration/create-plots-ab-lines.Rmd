@@ -25,7 +25,10 @@ field_sf <- get_shp_name(ffy, "TrialDesign", "boundary") %>%
   make_sf_utm()
 
 field_bbox <- st_bbox(field_sf) 
-field_len_ew <- field_bbox["xmax"] - field_bbox["xmin"]
+field_len_cross <- sqrt(
+  (field_bbox["xmax"] - field_bbox["xmin"]) ^2 +
+  (field_bbox["ymax"] - field_bbox["ymin"]) ^2 
+)
 
 #/*----------------------------------*/
 #' ## Input ab-line
@@ -56,7 +59,7 @@ if (length(input_ab_line_files) > 0) {
 i_ab_line <- 
 st_extend_line(
   st_geometry(i_ab_line), 
-  field_len_ew / as.numeric(st_length(i_ab_line))
+  field_len_cross / as.numeric(st_length(i_ab_line))
 )
 
 #/*=================================================*/
@@ -108,7 +111,7 @@ if (length(h_ab_line) > 0) {
   h_ab_line <- 
   st_extend_line(
     st_geometry(h_ab_line), 
-    field_len_ew / as.numeric(st_length(h_ab_line))
+    field_len_cross / as.numeric(st_length(h_ab_line))
   )
 
   ab_lines_tmap <- c(i_ab_line, h_ab_line) %>% 
@@ -166,6 +169,15 @@ length()
 # machine_width <- trial_data_first$machine_width[[1]]
 # headland_length <- trial_data_first$headland_length[[1]]
 # harvest_angle <- trial_data_first$harvest_angle[[1]]
+# field = field_sf
+# #--- by default uses the first one ---#
+# ab_line = i_ab_line[1, ]
+# plot_width = input_plot_width
+# machine_width = machine_width
+# cell_height = cell_height
+# headland_length = headland_length
+# harvest_angle = harvest_angle
+# side_plots_num = side_plots_num
 
 trial_data_first <- 
 trial_data_rh[1, ] %>% 
