@@ -56,8 +56,6 @@ if (length(input_ab_line_files) > 0) {
   past_input_files[1] %>% 
   st_read() %>% 
   make_sf_utm() %>% 
-  #=== use the first one if there are two ===#
-  .[1,] %>% 
   make_ab_line(field_sf)  
  
 } else {
@@ -94,8 +92,6 @@ if (harvest_angle == TRUE) {
     past_harvester_files[1] %>% 
     st_read() %>% 
     make_sf_utm() %>% 
-    #=== use the first one if there are two ===#
-    .[1,] %>% 
     make_ab_line(field_sf) 
 
     # ggplot() +
