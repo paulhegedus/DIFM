@@ -304,6 +304,29 @@ function(
   #--- create a vector that is perpendicular to ab_xy ---#
   ab_xy_nml_p90 <- ab_xy_nml %*% rotate_mat_p90
 
+  #=== if ab-line is outside of the field boundary ===#
+  if (nrow(st_intersection(field, ab_line_tilted)) == 0) {
+
+    b <- t(
+      st_coordinates(st_centroid(field)) - 
+      st_geometry(ab_line_tilted)[[1]][1, ] 
+    )
+    a <- rbind(
+      ab_xy_nml_p90,
+      ab_xy_nml
+    )
+    multiplier <- solve(a, b)
+
+    ab_line_tilted <- 
+    st_shift(
+      ab_line_tilted, 
+      round(multiplier[[1]] / plot_width) * plot_width * ab_xy_nml_p90 + 
+      multiplier[[2]] * ab_xy_nml, 
+      merge = FALSE
+    )
+
+  }
+
   # /*----------------------------------*/
   #' ## identify the number of subplots in a strip
   # /*----------------------------------*/
@@ -403,7 +426,7 @@ function(
   #   geom_sf(data = plots, fill = "blue", color = NA) +
   #   geom_sf(data = vect_to_sf_point(starting_point), col = "green", size = 2) +
   #   geom_sf(data = field, col = "black", fill = NA) +
-  #   geom_sf(data = ab_line, col = "red", size = 2)
+  #   geom_sf(data = ab_line_tilted, col = "red")
 
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### Shift the polygons for the right starting point
