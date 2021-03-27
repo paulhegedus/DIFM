@@ -143,7 +143,9 @@ summarise(list(
   st_write(
     trial_data_r$ab_lines[[1]], 
     dsn = dsn_name,
-    layer = paste0("ab-lines-", tolower(input_type), 
+    layer = paste0(
+      "ab-lines-trial-", tolower(input_type), 
+      "-", year,  
       ifelse(is.na(line_edge_id), "", line_edge_id)
     ),
     driver = "ESRI Shapefile",

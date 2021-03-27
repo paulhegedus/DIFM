@@ -1321,6 +1321,7 @@ get_td_parameters <- function(
       max_rate, input_plot_width, machine_width
     ) %>% 
     rename(gc_rate = sq_rate) %>% 
+    mutate(year = field_data$year) %>% 
     #=== the input with shorter plot length comes first ===#
     arrange(desc(input_plot_width))
   
