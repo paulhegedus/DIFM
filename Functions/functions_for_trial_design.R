@@ -722,7 +722,7 @@ function(
     mutate(ab_line_for_direction_check = list(
       st_shift(
         ab_norm, 
-        dir_p * ab_xy_nml_p90 * (2 * plot_width), 
+        dir_p * ab_xy_nml_p90 * (5 * plot_width), 
         merge = FALSE
       )
     )) %>% 
