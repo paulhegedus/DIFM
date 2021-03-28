@@ -103,7 +103,7 @@ if (harvest_angle == TRUE) {
 
   }
 
-  harvest_angle <- get_h_angle(h_ab_line, i_ab_line)
+  harvest_angle <- get_angle_lines(h_ab_line, i_ab_line)
     
 } else {
 

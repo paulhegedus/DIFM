@@ -19,6 +19,55 @@ function(
   # /*=================================================*/
   #' # Define functions
   # /*=================================================*/
+  # ggplot() +
+  #   geom_sf(data = field) +
+  #   geom_sf(data = circle, fill = NA) +
+  #   geom_sf(data = grids, aes(fill = group), color = NA) 
+  # This option uses st_make_grid. But, this is slower because it has to be tilted and shifted
+
+  create_cells <- function(field, plot_width, cell_height) {
+
+    f_bbox <- st_bbox(field)
+
+    #--- maximum distance ---#
+    radius <- 
+    sqrt(
+      (f_bbox["xmax"] - f_bbox["xmin"])^2 +
+      (f_bbox["ymax"] - f_bbox["ymin"])^2
+    ) / 2 + 50
+
+    circle <- st_buffer(st_centroid(field), radius)
+    grids <- st_make_grid(circle, cellsize = c(plot_width, cell_height)) %>% 
+        st_as_sf() %>% 
+        cbind(., st_coordinates(st_centroid(.))) %>% 
+        data.table() %>% 
+        .[order(X),] %>% 
+        .[, group := .GRP, by = X] %>% 
+        .[order(group, Y), ] %>% 
+        .[, id := 1:.N, by = group] %>% 
+        .[, .(group, id, x)] %>% 
+        setnames("x", "geometry") %>% 
+        st_as_sf()
+
+    line_through_centroids <- get_line_through_centroids(
+      filter(grids, group == 1),
+      st_crs(grids)
+    )
+
+    plots <- 
+    st_tilt(
+      data_sf = grids, 
+      angle = get_angle_lines(ab_line_tilted, line_through_centroids),
+      # angle = 50,
+      merge = TRUE,
+      preserve_centroid = TRUE 
+    )
+
+    return(plots)
+
+  }
+  
+
   # /*----------------------------------*/
   #' ## make polygons
   # /*----------------------------------*/
@@ -72,22 +121,11 @@ function(
 
     # group <- 1
     for (group in 1:100) {
-
-      # print(group)
-      # dir_p <- -1
-      # dir_v <- -1
-      # x <- 1
-      # make_polygon(
-      #       strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
-      #       x,
-      #       dir_p,
-      #       dir_v,
-      #       cell_height
-      #     ) %>% plot
-      # plot(exp_sf_ls[[1]])
-      exp_sf_ls[[paste(group)]] <- lapply(
-        1:num_subplots,
-        function(x) {
+      # group = 2
+      # strt_point <- starting_point
+      temp_line <- tibble(x = c(1, num_subplots)) %>% 
+        rowwise() %>% 
+        mutate(end_polygons = list(
           make_polygon(
             strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
             x,
@@ -95,17 +133,33 @@ function(
             dir_v,
             cell_height
           )
-        }
-      ) %>%
-      st_as_sfc() %>%
-      st_set_crs(st_crs(field)) %>%
-      st_as_sf() %>%
-      mutate(
-        group = group,
-        id = 1:nrow(.)
-      )
+        )) %>% 
+        pluck("end_polygons") %>% 
+        st_sfc() %>% 
+        st_as_sf() %>% 
+        get_line_through_centroids(st_crs(field))
 
-      is_intersecting[group] <- st_intersects(exp_sf_ls[[paste(group)]], field, sparse = F)[, 1] %>% any()
+      # exp_sf_ls[[paste(group)]] <- lapply(
+      #   1:num_subplots,
+      #   function(x) {
+      #     make_polygon(
+      #       strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
+      #       x,
+      #       dir_p,
+      #       dir_v,
+      #       cell_height
+      #     )
+      #   }
+      # ) %>%
+      # st_as_sfc() %>%
+      # st_set_crs(st_crs(field)) %>%
+      # st_as_sf() %>%
+      # mutate(
+      #   group = group,
+      #   id = 1:nrow(.)
+      # )
+
+      is_intersecting[group] <- st_intersects(temp_line, field, sparse = F)[, 1]
 
       if (is_intersecting[group]) {
         return(TRUE)
@@ -125,7 +179,7 @@ function(
     plot_width,
     num_subplots,
     cell_height
-  ){
+  ) {
 
     is_intersecting <- rep(TRUE, 1000)
     
@@ -1163,6 +1217,7 @@ st_tilt <- function(data_sf, angle, merge = TRUE) {
   wf_bbox <- st_bbox(data_sf)
   data_geom <- st_geometry(data_sf)
 
+  # base_point <- st_centroid(data_geom)
   base_point <- c(wf_bbox["xmax"], wf_bbox["ymin"]) %>%
     st_point() %>%
     st_sfc()
@@ -1176,6 +1231,51 @@ st_tilt <- function(data_sf, angle, merge = TRUE) {
   } else {
     return(data_tilted)
   }
+
+  # ggplot() +
+  #   geom_sf(data_sf, fill = "red", alpha = 0.4) +
+  #   geom_sf(data_tilted, fill = "blue", alpha = 0.4)
+}
+
+# preserve_centroid = TRUE
+st_tilt <- function(data_sf, angle, merge = TRUE, preserve_centroid = FALSE) {
+
+  rot <- function(a) matrix(c(cos(a), sin(a), -sin(a), cos(a)), 2, 2)
+
+  wf_bbox <- st_bbox(data_sf)
+  data_geom <- st_geometry(data_sf)
+
+  # base_point <- st_centroid(data_geom)
+  base_point <- c(wf_bbox["xmax"], wf_bbox["ymin"]) %>%
+    st_point() %>%
+    st_sfc()
+
+  data_tilted <- ((data_geom - base_point) * rot(angle / 180 * pi) + base_point) %>%
+    st_set_crs(st_crs(data_sf))  
+
+  if (preserve_centroid) {
+    n_bbox <- st_bbox(data_tilted)
+    n_base_point <- c(n_bbox["xmax"], n_bbox["ymin"]) %>%
+      st_point() %>%
+      st_sfc()
+    data_tilted <-
+    st_shift(
+      data_tilted, 
+      st_coordinates(base_point - n_base_point), 
+      merge == FALSE
+    )
+  }
+
+  if (merge == TRUE) {
+    data_sf$geometry <- data_tilted 
+    return(data_sf)
+  } else {
+    return(data_tilted)
+  }
+
+  # ggplot() +
+  #   geom_sf(data = data_sf, fill = "red", alpha = 0.4) +
+  #   geom_sf(data = data_tilted, fill = "blue", alpha = 0.4)
 
 }
 
@@ -1508,7 +1608,7 @@ make_sf_utm <- function(data_sf) {
 #' # Get harvester angle relative to input ab-line
 #/*=================================================*/
 
-get_h_angle <- function(h_ab_line, i_ab_line) {
+get_angle_lines <- function(line_1, line_2) {
 
   rotate <- function(angle) {
     matrix(
@@ -1516,11 +1616,11 @@ get_h_angle <- function(h_ab_line, i_ab_line) {
     )
   }
 
-  h_mat <- st_geometry(h_ab_line)[[1]]
+  h_mat <- st_geometry(line_1)[[1]]
   h_vec <- h_mat[2, ] - h_mat[1, ]
   h_vec_n <- h_vec / sqrt(sum(h_vec ^ 2))
 
-  i_mat <- st_geometry(i_ab_line)[[1]]
+  i_mat <- st_geometry(line_2)[[1]]
   i_vec <- i_mat[1, ] - i_mat[2, ]
   i_vec_n <- i_vec / sqrt(sum(i_vec ^ 2))
 
