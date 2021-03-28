@@ -33,7 +33,7 @@ trial_data_r <- trial_data_eh %>%
       data_sf = exp_plots,
       design_type = design_type,
       max_jump = max_jump,
-      gc_rate = gc_rate,
+      gc_rate = round(gc_rate),
       min_rate = min_rate,
       max_rate = max_rate,
       num_levels = num_levels, # ignored 
@@ -42,7 +42,7 @@ trial_data_r <- trial_data_eh %>%
     dplyr::select(rate)
   )) %>% 
   mutate(headland = list(
-    mutate(headland, rate = gc_rate) %>% 
+    mutate(headland, rate = round(gc_rate)) %>% 
     dplyr::select(rate)
   )) %>% 
   mutate(input_type = list(

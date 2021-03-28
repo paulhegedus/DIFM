@@ -1014,16 +1014,19 @@ assign_rates <- function(
 
     #=== get the rate sequence within a strip ===#
     basic_seq <- gen_sequence(num_levels)
-    if (push) {
-      basic_seq <- c(basic_seq[2:num_levels], basic_seq[1])
-    }
 
     #=== get the starting ranks across strips for the field ===#
     full_start_seq <- rep(
       get_starting_rank_across_strips(num_levels),
       ceiling(max_strip_id / num_levels)
     ) %>% 
-    .[1:max_strip_id]
+    .[1:(max_strip_id + 1)]
+
+    if (push) {
+      full_start_seq <- full_start_seq[2:(max_strip_id + 1)]
+    } else {
+      full_start_seq <- full_start_seq[1:max_strip_id]
+    }
     
     rates_data <- 
     data.table(
