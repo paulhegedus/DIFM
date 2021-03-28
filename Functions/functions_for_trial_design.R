@@ -1383,6 +1383,8 @@ get_td_parameters <- function(
 
   }
   
+  input_data <- arrange(input_data, desc(input_plot_width))
+
   return(input_data)
 
 }
