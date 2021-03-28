@@ -31,14 +31,14 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[15]
+ffy <- field_year_ls[14]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
 #--- force headland to be 100 feet ---#
 
 make_trial_design(
-  ffy = field_year_ls[15], 
+  ffy = field_year_ls[14], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_plots_num = 1,
@@ -68,7 +68,7 @@ make_trial_design(
 )
 
 make_trial_design(
-  ffy = field_year_ls[15], 
+  ffy = field_year_ls[14], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the machine widths
   # side_plots_num = 1,
