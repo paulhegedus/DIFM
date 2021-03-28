@@ -741,7 +741,8 @@ function(
     mutate(geometry = list(x)) %>% 
     #=== normalize the length ===#
     mutate(ab_norm = list(
-      st_extend_line(geometry, as.numeric(1 / st_length(geometry)))
+      #=== when too short, it is not recognized as intersection ===#
+      st_extend_line(geometry, as.numeric(10 / st_length(geometry)))
     )) %>% 
     mutate(ab_line_for_direction_check = list(
       st_shift(
@@ -756,9 +757,7 @@ function(
     mutate(int_check = nrow(intersection)) %>% 
     #=== which direction to go ===#
     # Notes: go inward (intersecting) if machine_width > plot_width, otherwise outward
-    ungroup() %>% 
     filter(int_check == ifelse(machine_width > plot_width, 1, 0)) %>% 
-    rowwise() %>% 
     mutate(ab_recentered = list(
       st_shift(
         geometry, 
