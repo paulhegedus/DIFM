@@ -711,30 +711,6 @@ function(
   #=== ab-line re-centering when machine width > plot_width ===#
   if (machine_width != plot_width & harvest_angle == 0) {
 
-    # ab_lines_t <- ab_lines
-    # ab_lines$geometry
-    # ab_lines$int_check
-    # ab_lines_t <- 
-    # expand_grid_df(tibble(dir_p = c(-1, 1)), st_as_sf(ab_lines_t)) %>% 
-    # # expand_grid_df(tibble(dir_p = c(-1, 1)), ab_lines) %>% 
-    # rowwise() %>% 
-    # mutate(geometry = list(st_sfc(x)))  %>% 
-    # #=== normalize the length ===#
-    # mutate(ab_norm = list(
-    #   st_extend_line(geometry, as.numeric(1 / st_length(geometry)))
-    # )) %>% 
-    # mutate(ab_line_for_direction_check = list(
-    #   st_shift(
-    #     ab_norm, 
-    #     dir_p * ab_xy_nml_p90 * (5 * plot_width), 
-    #     merge = FALSE
-    #   )
-    # )) %>% 
-    # mutate(intersection = list(
-    #   st_as_sf(ab_line_for_direction_check[final_exp_plots, ])
-    # )) %>% 
-    # mutate(int_check = nrow(intersection))
-
     ab_lines <- 
     expand_grid_df(tibble(dir_p = c(-1, 1)), ab_lines) %>% 
     rowwise() %>% 
@@ -743,6 +719,7 @@ function(
     mutate(ab_norm = list(
       #=== when too short, it is not recognized as intersection ===#
       st_extend_line(geometry, as.numeric(10 / st_length(geometry)))
+      # st_geometry(geometry, 5)
     )) %>% 
     mutate(ab_line_for_direction_check = list(
       st_shift(
