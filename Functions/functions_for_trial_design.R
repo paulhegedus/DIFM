@@ -1633,12 +1633,14 @@ get_angle_lines <- function(line_1, line_2) {
     i_vec_n %*% rotate(angle / 180 * pi) 
   )) %>% 
   mutate(dot_product = sum(i_vect_rotated * h_vec_n)) %>% 
-  filter(dot_product > 0.99 & dot_product < 1.01) %>% 
+  mutate(dist = abs(dot_product) - 1) %>% 
+  arrange(abs(dist)) %>% 
+  ungroup() %>% 
+  slice(1) %>% 
   pull(angle)
 
   return(angle)
 
 }
-
 
 
