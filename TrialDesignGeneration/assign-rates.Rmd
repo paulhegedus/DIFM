@@ -89,7 +89,17 @@ trial_data_r <- trial_data_eh %>%
   dplyr::select(
     - exp_plots, - experiment_plots_dissolved,
     - headland, - tm_exp_head, - experiment_design
-  )
+  ) %>% 
+  mutate(design_summary = list(
+    trial_design %>% 
+    mutate(area = as.numeric(st_area(.))) %>% 
+    mutate(acres = area * 0.000247105) %>% 
+    data.table()%>% 
+    .[, .(
+      tot_input = sum(acres * as.numeric(as.character(rate_tm))),
+      tot_acres = sum(acres)
+    )]  
+  ))  
 
 ``` 
 
@@ -110,7 +120,13 @@ mutate(map_design = list(
       col = "ab_id",
       palette = "Dark2",
       lwd = 2
+    ) +
+  tm_layout(
+    title = paste0(
+      "Total Input = ", round(design_summary[, tot_input]), 
+      "\nAcres = ", round(design_summary[, tot_acres], digits = 2)
     )
+  )
 )) %>% 
 pluck("map_design")
 
