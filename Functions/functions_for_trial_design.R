@@ -15,6 +15,23 @@ function(
   second_input = FALSE
 ) {
 
+  #/*=================================================*/
+  #' # Define functions
+  #/*=================================================*/
+  get_through_line <- function(geometry, radius) {
+
+    centroid <- st_coordinates(st_centroid(geometry))
+    end_point <- centroid + radius * ab_xy_nml
+    start_point <- centroid - radius * ab_xy_nml
+    return_line <- st_linestring(rbind(start_point, end_point)) %>% 
+      st_sfc() %>% 
+      st_set_crs(st_crs(geometry)) %>% 
+      st_as_sf()
+
+    return(return_line)
+
+  }
+
   # /*=================================================*/
   #' # Prepare ab-lines and vectors
   # /*=================================================*/
@@ -1134,20 +1151,6 @@ get_angle_lines <- function(line_1, line_2) {
   pull(angle)
 
   return(angle)
-
-}
-
-get_through_line <- function(geometry, radius) {
-
-  centroid <- st_coordinates(st_centroid(geometry))
-  end_point <- centroid + radius * ab_xy_nml
-  start_point <- centroid - radius * ab_xy_nml
-  return_line <- st_linestring(rbind(start_point, end_point)) %>% 
-    st_sfc() %>% 
-    st_set_crs(st_crs(geometry)) %>% 
-    st_as_sf()
-
-  return(return_line)
 
 }
 
