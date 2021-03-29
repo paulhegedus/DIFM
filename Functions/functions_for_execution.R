@@ -596,6 +596,7 @@ make_trial_design <- function(
     assign_rates = TRUE,
     harvest_angle = 0,
     design_type = c("jcl", "jcl"),
+    rates = NA,
     num_levels = c(5, 5), 
     max_jumps = NA,
     start_from_scratch = FALSE,
@@ -687,6 +688,8 @@ make_trial_design <- function(
       paste0("c(", paste0(max_jumps, collapse = ", "), ")"),
       .
     )
+
+    saveRDS(rates, here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
 
     if (length(num_levels) == 1 & nrow(trial_data) == 2) {
       print("You provided only 1 num_level value even though there are two inputs.")

@@ -6,6 +6,7 @@
 num_levels <- _num-levels-here_
 design_type <- _design-type-here_ 
 max_jumps <- _max-jumps-here_
+rates <- readRDS(here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
 
 if (nrow(trial_data) > 1) {
   design_parameter_data <- trial_data %>% 
