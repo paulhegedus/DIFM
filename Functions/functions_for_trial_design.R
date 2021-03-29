@@ -56,11 +56,10 @@ function(
     (f_bbox["ymax"] - f_bbox["ymin"])^2
   ) / 2 + 50
 
-  strips <- create_strips(field, ab_line_tilted, plot_width, cell_height, radius)
+  strips <- create_strips(field, ab_line_tilted, plot_width, radius)
 
   # ggplot() +
-  #   geom_sf(data = plots, fill = "blue", color = NA) +
-  #   geom_sf(data = vect_to_sf_point(starting_point), col = "green", size = 2) +
+  #   geom_sf(data = strips, aes(fill = "group")) +
   #   geom_sf(data = field, col = "black", fill = NA) +
   #   geom_sf(data = ab_line_tilted, col = "red")
   
@@ -1620,14 +1619,14 @@ make_polygon <- function(
 # /*=================================================*/
 # ggplot() +
 #   geom_sf(data = circle, fill = NA) +
-#   geom_sf(data = strips, aes(fill = group), color = NA, alpha = 0.4) +
-#   geom_sf(data = field) 
+#   geom_sf(data = field) +
+#   geom_sf(data = strips, aes(fill = group), color = NA, alpha = 0.4) 
 
-create_strips <- function(field, ab_line_tilted, plot_width, cell_height, radius) {
+create_strips <- function(field, ab_line_tilted, plot_width, radius) {
 
   circle <- st_buffer(st_centroid(field), radius)
 
-  strips <- st_make_grid(circle, cellsize = c(plot_width, radius * 2)) %>% 
+  strips <- st_make_grid(circle, cellsize = c(plot_width, radius * 2 + 50)) %>% 
       st_as_sf() %>% 
       cbind(., st_coordinates(st_centroid(.))) %>% 
       data.table() %>% 

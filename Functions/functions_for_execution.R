@@ -721,6 +721,14 @@ make_trial_design <- function(
       unlink(recursive = TRUE)
   }
 
+  td_r_file_name <- here(
+    "Data/Growers", 
+    ffy, 
+    "TrialDesign/for_debug.R"
+  )
+
+  purl(td_file_name, output = td_r_file_name)
+
   #--- render ---#
   render(td_file_name)
 
