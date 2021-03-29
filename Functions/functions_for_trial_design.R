@@ -599,10 +599,11 @@ assign_rates <- function(
 
   if (design_type == "jcl") {
   
-    if (is.na(rates)) {
+    if (any(is.na(rates))) {
       rates_ls <- get_rates(min_rate, max_rate, gc_rate, num_levels)
     } else {
       rates_ls <- rates
+      num_levels <- length(rates)
     }
 
     max_plot_id <- max(data_sf$plot_id)
@@ -620,7 +621,7 @@ assign_rates <- function(
     #=== get the starting ranks across strips for the field ===#
     full_start_seq <- rep(
       get_starting_rank_across_strips(num_levels),
-      ceiling(max_strip_id / num_levels)
+      ceiling(max_strip_id / num_levels) + 1
     ) %>% 
     .[1:(max_strip_id + 1)]
 
@@ -667,10 +668,11 @@ assign_rates <- function(
       print("max jump rate is too high. setting the number of levels to 8")
     }
 
-    if (is.na(rates)) {
+    if (any(is.na(rates))) {
       rates_ls <- get_rates(min_rate, max_rate, gc_rate, num_levels)
     } else {
       rates_ls <- rates
+      num_levels <- length(rates)
     }
 
     total_num_levels <- length(rates_ls)
