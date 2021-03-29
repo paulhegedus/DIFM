@@ -1,7 +1,6 @@
 # /*=================================================*/
 #' # Make experiment grids (basic cell, plot, strip)
 # /*=================================================*/
-# This codes relies on ab_line
 
 make_trial_grids <- 
 function(
@@ -17,367 +16,20 @@ function(
 ) {
 
   # /*=================================================*/
-  #' # Define functions
+  #' # Prepare ab-lines and vectors
   # /*=================================================*/
-  # ggplot() +
-  #   geom_sf(data = circle, fill = NA) +
-  #   geom_sf(data = strips, aes(fill = group), color = NA, alpha = 0.4) +
-  #   geom_sf(data = field) 
+  ab_line_data <- prepare_ablines(ab_line, harvest_angle, field)
 
-  create_strips field, plot_width, cell_height, radius<- function(field, plot_width, cell_height, radius) {
+  #=== ab-line tilted by harvester angle ===#
+  ab_line_tilted <- ab_line_data$ab_line_tilted
+  #=== unit vector pointing in the direction the machine moves ===#
+  ab_xy_nml <- ab_line_data$ab_xy_nml
+  #=== unit vector pointing in the direction PERPENDICULAR to the direction the machine moves ===#
+  ab_xy_nml_p90 <- ab_line_data$ab_xy_nml_p90
 
-    circle <- st_buffer(st_centroid(field), radius)
-
-    strips <- st_make_grid(circle, cellsize = c(plot_width, radius * 2)) %>% 
-        st_as_sf() %>% 
-        cbind(., st_coordinates(st_centroid(.))) %>% 
-        data.table() %>% 
-        .[order(X),] %>% 
-        .[, group := .GRP, by = X] %>% 
-        setnames("x", "geometry") %>% 
-        st_as_sf()
-
-    vertical_line <- 
-    rbind(
-      c(0, 0),
-      c(0, 10)
-    ) %>% 
-    st_linestring() %>% 
-    st_sfc() %>% 
-    st_set_crs(st_crs(field)) %>% 
-    st_as_sf()
-
-    strips <- 
-    st_tilt(
-      data_sf = strips, 
-      angle = get_angle_lines(ab_line_tilted, vertical_line),
-      base_sf = circle,
-      merge = TRUE
-    )
-
-    return(strips)
-
-  }
-  
-
-  # /*----------------------------------*/
-  #' ## make polygons
-  # /*----------------------------------*/
-  make_polygon <- function(strt_point_new, multiplier, dir_p, dir_v, cell_height) {
-
-    point_1 <- strt_point_new + cell_height * dir_v * ab_xy_nml * (multiplier - 1)
-    point_2 <- point_1 - plot_width * dir_p * ab_xy_nml_p90
-    point_3 <- point_2 + dir_v * ab_xy_nml * cell_height
-    point_4 <- point_3 + plot_width * dir_p * ab_xy_nml_p90
-
-    temp_polygon <- rbind(
-      point_1,
-      point_2,
-      point_3,
-      point_4,
-      point_1
-    ) %>%
-      list() %>%
-      st_polygon()
-
-    return(temp_polygon)
-  }
-  # /*----------------------------------*/
-  #' ## rotation matrix
-  # /*----------------------------------*/
-  rotate_mat_p90 <- matrix(
-    c(
-      cos(pi / 2),
-      sin(pi / 2),
-      -sin(pi / 2),
-      cos(pi / 2)
-    ),
-    nrow = 2
-  )
-
-  #/*----------------------------------*/
-  #' ## Create plots
-  #/*----------------------------------*/
-  detect_directions <- 
-  function(
-    strt_point, 
-    dir_p, dir_v, 
-    plot_width, 
-    num_subplots,
-    cell_height
-  ) {
-
-    is_intersecting <- rep(TRUE, 100)
-    
-    exp_sf_ls <- list()
-
-    # group <- 1
-    for (group in 1:100) {
-      # group = 2
-      # strt_point <- starting_point
-      temp_line <- tibble(x = c(1, num_subplots)) %>% 
-        rowwise() %>% 
-        mutate(end_polygons = list(
-          make_polygon(
-            strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
-            x,
-            dir_p,
-            dir_v,
-            cell_height
-          )
-        )) %>% 
-        pluck("end_polygons") %>% 
-        st_sfc() %>% 
-        st_as_sf() %>% 
-        get_line_through_centroids(st_crs(field))
-
-      # exp_sf_ls[[paste(group)]] <- lapply(
-      #   1:num_subplots,
-      #   function(x) {
-      #     make_polygon(
-      #       strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
-      #       x,
-      #       dir_p,
-      #       dir_v,
-      #       cell_height
-      #     )
-      #   }
-      # ) %>%
-      # st_as_sfc() %>%
-      # st_set_crs(st_crs(field)) %>%
-      # st_as_sf() %>%
-      # mutate(
-      #   group = group,
-      #   id = 1:nrow(.)
-      # )
-
-      is_intersecting[group] <- st_intersects(temp_line, field, sparse = F)[, 1]
-
-      if (is_intersecting[group]) {
-        return(TRUE)
-      } else if (all(!is_intersecting[1:50])) {
-        return(FALSE)
-      }
-    }
-  }
-
-  #/*----------------------------------*/
-  #' ## Create plots that covers the entire field
-  #/*----------------------------------*/
-  create_plots <- function(
-    strt_point,
-    dir_p,
-    dir_v,
-    plot_width,
-    num_subplots,
-    cell_height
-  ) {
-
-    is_intersecting <- rep(TRUE, 1000)
-    
-    exp_sf_ls <- list()
-
-    # group <- 1
-    for (group in 1:1000) {
-
-      # print(group)
-
-      exp_sf_ls[[paste(group)]] <- lapply(
-        1:num_subplots,
-        function(x) {
-          make_polygon(
-            strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
-            x,
-            dir_p,
-            dir_v,
-            cell_height
-          )
-        }
-      ) %>%
-      st_as_sfc() %>%
-      st_set_crs(st_crs(field)) %>%
-      st_as_sf() %>%
-      mutate(
-        group = group,
-        id = 1:nrow(.)
-      )
-
-      is_intersecting[group] <- st_intersects(exp_sf_ls[[paste(group)]], field, sparse = F)[, 1] %>% any()
-
-      min_intersecting_group <- which(is_intersecting) %>% min()
-
-      if(group > 20){
-        if (!is_intersecting[group - 10] & ((group - 10) > min_intersecting_group)) {
-          all_plygons <- do.call("rbind", exp_sf_ls) %>% 
-            .[st_buffer(field, 5 * plot_width), ] %>% 
-            rename(geometry = x)
-          return(all_plygons)
-        } else if (all(!is_intersecting[1:50])) {
-          return(NULL)
-        }
-      }
-    } 
-  }
-
-  # /*----------------------------------*/
-  #' ## vector of points of sf of points
-  # /*----------------------------------*/
-  vect_to_sf_point <- function(vec) {
-    st_as_sfc(list(st_point(vec))) %>%
-      st_set_crs(st_crs(field))
-  }
-
-  # /*----------------------------------*/
-  #' ## Re-assign plot id based on observation numbers per plot
-  # /*----------------------------------*/
-  reassign_plot_id <- function(data, grp) {
-
-    if (max(data$plot_id) == 1) {
-      #--- if there is only one plot_id in the strip ---#
-      return(data[, .(id, plot_id, group, group_in_group, geometry, type)])
-    }
-
-    if (nrow(data[too_short == TRUE, ]) == 0) {
-      return(data[, .(id, plot_id, group, group_in_group, geometry, type)])
-    }
-
-    num_obs_short <- data[too_short == TRUE, obs_per_plot] %>%
-      unique()
-
-    short_plot_id <- data[too_short == TRUE, plot_id] %>%
-      unique()
-
-    num_obs_short_1 <- data[plot_id == (short_plot_id - 1), obs_per_plot] %>%
-      unique()
-
-    if (num_obs_short >= (2 * min_obs - mean_obs)) { # make the last two short
-
-      first_obs_set <- ceiling((num_obs_short + mean_obs) / 2)
-
-      data[plot_id %in% c(short_plot_id, short_plot_id - 1), cum_num_reassign := cumsum(dummy)] %>%
-        .[cum_num_reassign <= first_obs_set, plot_id := short_plot_id - 1]
-    } else if ((max(data$plot_id) >= 3) & num_obs_short >= (3 * min_obs - 2 * mean_obs)) {
-
-      # make the last three short (there needs to be at least 3 plot ids)
-
-      first_obs_set <- ceiling((num_obs_short + 2 * mean_obs) / 3)
-
-      data[plot_id %in% short_plot_id:(short_plot_id - 2), cum_num_reassign := cumsum(dummy)] %>%
-        #--- third last ---#
-        .[plot_id %in% short_plot_id:(short_plot_id - 2), plot_id := short_plot_id] %>%
-        .[cum_num_reassign <= first_obs_set, plot_id := short_plot_id - 2] %>%
-        .[cum_num_reassign > first_obs_set & cum_num_reassign <= 2 * first_obs_set, plot_id := short_plot_id - 1]
-    } else if (max(data$plot_id) >= 3) {
-
-      # make the 2nd and 3rd last longer (there needs to be at least 3 plot ids)
-
-      first_obs_set <- ceiling((num_obs_short + 2 * mean_obs) / 2)
-
-      data[plot_id %in% short_plot_id:(short_plot_id - 2), cum_num_reassign := cumsum(dummy)] %>%
-        .[plot_id %in% short_plot_id:(short_plot_id - 2), plot_id := short_plot_id - 1] %>%
-        #--- third last ---#
-        .[cum_num_reassign <= first_obs_set, plot_id := short_plot_id - 2]
-    } else {
-
-      # make the two into one (there needs to be at least 2 plot ids)
-      data[, plot_id := 1]
-    }
-
-    # data[, .N, by = plot_id]
-
-    # return(data[, .(id, plot_id, group_contiguous, x)])
-    return(data[, .(id, plot_id, group, group_in_group, geometry, type)])
-  }
-
-  #/*----------------------------------*/
-  #' ## Calculate the distance 
-  #/*----------------------------------*/
-  # Calculate the distance between a strip of polygons and the ab_line
-
-  cal_dist_to_ab <- function(data_sf, ab_line) {
-
-    centroids <- data_sf %>% 
-      st_centroid() %>% 
-      .[c(1, nrow(.)), ] %>% 
-      st_geometry()
-
-    line <- list(st_linestring(c(centroids[[1]], centroids[[2]]))) %>% 
-      st_as_sfc() %>% 
-      st_set_crs(st_crs(field))
-
-    correction_dist <- st_distance(line, ab_line) %>% 
-      as.numeric()
-
-    return(correction_dist)
-  }
-
-  get_line_through_centroids <- function(data_sf, crs) {
-
-    centroids <- data_sf %>% 
-      st_centroid() %>% 
-      .[c(1, nrow(.)), ] %>% 
-      st_geometry()
-
-    line <- list(st_linestring(c(centroids[[1]], centroids[[2]]))) %>% 
-      st_as_sfc() %>% 
-      st_set_crs(crs)
-
-    return(line)
-
-  }
- 
-  # /*=================================================*/
-  #' # Main code
-  # /*=================================================*/
-  # ggplot() +
-  #   geom_sf(data = field) +
-  #   geom_sf(data = ab_line) +
-  #   geom_sf(data = ab_line_tilted) 
-
-  # ggplot() +
-  #   geom_sf(data = st_point(ab_xy_nml)) +
-  #   geom_sf(data = st_point(ab_xy_nml_p90)) +
-  #   ylim(-1, 1) +
-  #   xlim(-1, 1)
-
-  #=== tilt based on harvest angle ===#
-  ab_line_tilted <- st_tilt(ab_line, harvest_angle, merge = FALSE)
-  #--- get the vector (direction machines run)  ---#
-  ab_xy <- st_geometry(ab_line_tilted)[[1]][2, ] - st_geometry(ab_line_tilted)[[1]][1, ]  
-  #--- distance of the vector ---#
-  ab_length <- sqrt(sum(ab_xy^2))
-  #--- normalize (distance == 1) ---#
-  ab_xy_nml <- ab_xy / ab_length
-  #--- create a vector that is perpendicular to ab_xy ---#
-  ab_xy_nml_p90 <- ab_xy_nml %*% rotate_mat_p90
-
-  #=== if ab-line is outside of the field boundary ===#
-  if (nrow(st_as_sf(st_intersection(field, ab_line_tilted))) == 0) {
-
-    b <- t(
-      st_coordinates(st_centroid(field)) - 
-      st_geometry(ab_line_tilted)[[1]][1, ] 
-    )
-    a <- cbind(
-      t(ab_xy_nml_p90),
-      ab_xy_nml
-    )
-
-    multiplier <- solve(a, b)
-
-    ab_line_tilted <- 
-    st_shift(
-      ab_line_tilted, 
-      round(multiplier[[1]] / plot_width) * plot_width * ab_xy_nml_p90 + 
-      multiplier[[2]] * ab_xy_nml, 
-      merge = FALSE
-    )
-
-  }
-
-  # /*----------------------------------*/
-  #' ## identify the number of subplots in a strip
-  # /*----------------------------------*/
+  #/*=================================================*/
+  #' # Create strips
+  #/*=================================================*/
   f_bbox <- st_bbox(field)
 
   #--- maximum distance ---#
@@ -394,12 +46,10 @@ function(
   #   geom_sf(data = vect_to_sf_point(starting_point), col = "green", size = 2) +
   #   geom_sf(data = field, col = "black", fill = NA) +
   #   geom_sf(data = ab_line_tilted, col = "red")
-
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### Shift the polygons for the right starting point
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/   
-  print("Shifting the polygons for the right starting point")
-
+  
+  #/*=================================================*/
+  #' # Shift the polygons (the ab-line goes through the center of a strip)
+  #/*=================================================*/
   #=== find the group id for the cells that are intersecting with the ab-line  ===#
   ab_int_group <- st_intersection(strips, ab_line_tilted) %>% 
     pull(group) %>% unique()
@@ -471,18 +121,24 @@ function(
   #   geom_sf(data = strips_shifted, fill = "blue", color = NA) +
   #   geom_sf(data = ab_line_tilted, col = "red")
 
-  #/*----------------------------------*/
-  #' ## Create final plots
-  #/*----------------------------------*/
-  min_length <- conv_unit(200, "ft", "m") # (200 feet)
+  #/*=================================================*/
+  #' # Create experiment plots
+  #/*=================================================*/
+  min_length <- conv_unit(180, "ft", "m") # (200 feet)
   mean_length <- conv_unit(240, "ft", "m") # (240 feet)
   max_length <- conv_unit(300, "ft", "m") #  (300 feet) 
 
+  # ggplot(final_exp_plots) +
+  #   geom_sf(aes(fill = strip_id))
+
   final_exp_plots <- field %>% 
+    #=== create an inner buffer ===#
     st_buffer(- side_plots_num * plot_width) %>% 
+    #=== intersect strips and the field ===#
     st_intersection(strips, .) %>% 
     dplyr::select(group) %>% 
     rowwise() %>% 
+    #=== split multipolygons to individual polygons ===#
     mutate(indiv_polygon = list(
       st_cast(geometry, "POLYGON") %>% 
         st_as_sf() %>% 
@@ -534,7 +190,8 @@ function(
     pluck("plots") %>% 
     reduce(rbind) %>% 
     rename(strip_id = group, group_in_strip = id_in_group) %>%
-    mutate(strip_id = strip_id - min(strip_id) + 1)
+    mutate(strip_id = strip_id - min(strip_id) + 1) %>% 
+    st_set_crs(st_crs(field))
 
   #/*----------------------------------*/
   #' ## Get the ab-line
@@ -624,7 +281,7 @@ function(
       )) %>% 
       mutate(ab_lines_shifted_extended = list(
         #=== 50 meter ===#
-        st_extend_line(ab_lines_shifted, 50)
+        st_extend_line(ab_lines_shifted, 200)
       )) %>% 
       pluck("ab_lines_shifted_extended") %>% 
       reduce(c) %>% 
@@ -1551,7 +1208,8 @@ get_plot_length <- function(tot_plot_length) {
     .[!is.na(plot_length),]
   } else {
     # only 1 complete plot 
-    return_data <- return_data[, plot_length := mean_length + remainder]
+    return_data <- return_data[, plot_length := mean_length + remainder] %>% 
+      .[1,]
   }
   
   return(return_data)  
@@ -1634,4 +1292,345 @@ create_plots_in_strip <- function(
 
 }
 
+prepare_ablines <- function(ab_line, harvest_angle, field) {
 
+  rotate_mat_p90 <- matrix(
+    c(
+      cos(pi / 2),
+      sin(pi / 2),
+      -sin(pi / 2),
+      cos(pi / 2)
+    ),
+    nrow = 2
+  )
+
+  #=== tilt based on harvest angle ===#
+  ab_line_tilted <- st_tilt(ab_line, harvest_angle, merge = FALSE)
+  #--- get the vector (direction machines run)  ---#
+  ab_xy <- st_geometry(ab_line_tilted)[[1]][2, ] - st_geometry(ab_line_tilted)[[1]][1, ]  
+  #--- distance of the vector ---#
+  ab_length <- sqrt(sum(ab_xy^2))
+  #--- normalize (distance == 1) ---#
+  ab_xy_nml <- ab_xy / ab_length
+  #--- create a vector that is perpendicular to ab_xy ---#
+  ab_xy_nml_p90 <- ab_xy_nml %*% rotate_mat_p90
+
+  #=== if ab-line is outside of the field boundary ===#
+  if (nrow(st_as_sf(st_intersection(field, ab_line_tilted))) == 0) {
+
+    b <- t(
+      st_coordinates(st_centroid(field)) - 
+      st_geometry(ab_line_tilted)[[1]][1, ] 
+    )
+    a <- cbind(
+      t(ab_xy_nml_p90),
+      ab_xy_nml
+    )
+
+    multiplier <- solve(a, b)
+
+    ab_line_tilted <- 
+    st_shift(
+      ab_line_tilted, 
+      round(multiplier[[1]] / plot_width) * plot_width * ab_xy_nml_p90 + 
+      multiplier[[2]] * ab_xy_nml, 
+      merge = FALSE
+    )
+
+  }
+
+  return(list(
+    ab_line_tilted = ab_line_tilted,
+    ab_xy_nml = ab_xy_nml,
+    ab_xy_nml_p90 = ab_xy_nml_p90
+  ))
+}
+
+get_line_through_centroids <- function(data_sf, crs) {
+
+  centroids <- data_sf %>% 
+    st_centroid() %>% 
+    .[c(1, nrow(.)), ] %>% 
+    st_geometry()
+
+  line <- list(st_linestring(c(centroids[[1]], centroids[[2]]))) %>% 
+    st_as_sfc() %>% 
+    st_set_crs(crs)
+
+  return(line)
+
+}
+
+#/*----------------------------------*/
+#' ## Calculate the distance 
+#/*----------------------------------*/
+# Calculate the distance between a strip of polygons and the ab_line
+
+cal_dist_to_ab <- function(data_sf, ab_line) {
+
+  centroids <- data_sf %>% 
+    st_centroid() %>% 
+    .[c(1, nrow(.)), ] %>% 
+    st_geometry()
+
+  line <- list(st_linestring(c(centroids[[1]], centroids[[2]]))) %>% 
+    st_as_sfc() %>% 
+    st_set_crs(st_crs(field))
+
+  correction_dist <- st_distance(line, ab_line) %>% 
+    as.numeric()
+
+  return(correction_dist)
+}
+
+# /*----------------------------------*/
+#' ## vector of points of sf of points
+# /*----------------------------------*/
+vect_to_sf_point <- function(vec) {
+  st_as_sfc(list(st_point(vec))) %>%
+    st_set_crs(st_crs(field))
+}
+
+# /*----------------------------------*/
+#' ## Re-assign plot id based on observation numbers per plot
+# /*----------------------------------*/
+reassign_plot_id <- function(data) {
+
+  if (max(data$plot_id) == 1) {
+    #--- if there is only one plot_id in the strip ---#
+    return(data[, .(id, plot_id, group, group_in_group, geometry, type)])
+  }
+
+  if (nrow(data[too_short == TRUE, ]) == 0) {
+    return(data[, .(id, plot_id, group, group_in_group, geometry, type)])
+  }
+
+  num_obs_short <- data[too_short == TRUE, obs_per_plot] %>%
+    unique()
+
+  short_plot_id <- data[too_short == TRUE, plot_id] %>%
+    unique()
+
+  num_obs_short_1 <- data[plot_id == (short_plot_id - 1), obs_per_plot] %>%
+    unique()
+
+  if (num_obs_short >= (2 * min_obs - mean_obs)) { # make the last two short
+
+    first_obs_set <- ceiling((num_obs_short + mean_obs) / 2)
+
+    data[plot_id %in% c(short_plot_id, short_plot_id - 1), cum_num_reassign := cumsum(dummy)] %>%
+      .[cum_num_reassign <= first_obs_set, plot_id := short_plot_id - 1]
+  } else if ((max(data$plot_id) >= 3) & num_obs_short >= (3 * min_obs - 2 * mean_obs)) {
+
+    # make the last three short (there needs to be at least 3 plot ids)
+
+    first_obs_set <- ceiling((num_obs_short + 2 * mean_obs) / 3)
+
+    data[plot_id %in% short_plot_id:(short_plot_id - 2), cum_num_reassign := cumsum(dummy)] %>%
+      #--- third last ---#
+      .[plot_id %in% short_plot_id:(short_plot_id - 2), plot_id := short_plot_id] %>%
+      .[cum_num_reassign <= first_obs_set, plot_id := short_plot_id - 2] %>%
+      .[cum_num_reassign > first_obs_set & cum_num_reassign <= 2 * first_obs_set, plot_id := short_plot_id - 1]
+  } else if (max(data$plot_id) >= 3) {
+
+    # make the 2nd and 3rd last longer (there needs to be at least 3 plot ids)
+
+    first_obs_set <- ceiling((num_obs_short + 2 * mean_obs) / 2)
+
+    data[plot_id %in% short_plot_id:(short_plot_id - 2), cum_num_reassign := cumsum(dummy)] %>%
+      .[plot_id %in% short_plot_id:(short_plot_id - 2), plot_id := short_plot_id - 1] %>%
+      #--- third last ---#
+      .[cum_num_reassign <= first_obs_set, plot_id := short_plot_id - 2]
+  } else {
+
+    # make the two into one (there needs to be at least 2 plot ids)
+    data[, plot_id := 1]
+  }
+
+  # data[, .N, by = plot_id]
+
+  # return(data[, .(id, plot_id, group_contiguous, x)])
+  return(data[, .(id, plot_id, group, group_in_group, geometry, type)])
+}
+
+#/*----------------------------------*/
+#' ## Create plots (cells) that covers the entire field
+#/*----------------------------------*/
+create_plots <- function(
+  strt_point,
+  dir_p,
+  dir_v,
+  plot_width,
+  num_subplots,
+  cell_height,
+  field,
+  ab_xy_nml_p90
+) {
+
+  is_intersecting <- rep(TRUE, 1000)
+
+  exp_sf_ls <- list()
+
+  # group <- 1
+  for (group in 1:1000) {
+
+    # print(group)
+
+    exp_sf_ls[[paste(group)]] <- lapply(
+      1:num_subplots,
+      function(x) {
+        make_polygon(
+          strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
+          x,
+          dir_p,
+          dir_v,
+          cell_height
+        )
+      }
+    ) %>%
+    st_as_sfc() %>%
+    st_set_crs(st_crs(field)) %>%
+    st_as_sf() %>%
+    mutate(
+      group = group,
+      id = 1:nrow(.)
+    )
+
+    is_intersecting[group] <- st_intersects(exp_sf_ls[[paste(group)]], field, sparse = F)[, 1] %>% any()
+
+    min_intersecting_group <- which(is_intersecting) %>% min()
+
+    if(group > 20){
+      if (!is_intersecting[group - 10] & ((group - 10) > min_intersecting_group)) {
+        all_plygons <- do.call("rbind", exp_sf_ls) %>% 
+          .[st_buffer(field, 5 * plot_width), ] %>% 
+          rename(geometry = x)
+        return(all_plygons)
+      } else if (all(!is_intersecting[1:50])) {
+        return(NULL)
+      }
+    }
+  } 
+}
+
+#/*----------------------------------*/
+#' ## Create plots
+#/*----------------------------------*/
+detect_directions <- 
+function(
+  strt_point, 
+  dir_p, dir_v, 
+  plot_width, 
+  num_subplots,
+  cell_height,
+  field,
+  ab_xy_nml_p90
+) {
+
+  is_intersecting <- rep(TRUE, 100)
+  
+  exp_sf_ls <- list()
+
+  # group <- 1
+  for (group in 1:100) {
+    # group = 2
+    # strt_point <- starting_point
+    temp_line <- tibble(x = c(1, num_subplots)) %>% 
+      rowwise() %>% 
+      mutate(end_polygons = list(
+        make_polygon(
+          strt_point + plot_width * dir_p * ab_xy_nml_p90 * (group - 1),
+          x,
+          dir_p,
+          dir_v,
+          cell_height
+        )
+      )) %>% 
+      pluck("end_polygons") %>% 
+      st_sfc() %>% 
+      st_as_sf() %>% 
+      get_line_through_centroids(st_crs(field))
+
+    is_intersecting[group] <- st_intersects(temp_line, field, sparse = F)[, 1]
+
+    if (is_intersecting[group]) {
+      return(TRUE)
+    } else if (all(!is_intersecting[1:50])) {
+      return(FALSE)
+    }
+  }
+}
+
+# /*----------------------------------*/
+#' ## make polygons
+# /*----------------------------------*/
+make_polygon <- function(
+  strt_point_new, 
+  multiplier,
+  dir_p,
+  dir_v,
+  cell_height,
+  ab_xy_nml,
+  ab_xy_nml_p90
+) {
+
+  point_1 <- strt_point_new + cell_height * dir_v * ab_xy_nml * (multiplier - 1)
+  point_2 <- point_1 - plot_width * dir_p * ab_xy_nml_p90
+  point_3 <- point_2 + dir_v * ab_xy_nml * cell_height
+  point_4 <- point_3 + plot_width * dir_p * ab_xy_nml_p90
+
+  temp_polygon <- rbind(
+    point_1,
+    point_2,
+    point_3,
+    point_4,
+    point_1
+  ) %>%
+    list() %>%
+    st_polygon()
+
+  return(temp_polygon)
+}
+
+# /*=================================================*/
+#' # Create strips
+# /*=================================================*/
+# ggplot() +
+#   geom_sf(data = circle, fill = NA) +
+#   geom_sf(data = strips, aes(fill = group), color = NA, alpha = 0.4) +
+#   geom_sf(data = field) 
+
+create_strips <- function(field, plot_width, cell_height, radius) {
+
+  circle <- st_buffer(st_centroid(field), radius)
+
+  strips <- st_make_grid(circle, cellsize = c(plot_width, radius * 2)) %>% 
+      st_as_sf() %>% 
+      cbind(., st_coordinates(st_centroid(.))) %>% 
+      data.table() %>% 
+      .[order(X),] %>% 
+      .[, group := .GRP, by = X] %>% 
+      setnames("x", "geometry") %>% 
+      st_as_sf()
+
+  vertical_line <- 
+  rbind(
+    c(0, 0),
+    c(0, 10)
+  ) %>% 
+  st_linestring() %>% 
+  st_sfc() %>% 
+  st_set_crs(st_crs(field)) %>% 
+  st_as_sf()
+
+  strips <- 
+  st_tilt(
+    data_sf = strips, 
+    angle = get_angle_lines(ab_line_tilted, vertical_line),
+    base_sf = circle,
+    merge = TRUE
+  )
+
+  return(strips)
+
+}
