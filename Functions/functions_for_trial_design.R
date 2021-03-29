@@ -507,6 +507,7 @@ assign_rates <- function(
   min_rate,
   max_rate,
   num_levels,
+  rates,
   push,
   merge = TRUE
 ) {
@@ -576,7 +577,11 @@ assign_rates <- function(
 
   if (design_type == "jcl") {
   
-    rates_ls <- get_rates(min_rate, max_rate, gc_rate, num_levels)
+    rates_ls <- ifelse(
+      is.na(rates),
+      get_rates(min_rate, max_rate, gc_rate, num_levels),
+      rates
+    )
     max_plot_id <- max(data_sf$plot_id)
     max_strip_id <- max(data_sf$strip_id)
 
@@ -639,7 +644,11 @@ assign_rates <- function(
       print("max jump rate is too high. setting the number of levels to 8")
     }
 
-    rates_ls <- get_rates(min_rate, max_rate, gc_rate, num_levels)
+    rates_ls <- ifelse(
+      is.na(rates),
+      get_rates(min_rate, max_rate, gc_rate, num_levels),
+      rates
+    )
 
     total_num_levels <- length(rates_ls)
     max_plot_id <- max(data_sf$plot_id)
