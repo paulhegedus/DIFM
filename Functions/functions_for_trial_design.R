@@ -1645,9 +1645,6 @@ create_strips <- function(field, ab_line_tilted, plot_width, cell_height, radius
     merge = TRUE
   )
 
-<<<<<<< HEAD
-=======
   return(strips)
 
 }
->>>>>>> ef_create_plots
