@@ -37,21 +37,25 @@ function(
         setnames("x", "geometry") %>% 
         st_as_sf()
 
-    through_line <- get_through_line(
-      filter(strips, group == 1),
-      radius
-    )
+    vertical_line <- 
+    rbind(
+      c(0, 0),
+      c(0, 10)
+    ) %>% 
+    st_linestring() %>% 
+    st_sfc() %>% 
+    st_set_crs(st_crs(field)) %>% 
+    st_as_sf()
 
-    plots <- 
+    strips <- 
     st_tilt(
-      data_sf = grids, 
-      angle = get_angle_lines(ab_line_tilted, through_line),
-      # angle = 50,
-      merge = TRUE,
-      preserve_centroid = TRUE 
+      data_sf = strips, 
+      angle = get_angle_lines(ab_line_tilted, vertical_line),
+      base_sf = circle,
+      merge = TRUE
     )
 
-    return(plots)
+    return(strips)
 
   }
   
@@ -1190,17 +1194,18 @@ assign_rates <- function(
 # data_sf = ab_line
 # angle = harvest_angle
 
-st_tilt <- function(data_sf, angle, merge = TRUE) {
+st_tilt <- function(data_sf, angle, base_sf = FALSE, merge = TRUE) {
 
   rot <- function(a) matrix(c(cos(a), sin(a), -sin(a), cos(a)), 2, 2)
 
-  wf_bbox <- st_bbox(data_sf)
+  if ("sf" %in% class(base_sf)) {
+    wf_bbox <- st_bbox(base_sf) %>% st_as_sfc()
+  } else {
+    wf_bbox <- st_bbox(data_sf) %>% st_as_sfc()
+  }
+  
+  base_point <- st_centroid(wf_bbox)
   data_geom <- st_geometry(data_sf)
-
-  # base_point <- st_centroid(data_geom)
-  base_point <- c(wf_bbox["xmax"], wf_bbox["ymin"]) %>%
-    st_point() %>%
-    st_sfc()
 
   data_tilted <- ((data_geom - base_point) * rot(angle / 180 * pi) + base_point) %>%
     st_set_crs(st_crs(data_sf)) 
@@ -1215,48 +1220,6 @@ st_tilt <- function(data_sf, angle, merge = TRUE) {
   # ggplot() +
   #   geom_sf(data_sf, fill = "red", alpha = 0.4) +
   #   geom_sf(data_tilted, fill = "blue", alpha = 0.4)
-}
-
-# preserve_centroid = TRUE
-st_tilt <- function(data_sf, angle, merge = TRUE, preserve_centroid = FALSE) {
-
-  rot <- function(a) matrix(c(cos(a), sin(a), -sin(a), cos(a)), 2, 2)
-
-  wf_bbox <- st_bbox(data_sf)
-  data_geom <- st_geometry(data_sf)
-
-  # base_point <- st_centroid(data_geom)
-  base_point <- c(wf_bbox["xmax"], wf_bbox["ymin"]) %>%
-    st_point() %>%
-    st_sfc()
-
-  data_tilted <- ((data_geom - base_point) * rot(angle / 180 * pi) + base_point) %>%
-    st_set_crs(st_crs(data_sf))  
-
-  if (preserve_centroid) {
-    n_bbox <- st_bbox(data_tilted)
-    n_base_point <- c(n_bbox["xmax"], n_bbox["ymin"]) %>%
-      st_point() %>%
-      st_sfc()
-    data_tilted <-
-    st_shift(
-      data_tilted, 
-      st_coordinates(base_point - n_base_point), 
-      merge == FALSE
-    )
-  }
-
-  if (merge == TRUE) {
-    data_sf$geometry <- data_tilted 
-    return(data_sf)
-  } else {
-    return(data_tilted)
-  }
-
-  # ggplot() +
-  #   geom_sf(data = data_sf, fill = "red", alpha = 0.4) +
-  #   geom_sf(data = data_tilted, fill = "blue", alpha = 0.4)
-
 }
 
 #/*=================================================*/
@@ -1587,6 +1550,8 @@ make_sf_utm <- function(data_sf) {
 #/*=================================================*/
 #' # Get harvester angle relative to input ab-line
 #/*=================================================*/
+# line_1 <- ab_line_tilted
+# line_2 <- through_line
 
 get_angle_lines <- function(line_1, line_2) {
 
@@ -1601,7 +1566,7 @@ get_angle_lines <- function(line_1, line_2) {
   h_vec_n <- h_vec / sqrt(sum(h_vec ^ 2))
 
   i_mat <- st_geometry(line_2)[[1]]
-  i_vec <- i_mat[1, ] - i_mat[2, ]
+  i_vec <- i_mat[2, ] - i_mat[1, ]
   i_vec_n <- i_vec / sqrt(sum(i_vec ^ 2))
 
   angle <- acos(sum(i_vec_n * h_vec_n)) / pi * 180
@@ -1613,7 +1578,10 @@ get_angle_lines <- function(line_1, line_2) {
     i_vec_n %*% rotate(angle / 180 * pi) 
   )) %>% 
   mutate(dot_product = sum(i_vect_rotated * h_vec_n)) %>% 
-  filter(dot_product > 0.99 & dot_product < 1.01) %>% 
+  mutate(dist = abs(dot_product) - 1) %>% 
+  arrange(abs(dist)) %>% 
+  ungroup() %>% 
+  slice(1) %>% 
   pull(angle)
 
   return(angle)
