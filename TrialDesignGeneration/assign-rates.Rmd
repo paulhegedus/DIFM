@@ -27,7 +27,7 @@ if (nrow(trial_data) > 1) {
   mutate(num_levels = num_levels[1]) %>% 
   mutate(design_type = design_type[1]) %>% 
   mutate(max_jump = max_jumps[1]) %>% 
-  mutate(rates = rates[[1]]) 
+  mutate(rates = list(rates[[1]])) 
 
 }
 

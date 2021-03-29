@@ -67,8 +67,6 @@ make_trial_design(
   rerun = TRUE
 )
 
-  rates <- c(40, 50, 60)
-
 make_trial_design(
   ffy = field_year_ls[4], 
   json_file = "fp_2021_TD.json", 
@@ -87,7 +85,7 @@ make_trial_design(
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
   design_type = c("jcl", "jcl"),
-  rates = list(c(40, 50, 60), c(50, 60, 70)),
+  # rates = list(c(40, 50, 60), c(50, 60, 70)),
   #=== number of levels ===#
   # used in "jcl", ignored in "ejca"
   num_levels = c(5, 5), 
