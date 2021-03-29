@@ -85,7 +85,7 @@ make_trial_design(
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
   design_type = c("jcl", "jcl"),
-  # rates = list(c(40, 50, 60), c(50, 60, 70)),
+  rates = list(c(40, 50, 60, 70, 80)),
   #=== number of levels ===#
   # used in "jcl", ignored in "ejca"
   num_levels = c(5, 5), 

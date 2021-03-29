@@ -128,12 +128,13 @@ function(
   mean_length <- conv_unit(240, "ft", "m") # (240 feet)
   max_length <- conv_unit(300, "ft", "m") #  (300 feet) 
 
+  side_length <- 1.5 * side_plots_num * plot_width
   # ggplot(final_exp_plots) +
   #   geom_sf(aes(fill = strip_id))
 
   final_exp_plots <- field %>% 
     #=== create an inner buffer ===#
-    st_buffer(- side_plots_num * plot_width) %>% 
+    st_buffer(- side_length) %>% 
     #=== intersect strips and the field ===#
     st_intersection(strips, .) %>% 
     dplyr::select(group) %>% 
@@ -164,7 +165,7 @@ function(
     mutate(new_center_line = list(
       move_points_inward(
         int_line, 
-        max(headland_length - side_plots_num * plot_width, 0),
+        max(headland_length - side_length, 0),
         ab_xy_nml
       )  
     )) %>% 
