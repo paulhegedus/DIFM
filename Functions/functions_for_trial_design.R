@@ -25,17 +25,9 @@ function(
   #   geom_sf(data = grids, aes(fill = group), color = NA) 
   # This option uses st_make_grid. But, this is slower because it has to be tilted and shifted
 
-  create_cells <- function(field, plot_width, cell_height) {
+  create_strips <- function(field, plot_width, cell_height, radius) {
 
-    f_bbox <- st_bbox(field)
-
-    #--- maximum distance ---#
-    radius <- 
-    sqrt(
-      (f_bbox["xmax"] - f_bbox["xmin"])^2 +
-      (f_bbox["ymax"] - f_bbox["ymin"])^2
-    ) / 2 + 50
-
+    
     circle <- st_buffer(st_centroid(field), radius)
     grids <- st_make_grid(circle, cellsize = c(plot_width, cell_height)) %>% 
         st_as_sf() %>% 
@@ -388,20 +380,12 @@ function(
   # /*----------------------------------*/
   f_bbox <- st_bbox(field)
 
-  #--- maximum distance ---#
-  max_dist <- 
-  sqrt(
-    (f_bbox["xmax"] - f_bbox["xmin"])^2 +
-    (f_bbox["ymax"] - f_bbox["ymin"])^2
-  ) + 150
-
-  #--- number of subplots to create ---#
-  num_subplots_in_a_strip <- ceiling(max_dist / cell_height)
-
-  # /*----------------------------------*/
-  #' ## Detect which direction to go
-  # /*----------------------------------*/
-  starting_point <- c(f_bbox["xmin"] - 150, f_bbox["ymin"] - 150) 
+    #--- maximum distance ---#
+    radius <- 
+    sqrt(
+      (f_bbox["xmax"] - f_bbox["xmin"])^2 +
+      (f_bbox["ymax"] - f_bbox["ymin"])^2
+    ) / 2 + 50
 
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### which direction (perpendicular to the ab-line) 
@@ -1640,5 +1624,3 @@ get_angle_lines <- function(line_1, line_2) {
 
 }
 
-
-dd
