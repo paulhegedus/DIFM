@@ -659,12 +659,13 @@ assign_rates <- function(
   } else if (design_type == "ejca") { # Extra jump-conscious alternate
 
     #=== num_levels internally determined ===#
-    num_levels <- seq(min_rate, max_rate, by = max_jump * 0.8) %>% 
-      length()
-
-    if (num_levels < 5) {
-      num_levels <- 8 
-      print("max jump rate is too high. setting the number of levels to 8")
+    if (is.na(max_jump)) {
+      num_levels <- seq(min_rate, max_rate, by = max_jump * 0.8) %>% 
+        length()
+      if (num_levels < 5) {
+        num_levels <- 8 
+        print("max jump rate is too high. setting the number of levels to 8")
+      }
     }
 
     if (any(is.na(rates))) {
