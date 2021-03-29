@@ -32,6 +32,16 @@ if (nrow(trial_data) > 1) {
 }
 
 #=== user-specified number of levels ===#
+# data_sf <- trial_data_r$exp_plots[[1]]
+# design_type <- trial_data_r$design_type[[1]]
+# max_jump <- trial_data_r$max_jump[[1]]
+# gc_rate <- round(trial_data_r$gc_rate[[1]])
+# min_rate <- trial_data_r$min_rate[[1]]
+# max_rate <- trial_data_r$max_rate[[1]]
+# num_levels <- trial_data_r$num_levels [[1]]# ignored
+# rates <- trial_data_r$rates[[1]]
+# push <- trial_data_r$push[[1]]
+
 trial_data_r <- trial_data_eh %>% 
   left_join(., design_parameter_data, by = "form") %>% 
   mutate(experiment_design = list(
