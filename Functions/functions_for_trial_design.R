@@ -20,36 +20,32 @@ function(
   #' # Define functions
   # /*=================================================*/
   # ggplot() +
-  #   geom_sf(data = field) +
   #   geom_sf(data = circle, fill = NA) +
-  #   geom_sf(data = grids, aes(fill = group), color = NA) 
-  # This option uses st_make_grid. But, this is slower because it has to be tilted and shifted
+  #   geom_sf(data = strips, aes(fill = group), color = NA, alpha = 0.4) +
+  #   geom_sf(data = field) 
 
   create_strips <- function(field, plot_width, cell_height, radius) {
 
-    
     circle <- st_buffer(st_centroid(field), radius)
-    grids <- st_make_grid(circle, cellsize = c(plot_width, cell_height)) %>% 
+
+    strips <- st_make_grid(circle, cellsize = c(plot_width, radius * 2)) %>% 
         st_as_sf() %>% 
         cbind(., st_coordinates(st_centroid(.))) %>% 
         data.table() %>% 
         .[order(X),] %>% 
         .[, group := .GRP, by = X] %>% 
-        .[order(group, Y), ] %>% 
-        .[, id := 1:.N, by = group] %>% 
-        .[, .(group, id, x)] %>% 
         setnames("x", "geometry") %>% 
         st_as_sf()
 
-    line_through_centroids <- get_line_through_centroids(
-      filter(grids, group == 1),
-      st_crs(grids)
+    through_line <- get_through_line(
+      filter(strips, group == 1),
+      radius
     )
 
     plots <- 
     st_tilt(
       data_sf = grids, 
-      angle = get_angle_lines(ab_line_tilted, line_through_centroids),
+      angle = get_angle_lines(ab_line_tilted, through_line),
       # angle = 50,
       merge = TRUE,
       preserve_centroid = TRUE 
@@ -380,12 +376,12 @@ function(
   # /*----------------------------------*/
   f_bbox <- st_bbox(field)
 
-    #--- maximum distance ---#
-    radius <- 
-    sqrt(
-      (f_bbox["xmax"] - f_bbox["xmin"])^2 +
-      (f_bbox["ymax"] - f_bbox["ymin"])^2
-    ) / 2 + 50
+  #--- maximum distance ---#
+  radius <- 
+  sqrt(
+    (f_bbox["xmax"] - f_bbox["xmin"])^2 +
+    (f_bbox["ymax"] - f_bbox["ymin"])^2
+  ) / 2 + 50
 
   #/*~~~~~~~~~~~~~~~~~~~~~~*/
   #' ### which direction (perpendicular to the ab-line) 
@@ -1621,6 +1617,20 @@ get_angle_lines <- function(line_1, line_2) {
   pull(angle)
 
   return(angle)
+
+}
+
+get_through_line <- function(geometry, radius) {
+
+  centroid <- st_coordinates(st_centroid(geometry))
+  end_point <- centroid + radius * ab_xy_nml
+  start_point <- centroid - radius * ab_xy_nml
+  return_line <- st_linestring(rbind(start_point, end_point)) %>% 
+    st_sfc() %>% 
+    st_set_crs(st_crs(geometry)) %>% 
+    st_as_sf()
+
+  return(return_line)
 
 }
 
