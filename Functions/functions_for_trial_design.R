@@ -199,6 +199,15 @@ function(
   # plot_width
   # machine_width <- conv_unit(90, "ft","m")
 
+    # ggplot() + 
+    #   geom_sf(data = field) +
+    #   geom_sf(data = ab_lines_data$ab_line_for_direction_check[[2]])
+
+  # ggplot() + 
+  #     geom_sf(data = field) +
+  #     geom_sf(data = ab_lines_data$geometry[[1]])
+
+
   if (harvest_angle == 0) {
 
     ab_lines_data <- 
@@ -222,15 +231,9 @@ function(
     expand_grid_df(tibble(dir_p = c(-1, 1)), .) %>% 
     rowwise() %>% 
     mutate(geometry = list(x)) %>% 
-    #=== normalize the length ===#
-    mutate(ab_norm = list(
-      #=== when too short, it is not recognized as intersection ===#
-      st_extend_line(geometry, as.numeric(10 / st_length(geometry)))
-      # st_geometry(geometry, 5)
-    )) %>% 
     mutate(ab_line_for_direction_check = list(
       st_shift(
-        ab_norm, 
+        geometry, 
         dir_p * ab_xy_nml_p90 * (5 * plot_width), 
         merge = FALSE
       )
@@ -314,6 +317,8 @@ function(
   if (second_input == FALSE & harvest_angle == 0) {
     # this is used to align the left (or) right edges of the first input experiment plot
     #=== which way to move for the first to go inward ===#
+    # ab_lines_data$int_check 
+
     dir_p <- filter(ab_lines_data, ab_id == 1 & int_check == 1) %>% 
       pull(dir_p)
 
