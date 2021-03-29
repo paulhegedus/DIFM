@@ -68,7 +68,7 @@ make_trial_design(
 )
 
 make_trial_design(
-  ffy = field_year_ls[17], 
+  ffy = field_year_ls[4], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the machine widths
   side_plots_num = 1,
@@ -79,7 +79,7 @@ make_trial_design(
   # TRUE: uses both harvester and planter/applicator ab-lines or paste data
   # numeric: uses only planter/applicator ab-line or past data and apply the angle
   # rotation is clockwise 
-  harvest_angle = TRUE, 
+  harvest_angle = 0, 
   # harvest_angle = TRUE, 
   #=== design type ===#
   # jcl: jump-conscious latin

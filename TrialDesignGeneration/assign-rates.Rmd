@@ -92,7 +92,7 @@ trial_data_r <- trial_data_eh %>%
 trial_data_r %>% 
 mutate(map_design = list(
   tm_shape(trial_design) +
-    tm_fill(
+    tm_polygons(
       col = "rate_tm",
       title = form,
       palette = "Greens"
@@ -101,7 +101,8 @@ mutate(map_design = list(
   tm_shape(ab_lines) +
     tm_lines(
       col = "ab_id",
-      palette = "Dark2"
+      palette = "Dark2",
+      lwd = 2
     )
 )) %>% 
 pluck("map_design")

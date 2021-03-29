@@ -68,8 +68,13 @@ library(purrr)
 ```
 
 ```{r preparations, cache = F}
+# source(
+#   "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
+#   local = TRUE
+# )
+
 source(
-  "https://github.com/tmieno2/DIFM/blob/master/Functions/prepare.R?raw=TRUE",
+  "https://github.com/tmieno2/DIFM/blob/ef_create_plots/Functions/prepare.R?raw=TRUE",
   local = TRUE
 )
 
