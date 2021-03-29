@@ -174,7 +174,11 @@ function(
       as.numeric(st_length(new_center_line))
     )) %>% 
     mutate(plot_data = list(
-      get_plot_length(tot_plot_length)
+      get_plot_length(
+        tot_plot_length, 
+        min_length,
+        mean_length
+      )
     )) %>% 
     filter(!is.null(plot_data)) %>% 
     mutate(plots = list(
@@ -1181,7 +1185,7 @@ move_points_inward <- function(line, dist, ab_xy_nml) {
 
 }
 
-get_plot_length <- function(tot_plot_length) {
+get_plot_length <- function(tot_plot_length, min_length, mean_length) {
 
   num_comp_plots <-  tot_plot_length %/% mean_length
   remainder <- tot_plot_length %% mean_length

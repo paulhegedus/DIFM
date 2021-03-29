@@ -31,7 +31,7 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[17]
+ffy <- field_year_ls[4]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
@@ -49,11 +49,13 @@ make_trial_design(
   # TRUE: uses both harvester and planter/applicator ab-lines or paste data
   # numeric: uses only planter/applicator ab-line or past data and apply the angle
   # rotation is clockwise 
-  harvest_angle = TRUE, 
+  harvest_angle = FALSE, 
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
   design_type = c("jcl", "jcl"),
+  #=== user-specified rates ===#
+  # rates = list(c(40, 50, 60, 70, 80)),
   #=== number of levels ===#
   # used in "jcl", ignored in "ejca"
   num_levels = c(5, 5), 
@@ -85,7 +87,7 @@ make_trial_design(
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
   design_type = c("jcl", "jcl"),
-  rates = list(c(40, 50, 60, 70, 80)),
+  # rates = list(c(40, 50, 60, 70, 80)),
   #=== number of levels ===#
   # used in "jcl", ignored in "ejca"
   num_levels = c(5, 5), 
