@@ -39,7 +39,7 @@ function(
     (f_bbox["ymax"] - f_bbox["ymin"])^2
   ) / 2 + 50
 
-  strips <- create_strips(field, plot_width, cell_height, radius)
+  strips <- create_strips(field, ab_line_tilted, plot_width, cell_height, radius)
 
   # ggplot() +
   #   geom_sf(data = plots, fill = "blue", color = NA) +
@@ -1603,7 +1603,7 @@ make_polygon <- function(
 #   geom_sf(data = strips, aes(fill = group), color = NA, alpha = 0.4) +
 #   geom_sf(data = field) 
 
-create_strips <- function(field, plot_width, cell_height, radius) {
+create_strips <- function(field, ab_line_tilted, plot_width, cell_height, radius) {
 
   circle <- st_buffer(st_centroid(field), radius)
 
