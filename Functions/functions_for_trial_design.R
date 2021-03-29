@@ -1131,8 +1131,6 @@ get_through_line <- function(geometry, radius) {
 
 }
 
-line <- temp$int_line[[1]] 
-
 move_points_inward <- function(line, dist, ab_xy_nml) {
 
   #=== in case the intersected line is multi-linestring ===#
