@@ -6,23 +6,29 @@
 num_levels <- _num-levels-here_
 design_type <- _design-type-here_ 
 max_jumps <- _max-jumps-here_
+rates <- readRDS(here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
 
 if (nrow(trial_data) > 1) {
+
   design_parameter_data <- trial_data %>% 
   dplyr::select(form) %>% 
   mutate(push = c(FALSE, TRUE)) %>% 
   mutate(num_levels = num_levels) %>% 
   mutate(design_type = design_type) %>% 
-  mutate(max_jump = max_jumps)  
+  mutate(max_jump = max_jumps) %>% 
+  mutate(rates = rates)  
 
 } else {
+
   design_parameter_data <- trial_data %>% 
   dplyr::select(form) %>% 
   mutate(push = FALSE) %>% 
   #=== use only the first in case two are provided ===#
   mutate(num_levels = num_levels[1]) %>% 
   mutate(design_type = design_type[1]) %>% 
-  mutate(max_jump = max_jumps[1])   
+  mutate(max_jump = max_jumps[1]) %>% 
+  mutate(rates = list(rates[[1]])) 
+
 }
 
 #=== user-specified number of levels ===#
@@ -37,6 +43,7 @@ trial_data_r <- trial_data_eh %>%
       min_rate = min_rate,
       max_rate = max_rate,
       num_levels = num_levels, # ignored 
+      rates = rates,
       push = push,
     ) %>% 
     dplyr::select(rate)
@@ -82,7 +89,17 @@ trial_data_r <- trial_data_eh %>%
   dplyr::select(
     - exp_plots, - experiment_plots_dissolved,
     - headland, - tm_exp_head, - experiment_design
-  )
+  ) %>% 
+  mutate(design_summary = list(
+    trial_design %>% 
+    mutate(area = as.numeric(st_area(.))) %>% 
+    mutate(acres = area * 0.000247105) %>% 
+    data.table()%>% 
+    .[, .(
+      tot_input = sum(acres * as.numeric(as.character(rate_tm))),
+      tot_acres = sum(acres)
+    )]  
+  ))  
 
 ``` 
 
@@ -92,7 +109,7 @@ trial_data_r <- trial_data_eh %>%
 trial_data_r %>% 
 mutate(map_design = list(
   tm_shape(trial_design) +
-    tm_fill(
+    tm_polygons(
       col = "rate_tm",
       title = form,
       palette = "Greens"
@@ -101,8 +118,15 @@ mutate(map_design = list(
   tm_shape(ab_lines) +
     tm_lines(
       col = "ab_id",
-      palette = "Dark2"
+      palette = "Dark2",
+      lwd = 2
+    ) +
+  tm_layout(
+    title = paste0(
+      "Total Input = ", round(design_summary[, tot_input]), 
+      "\nAcres = ", round(design_summary[, tot_acres], digits = 2)
     )
+  )
 )) %>% 
 pluck("map_design")
 
