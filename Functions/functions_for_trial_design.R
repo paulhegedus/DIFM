@@ -24,7 +24,7 @@ function(
   #   geom_sf(data = strips, aes(fill = group), color = NA, alpha = 0.4) +
   #   geom_sf(data = field) 
 
-  create_strips <- function(field, plot_width, cell_height, radius) {
+  create_strips field, plot_width, cell_height, radius<- function(field, plot_width, cell_height, radius) {
 
     circle <- st_buffer(st_centroid(field), radius)
 
@@ -387,80 +387,7 @@ function(
     (f_bbox["ymax"] - f_bbox["ymin"])^2
   ) / 2 + 50
 
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### which direction (perpendicular to the ab-line) 
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  print("Detecting the direction to go in")
-
-  directions <- expand.grid(dir_p = c(-1, 1), dir_v = c(-1, 1)) %>% 
-  data.table() %>% 
-  .[,
-    keep := map2(dir_p, dir_v, ~
-      detect_directions(
-        strt_point = starting_point,
-        dir_p = .x,
-        dir_v = .y,
-        plot_width = plot_width,
-        num_subplots = 100,
-        cell_height = cell_height
-      )
-    )
-  ] %>% 
-  .[keep == TRUE, ]  
-  
-  #/*----------------------------------*/
-  #' ## create plots (multiple direction combinations possible)
-  #/*----------------------------------*/
-  print("Creating the full polygons")
-
-  plots_dt <- directions %>% 
-  mutate(dir_id := seq_len(nrow(.))) %>% 
-  rowwise() %>% 
-  mutate(plots = list(
-    create_plots(
-      strt_point = starting_point,
-      dir_p = dir_p,
-      dir_v = dir_v,
-      plot_width = plot_width,
-      num_subplots = num_subplots_in_a_strip,
-      cell_height = cell_height
-    ) %>% 
-    mutate(dir_id = dir_id)
-  )) %>% 
-  pluck("plots") %>% 
-  reduce(rbind) %>% 
-  data.table()  
-
-  if (nrow(directions) > 1) {
-
-    group_dif <- st_intersection(
-      st_as_sf(plots_dt[dir_id == 1, ]),
-      st_as_sf(plots_dt[dir_id == 2, ])
-    ) %>% 
-    mutate(geometry_type = st_geometry_type(.)) %>% 
-    filter(geometry_type == "LINESTRING") %>% 
-    #=== which group id in the second corresponds to the one in the first ===#
-    mutate(group_dif = group.1 - group) %>% 
-    pull(group_dif) %>% 
-    unique()
-
-    plots_dt[dir_id == 1, group := group + group_dif]
-
-    #=== cell id adjustment ===#
-    plots_dt[dir_id == 1, id := - id + 1] 
-    plots_dt[, id := id - min(id) + 1, by = group] 
-
-    #=== directions to move for later use ===#
-    dir_p <- directions[2, dir_p] 
-    dir_v <- directions[2, dir_v]
-  } else {
-
-    #=== directions to move for later use ===#
-    dir_p <- directions[1, dir_p] 
-    dir_v <- directions[1, dir_v]
-  }
-
-  plots <- st_as_sf(plots_dt)
+  strips <- create_strips(field, plot_width, cell_height, radius)
 
   # ggplot() +
   #   geom_sf(data = plots, fill = "blue", color = NA) +
@@ -474,17 +401,25 @@ function(
   print("Shifting the polygons for the right starting point")
 
   #=== find the group id for the cells that are intersecting with the ab-line  ===#
-  ab_int_group <- st_intersection(plots, ab_line_tilted) %>% 
+  ab_int_group <- st_intersection(strips, ab_line_tilted) %>% 
     pull(group) %>% unique()
 
   #=== get the sf of the intersecting group ===# 
-  int_group <- filter(plots, group == ab_int_group)
+  int_group <- filter(strips, group == ab_int_group)
 
   #=== the distance between the ab-line and the line that connect the centroids of the intersecting sf ===#
-  correction_dist <- cal_dist_to_ab(int_group, ab_line_tilted)
+  correction_dist <- st_distance(
+    get_through_line(int_group, radius), 
+    ab_line_tilted
+  ) %>% 
+  as.numeric()
 
   #=== shift the intersecting sf  ===#
-  int_group_corrected <- st_shift(int_group, correction_dist * ab_xy_nml_p90)
+  int_group_corrected <- st_shift(
+    int_group, 
+    correction_dist * ab_xy_nml_p90,
+    merge = FALSE
+  )
 
   # ggplot() +
   #   geom_sf(data = int_group, fill = "blue", color = NA) +
@@ -493,196 +428,113 @@ function(
   #   geom_sf(data = int_group_corrected, fill = "blue", color = NA) +
   #   geom_sf(data = ab_line_tilted, color = "red") 
 
+  new_dist <- 
+  st_distance(
+    get_through_line(int_group_corrected, radius), 
+    ab_line_tilted
+  ) %>% 
+  as.numeric()
+
   if (second_input == FALSE) {
     #=== if the first input ===# 
     # Note: for the first input, the cell center is aligned to the 
     # supplied ab-line (which is not the final ab-line)
-    if (cal_dist_to_ab(int_group_corrected, ab_line_tilted) > correction_dist) {
+
+    if (new_dist > correction_dist) {
       #--- if moved further away ---#
-      plots_shifted <- st_shift(plots, - correction_dist * ab_xy_nml_p90) %>% 
-        mutate(unique_id := paste0(group, "_", id))
+      strips_shifted <- st_shift(strips, - correction_dist * ab_xy_nml_p90)
     } else {
       #--- if get close ---#
-      plots_shifted <- st_shift(plots, correction_dist * ab_xy_nml_p90) %>% 
-        mutate(unique_id := paste0(group, "_", id))
+      strips_shifted <- st_shift(strips, correction_dist * ab_xy_nml_p90)
     }
   } else {
     #=== if the second input ===#
     # Note: line_edge is used as the ab-line for the second input
     # the left (right) edge of the cells is shifted so that it is
     # aligned with the line_edge
-    if (cal_dist_to_ab(int_group_corrected, ab_line_tilted) > correction_dist) {
+    if (new_dist > correction_dist) {
       #--- if moved further away ---#
-      plots_shifted <- 
-      plots %>% 
+      strips_shifted <- 
+      strips %>% 
       st_shift(., - correction_dist * ab_xy_nml_p90) %>% 
-      st_shift(., - plot_width * ab_xy_nml_p90 / 2) %>% 
-      mutate(unique_id := paste0(group, "_", id))
+      st_shift(., - plot_width * ab_xy_nml_p90 / 2)
     } else {
       #--- if get close ---#
-      plots_shifted <- 
-      plots %>% 
+      strips_shifted <- 
+      strips %>% 
       st_shift(., correction_dist * ab_xy_nml_p90) %>% 
-      st_shift(., plot_width * ab_xy_nml_p90 / 2) %>% 
-      mutate(unique_id := paste0(group, "_", id))
+      st_shift(., plot_width * ab_xy_nml_p90 / 2)
     }
   }
   
-  
   # ggplot() +
-  #   geom_sf(data = plots_shifted, fill = "blue", color = NA) +
+  #   geom_sf(data = strips_shifted, fill = "blue", color = NA) +
   #   geom_sf(data = ab_line_tilted, col = "red")
 
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### Remove all the non-intersecting (or almost)
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/  
-  print("Removing all the non-intersecting grids")
-
-  keep_ids <- st_intersection(plots_shifted, field) %>% 
-    mutate(area = as.numeric(st_area(.))) %>% 
-    data.table() %>% 
-    .[, area := sum(area), by = .(group, id)] %>% 
-    .[area > 0.2 * (plot_width * cell_height), ] %>% 
-    .[, unique_id]
-
-  how_many_cells_in <- ceiling(headland_length / cell_height)  
-
-  plots_intersecting <- filter(plots_shifted, unique_id %in% keep_ids) %>% 
-    data.table() %>% 
-    #--- id starting from 1 from each group---#
-    .[, id := id - min(id) + 1, by = group] %>% 
-    #--- remove the first and last `how_many_cells_in`  ---#
-    .[, type := "experiment"] %>% 
-    .[id <= how_many_cells_in, type := "headland", by = group] %>% 
-    .[, id_threshold_up := max(max(id) - how_many_cells_in, 0), by = group] %>% 
-    .[id > id_threshold_up, type := "headland", by = group] %>% 
-    # .[, .SD[id > how_many_cells_in &  id <= max(id) - how_many_cells_in, ], by = group] %>% 
-    .[type != "headland",] %>% 
-    st_as_sf() 
-
-  # filter(plots_intersecting, group == 47)$id %>% max()
-  # filter(plots_intersecting, group == 47)$type
-
-  # ggplot() +
-  #   # geom_sf(data = filter(plots_intersecting, group == 47), aes(fill = type)) +
-  #   geom_sf(data = plots_intersecting, fill = "red", color = NA, alpha = 0.4) +
-  #   # geom_sf(data = plots_intersecting) +
-  #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = ab_line_tilted, col = "red")
-
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/
-  #' ### Cut off the plots on the sides that are perpendicular to the machine direction
-  #/*~~~~~~~~~~~~~~~~~~~~~~*/ 
-
-  headland_buffer <- st_buffer(field, - side_plots_num * plot_width) %>% 
-    st_difference(field, .)
-
-  headland_ids <- st_intersection(plots_intersecting, headland_buffer) %>% 
-    mutate(area = as.numeric(st_area(.))) %>% 
-    data.table() %>% 
-    .[, area := sum(area), by = .(group, id)] %>% 
-    .[area > 0.2 * (plot_width * cell_height),]  %>% 
-    .[, unique_id]
-
-  exp_plots_all <- filter(
-    plots_intersecting, 
-    !(unique_id %in% headland_ids)
-  )
-
-  # ggplot() +
-  #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = headland_buffer, fill = "green", alpha = 0.4) +
-  #   geom_sf(data = exp_plots_all, aes(fill = type), color = NA) +
-  #   geom_sf(data = ab_line, col = "red")
-
-
   #/*----------------------------------*/
-  #' ## starting point for the second input
+  #' ## Create final plots
   #/*----------------------------------*/
-  strt_point_second <- 
-  (
-  #=== the original starting point ===#
-  starting_point + 
-  #=== shift (perpendicular) ===#
-  (min(exp_plots_all$group) - 1) * ab_xy_nml_p90 * plot_width * dir_p
-  ) %>% 
-  st_point() %>% 
-  list() %>% 
-  st_as_sfc() %>% 
-  st_set_crs(st_crs(field))
+  min_length <- conv_unit(200, "ft", "m") # (200 feet)
+  mean_length <- conv_unit(240, "ft", "m") # (240 feet)
+  max_length <- conv_unit(300, "ft", "m") #  (300 feet) 
 
-  # ggplot() +
-  #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = exp_plots_all, fill = "red", color = NA, alpha = 0.3) +
-  #   geom_sf(data = strt_point_second, col = "black", size = 2) 
-
-  # /*----------------------------------*/
-  #' ## Reassign plot id
-  # /*----------------------------------*/
-  print("Reassigning plot id")
-  # group: strip id
-  # id: subplot id
-  # plot_id: plot id
-  min_obs <- round(conv_unit(200, "ft", "m") / cell_height, 0) # (200 feet)
-  mean_obs <- round(conv_unit(240, "ft", "m") / cell_height, 0) # (240 feet)
-  max_obs <- round(conv_unit(300, "ft", "m") / cell_height, 0) #  (300 feet)
-
-  # tm_shape(filter(final_plots, strip_id == 42)) +
-  #   tm_fill(
-  #     col = "plot_id", 
-  #     palette = "Spectral", 
-  #     style = "order"
-  #   ) + 
-  #   tm_layout_to_add
-
-  exp_plots_pid <- exp_plots_all %>% 
-    cbind(., st_coordinates(st_centroid(.))) %>% 
-    data.table() %>%
-    #--- detect gap ---# %>% 
-    .[, d_X := c(0, diff(X)), by = group] %>% 
-    .[, d_Y := c(0, diff(Y)), by = group] %>% 
-    .[, distance := sqrt(d_X ^ 2 + d_Y ^ 2)] %>% 
-    .[, gap := distance > (2 * cell_height)] %>% 
-    .[, group_in_group := cumsum(gap) + 1, by = group] %>% 
-    .[, group_contiguous := paste0(group, "_", group_in_group)] %>% 
-    #--- observations per strip ---#
-    .[, obs_per_strip := .N, by = .(group_contiguous)] %>%
-    #--- drop the strip if there are less than `min_obs` subplots in it ---#
-    # .[obs_per_strip < min_obs, type := "headland"] %>% 
-    .[obs_per_strip > min_obs, ] %>% 
-    #--- (initial) plot id ---#
-    .[, dummy := 1] %>%
-    .[, cum_num := cumsum(dummy), by = .(group_contiguous)] %>%
-    .[, plot_id := (cum_num - 1) %/% mean_obs + 1, by = .(group_contiguous)] %>%
-    #--- max number of plots per group_contiguous ---#
-    .[, max_plot_id := max(plot_id), by = .(group_contiguous, plot_id)] %>%
-    #--- number of subplots per plot ---#
-    .[, obs_per_plot := .N, by = .(group_contiguous, plot_id)] %>%
-    .[, too_short := obs_per_plot <= min_obs] %>% 
-    #--- nest the data by group_contiguous ---#
-    group_by(group_contiguous) %>% 
-    nest() %>% 
-    mutate(
-      data = map(data, ~ data.table(.x))
-    ) %>% 
-    data.table() %>% 
-    #--- apply reassign_plot_id ---#
-    .[, map2(data, group_contiguous, ~ reassign_plot_id(.x, .y)) %>% rbindlist()] %>% 
-    #--- make plot id in the same strip consecutive ---#
-    .[, plot_id := .GRP, by = .(group, paste0(plot_id, group_in_group))] %>% 
-    .[, plot_id := plot_id - min(plot_id) + 1, by = group] %>% 
-    st_as_sf() 
-
-  final_exp_plots <- exp_plots_pid %>%
-    rename(strip_id = group, group_in_strip = group_in_group) %>%
-    mutate(cell_id := 1:nrow(.)) %>%
-    mutate(strip_id = strip_id - min(strip_id) + 1) %>%
-    dplyr::select(-id)
-
-  # final_headland <- filter(exp_plots_all, type == "headland") %>% 
-  #   st_intersection(., field) %>% 
-  #   dplyr::select(geometry) %>% 
-  #   rbind(., filter(exp_plots_pid, type == "headland") %>% dplyr::select(geometry))
+  final_exp_plots <- field %>% 
+    st_buffer(- side_plots_num * plot_width) %>% 
+    st_intersection(strips, .) %>% 
+    dplyr::select(group) %>% 
+    rowwise() %>% 
+    mutate(indiv_polygon = list(
+      st_cast(geometry, "POLYGON") %>% 
+        st_as_sf() %>% 
+        data.table() %>% 
+        .[, group := group]
+    )) %>% 
+    pluck("indiv_polygon") %>% 
+    reduce(rbind) %>% 
+    .[, id_in_group := 1:.N, by = group] %>%
+    st_as_sf() %>% 
+    rowwise() %>% 
+    #=== get the original strip geometry by group ===#
+    left_join(., strips[, c("group", "geometry")], by = "group") %>% 
+    #=== draw a line that goes through the middle of the strips ===#
+    mutate(through_line = list(
+      get_through_line(geometry, radius)
+    )) %>% 
+    mutate(int_line  = list(
+      st_intersection(x, through_line)
+    )) %>% 
+    filter(length(int_line) != 0) %>% 
+    #=== move int_points inward by (head_dist - side_distance) ===#
+    mutate(new_center_line = list(
+      move_points_inward(
+        int_line, 
+        max(headland_length - side_plots_num * plot_width, 0),
+        ab_xy_nml
+      )  
+    )) %>% 
+    filter(!is.null(new_center_line)) %>% 
+    mutate(tot_plot_length = list(
+      as.numeric(st_length(new_center_line))
+    )) %>% 
+    mutate(plot_data = list(
+      get_plot_length(tot_plot_length)
+    )) %>% 
+    filter(!is.null(plot_data)) %>% 
+    mutate(plots = list(
+      create_plots_in_strip(
+        plot_data, 
+        new_center_line,
+        plot_width,
+        ab_xy_nml,
+        ab_xy_nml_p90
+      ) %>% 
+      mutate(group = group) %>% 
+      mutate(id_in_group = id_in_group)  
+    )) %>% 
+    pluck("plots") %>% 
+    reduce(rbind) %>% 
+    rename(strip_id = group, group_in_strip = id_in_group) %>%
+    mutate(strip_id = strip_id - min(strip_id) + 1)
 
   #/*----------------------------------*/
   #' ## Get the ab-line
@@ -692,26 +544,61 @@ function(
 
   if (harvest_angle == 0) {
 
-    ab_lines <- 
+    ab_lines_data <- 
     rbind(
-      get_line_through_centroids(
-        filter(final_exp_plots, strip_id == min(strip_id)),
-        st_crs(field)
-      ) %>% st_as_sf(),
-      get_line_through_centroids(
-        filter(final_exp_plots, strip_id == max(strip_id)),
-        st_crs(field)
-      ) %>% st_as_sf()
+      get_through_line(
+        filter(
+          final_exp_plots, 
+          strip_id == min(strip_id) & plot_id == 1
+        ),
+        radius
+      ),
+      get_through_line(
+        filter(
+          final_exp_plots, 
+          strip_id == max(strip_id) & plot_id == 1
+        ),
+        radius
+      )
     ) %>% 
-    mutate(ab_id = seq_len(nrow(.)))
+    mutate(ab_id = seq_len(nrow(.))) %>% 
+    expand_grid_df(tibble(dir_p = c(-1, 1)), .) %>% 
+    rowwise() %>% 
+    mutate(geometry = list(x)) %>% 
+    #=== normalize the length ===#
+    mutate(ab_norm = list(
+      #=== when too short, it is not recognized as intersection ===#
+      st_extend_line(geometry, as.numeric(10 / st_length(geometry)))
+      # st_geometry(geometry, 5)
+    )) %>% 
+    mutate(ab_line_for_direction_check = list(
+      st_shift(
+        ab_norm, 
+        dir_p * ab_xy_nml_p90 * (5 * plot_width), 
+        merge = FALSE
+      )
+    )) %>% 
+    mutate(intersection = list(
+      st_as_sf(ab_line_for_direction_check[final_exp_plots, ])
+    )) %>% 
+    mutate(int_check = nrow(intersection))
+
+    ab_lines <- ab_lines_data %>% 
+      dplyr::select(ab_id, x) %>% 
+      unique(by = "ab_id") %>% 
+      st_as_sf() %>% 
+      ungroup()
 
   } else { # if harvest angle is non-zero
 
-    ab_line <- get_line_through_centroids(
-      #=== any line that goes through the centroids of a strip will do ===#
-      filter(final_exp_plots, strip_id == min(strip_id)),
-      st_crs(field)
-    ) %>%  
+    ab_line <- 
+    get_through_line(
+      filter(
+        final_exp_plots, 
+        strip_id == min(strip_id) & plot_id == 1
+      ),
+      radius
+    ) %>% 
     #=== normalize ===#
     st_extend_line(., as.numeric(1 / st_length(.))) %>%
     st_tilt(., - harvest_angle, merge = FALSE)  
@@ -749,27 +636,7 @@ function(
   #=== ab-line re-centering when machine width > plot_width ===#
   if (machine_width != plot_width & harvest_angle == 0) {
 
-    ab_lines <- 
-    expand_grid_df(tibble(dir_p = c(-1, 1)), ab_lines) %>% 
-    rowwise() %>% 
-    mutate(geometry = list(x)) %>% 
-    #=== normalize the length ===#
-    mutate(ab_norm = list(
-      #=== when too short, it is not recognized as intersection ===#
-      st_extend_line(geometry, as.numeric(10 / st_length(geometry)))
-      # st_geometry(geometry, 5)
-    )) %>% 
-    mutate(ab_line_for_direction_check = list(
-      st_shift(
-        ab_norm, 
-        dir_p * ab_xy_nml_p90 * (5 * plot_width), 
-        merge = FALSE
-      )
-    )) %>% 
-    mutate(intersection = list(
-      st_as_sf(ab_line_for_direction_check[final_exp_plots, ])
-    )) %>% 
-    mutate(int_check = nrow(intersection)) %>% 
+    ab_lines <- ab_lines_data %>% 
     #=== which direction to go ===#
     # Notes: go inward (intersecting) if machine_width > plot_width, otherwise outward
     filter(int_check == ifelse(machine_width > plot_width, 1, 0)) %>% 
@@ -787,7 +654,12 @@ function(
 
   } 
 
-  if (second_input == FALSE) {
+  if (second_input == FALSE & harvest_angle == 0) {
+    # this is used to align the left (or) right edges of the first input experiment plot
+    #=== which way to move for the first to go inward ===#
+    dir_p <- filter(ab_lines_data, ab_id == 1 & int_check == 1) %>% 
+      pull(dir_p)
+
     line_edges <- 
     rbind(
       line_edge_f = st_shift(ab_lines[1, ], - dir_p * ab_xy_nml_p90 * plot_width / 2),
@@ -1601,4 +1473,165 @@ get_through_line <- function(geometry, radius) {
   return(return_line)
 
 }
+
+line <- temp$int_line[[1]] 
+
+move_points_inward <- function(line, dist, ab_xy_nml) {
+
+  #=== in case the intersected line is multi-linestring ===#
+  temp_lines <- st_cast(line, "LINESTRING")
+  line <- temp_lines[[length(temp_lines)]]
+
+  if (as.numeric(st_length(line)) > 2 * dist) {
+
+    start_point <- line[1, ]
+    end_point <- line[2, ]
+
+    new_start_point <- line[1, ] + ab_xy_nml * dist
+    new_end_point <- line[2, ] - ab_xy_nml * dist
+
+    new_through_line <- 
+    st_linestring(
+      rbind(
+        new_start_point,
+        new_end_point
+      )
+    ) %>% 
+    st_sfc() %>% 
+    st_set_crs(st_crs(line))
+
+    return(new_through_line)
+
+  } else {
+
+    return(NULL)
+
+  }
+
+}
+
+get_plot_length <- function(tot_plot_length) {
+
+  num_comp_plots <-  tot_plot_length %/% mean_length
+  remainder <- tot_plot_length %% mean_length
+
+  return_data <- data.table(plot_id = seq_len(num_comp_plots + 1))
+
+  if (num_comp_plots == 0) { # if no complete plots
+    if (remainder < min_length) {
+      return(NULL)
+    } else {
+      return_data[, plot_length := remainder]
+    }
+  } else if (remainder >= (2 * min_length - mean_length)) {
+    # make the last two short
+    return_data[, plot_length := c(
+      rep(mean_length, num_comp_plots - 1),
+      rep((mean_length + remainder) / 2, 2)
+    )]
+  } else if (
+    num_comp_plots >= 2 & 
+    remainder >= (3 * min_length - 2 * mean_length)
+  ) 
+  {
+    # make the last three short 
+    return_data[, plot_length := c(
+      rep(mean_length, num_comp_plots - 2),
+      rep((2 * mean_length + remainder) / 3, 3)
+    )]
+  } else if (
+    num_comp_plots >= 2  
+  ) {
+    # make the 2nd and 3rd last longer 
+    return_data <- return_data[, plot_length := c(
+      rep(mean_length, num_comp_plots - 2),
+      rep((2 * mean_length + remainder) / 2, 2),
+      NA
+    )] %>% 
+    .[!is.na(plot_length),]
+  } else {
+    # only 1 complete plot 
+    return_data <- return_data[, plot_length := mean_length + remainder]
+  }
+  
+  return(return_data)  
+
+}
+
+# plots <- temp$plots[[4]]
+# new_center_line <- temp$new_center_line[[4]]
+# ggplot() +
+#   geom_sf(data = plots, fill = "blue") +
+#   geom_sf(data = new_center_line, fill = "red") 
+# create_plots_in_strip(
+#   plot_data, 
+#   new_center_line,
+#   plot_width,
+#   ab_xy_nml,
+#   ab_xy_nml_p90
+# )
+
+create_plots_in_strip <- function(
+  plot_data, 
+  new_center_line,
+  plot_width,
+  ab_xy_nml,
+  ab_xy_nml_p90
+) {
+
+  make_polygon <- function(
+    base_point, 
+    start_length, 
+    plot_length,
+    plot_width,
+    ab_xy_nml,
+    ab_xy_nml_p90
+  ) {
+
+    point_0 <- base_point + ab_xy_nml * start_length
+    point_1 <- point_0 + (plot_width / 2) * ab_xy_nml_p90
+    point_2 <- point_1 + ab_xy_nml * plot_length
+    point_3 <- point_2 - plot_width * ab_xy_nml_p90
+    point_4 <- point_3 - ab_xy_nml * plot_length
+
+    temp_polygon <- rbind(
+      point_1,
+      point_2,
+      point_3,
+      point_4,
+      point_1
+    ) %>%
+      list() %>%
+      st_polygon()
+
+    return(temp_polygon)
+
+  }
+
+  base_point <- st_geometry(new_center_line)[[1]][1, ]
+
+  return_polygons <- 
+  plot_data %>% 
+  .[, plot_start := data.table::shift(plot_length, type = "lag")] %>% 
+  .[is.na(plot_start), plot_start := 0] %>% 
+  .[, start_length := cumsum(plot_start)] %>% 
+  rowwise() %>% 
+  mutate(geometry = list(
+    make_polygon(
+      base_point = base_point, 
+      start_length = start_length, 
+      plot_length = plot_length,
+      plot_width = plot_width,
+      ab_xy_nml = ab_xy_nml,
+      ab_xy_nml_p90 = ab_xy_nml_p90     
+    )
+  )) %>% 
+  data.table() %>% 
+  .[, .(plot_id, geometry)] %>% 
+  st_as_sf()
+
+  return(return_polygons)
+
+}
+
 
