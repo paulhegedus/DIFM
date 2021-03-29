@@ -38,7 +38,7 @@ get_td_parameters(ffy, "fp_2021_TD.json")
 #--- force headland to be 100 feet ---#
 
 make_trial_design(
-  ffy = field_year_ls[17], 
+  ffy = field_year_ls[28], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_plots_num = 1,
@@ -49,7 +49,7 @@ make_trial_design(
   # TRUE: uses both harvester and planter/applicator ab-lines or paste data
   # numeric: uses only planter/applicator ab-line or past data and apply the angle
   # rotation is clockwise 
-  harvest_angle = FALSE, 
+  harvest_angle = 0, 
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
