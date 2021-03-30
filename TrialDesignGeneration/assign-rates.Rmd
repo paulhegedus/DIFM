@@ -122,7 +122,7 @@ mutate(map_design = list(
     tm_polygons(
       col = "rate_tm",
       title = form,
-      palette = "Greens"
+      palette = ifelse(form == "seed", "Greens", "Reds")
     ) +
   tm_layout_to_add +
   tm_shape(ab_lines) +
@@ -185,7 +185,7 @@ summarise(list(
     ab_lines, 
     dsn = dsn_name,
     layer = paste0(
-      "ab-lines-trial-", tolower(input_type), 
+      "ab-lines-farmer-", tolower(input_type), 
       "-", year,  
       ifelse(is.na(line_edge_id), "", line_edge_id)
     ),
