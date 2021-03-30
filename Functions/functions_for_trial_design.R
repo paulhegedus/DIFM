@@ -36,7 +36,7 @@ function(
   # /*=================================================*/
   #' # Prepare ab-lines and vectors
   # /*=================================================*/
-  ab_line_data <- prepare_ablines(ab_line, harvest_angle, field)
+  ab_line_data <- prepare_ablines(ab_line, harvest_angle, field, plot_width)
 
   #=== ab-line tilted by harvester angle ===#
   ab_line_tilted <- ab_line_data$ab_line_tilted
@@ -1366,7 +1366,7 @@ create_plots_in_strip <- function(
 
 }
 
-prepare_ablines <- function(ab_line, harvest_angle, field) {
+prepare_ablines <- function(ab_line, harvest_angle, field, plot_width) {
 
   rotate_mat_p90 <- matrix(
     c(
