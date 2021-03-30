@@ -64,6 +64,9 @@ st_extend_line(
 #/*=================================================*/
 #' # Harvester ab-line
 #/*=================================================*/
+#=== harvest angle ===#
+harvest_angle <- _harvest-angle-here_
+
 if (harvest_angle == TRUE) {
 
   harvester_ab_line_files <- get_shp_name(ffy, "TrialDesign", "ab-line-h") 
@@ -169,8 +172,6 @@ if (nrow(trial_data) == 1) {
   lock_start_point <- lock_start_point[1]
 }
 
-#=== harvest angle ===#
-harvest_angle <- _harvest-angle-here_
 
 #/*----------------------------------*/
 #' ## Trial data 
@@ -207,17 +208,15 @@ length()
 #=== get the first one of the two if more than one ===#
 # input_plot_width <- trial_data_first$input_plot_width[[1]]
 # machine_width <- trial_data_first$machine_width[[1]]
+# section_num <- trial_data_first$section_num[[1]]
 # headland_length <- trial_data_first$headland_length[[1]]
+# side_length <- trial_data_first$side_length[[1]]
 # harvest_angle <- trial_data_first$harvest_angle[[1]]
+# lock_start <- trial_data_first$lock_start[[1]]
 # field = field_sf
 # #--- by default uses the first one ---#
 # ab_line = i_ab_line[1, ]
 # plot_width = input_plot_width
-# machine_width = machine_width
-# cell_height = cell_height
-# headland_length = headland_length
-# harvest_angle = harvest_angle
-# side_dist = side_dist
 
 trial_data_first <- 
 trial_data_rh[1, ] %>% 

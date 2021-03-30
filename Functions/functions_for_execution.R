@@ -632,11 +632,6 @@ make_trial_design <- function(
   gsub("_head-dist-here_", paste0(head_dist), .) %>% 
   gsub("_harvest-angle-here_", harvest_angle, .)  
 
-  #=== whether to lock the ab-line as the starting point ===#
-  if (length(lock_start_point) == 2 & all(lock_start_point)) {
-    return("Error: both of lock_start_point cannot be TRUE.")
-  }
-
   saveRDS(
     lock_start_point,
     here("Data", "Growers", ffy, "TrialDesign/lock_start.rds")

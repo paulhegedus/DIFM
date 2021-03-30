@@ -31,7 +31,7 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[4]
+ffy <- field_year_ls[16]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
@@ -41,7 +41,7 @@ make_trial_design(
   ffy = field_year_ls[16], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
-  # side_plots_num = 1,
+  # side_dist = 30,
   #=== angled harvesting ===#
   # harvest angle relative to the planter/applicator
   # TRUE: uses both harvester and planter/applicator ab-lines or paste data
@@ -61,9 +61,12 @@ make_trial_design(
   # used in "ejca", ignored in "jcl"
   max_jumps = c(NA, NA),
   #=== force start point ===#
-  lock_start_point = c(TRUE, FALSE),
-  rerun = TRUE
+  # lock_start_point = c(TRUE, FALSE)
 )
+
+ffy <- field_year_ls[28]
+
+get_td_parameters(ffy, "fp_2021_TD.json")
 
 make_trial_design(
   ffy = field_year_ls[28], 
