@@ -592,7 +592,6 @@ make_trial_design <- function(
     json_file,
     head_dist = NA, 
     side_dist = NA,
-    assign_rates = TRUE,
     harvest_angle = 0,
     design_type = c("jcl", "jcl"),
     rates = list(NA, NA),
@@ -629,8 +628,8 @@ make_trial_design <- function(
     "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
     locally_run = locally_run
   ) %>% 
-  gsub("_side-dist-here_", side_dist, .) %>% 
-  gsub("_head-dist-here_", head_dist, .) %>% 
+  gsub("_side-dist-here_", paste0(side_dist), .) %>% 
+  gsub("_head-dist-here_", paste0(head_dist), .) %>% 
   gsub("_harvest-angle-here_", harvest_angle, .)  
 
   #=== whether to lock the ab-line as the starting point ===#
