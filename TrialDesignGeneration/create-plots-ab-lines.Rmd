@@ -159,7 +159,7 @@ if (is.na(head_dist)) {
 side_dist <- _side-dist-here_ 
 
 if (is.na(side_dist)) {
-  side_dist <- min(max(trial_data$section_width), 30)
+  side_dist <- max(max(trial_data$section_width), 30)
 } else {
   side_dist <- conv_unit(side_dist, "ft", "m")
 }
