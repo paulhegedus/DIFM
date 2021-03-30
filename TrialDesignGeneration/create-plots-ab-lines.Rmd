@@ -1,18 +1,6 @@
 # Preparation for Creating Plots and ab-lines
 
-## Set parameters
 
-```{r }
-side_plots_num <- _side-plots-num-here_ 
-head_dist <- _head-dist-here_
-harvest_angle <- _harvest-angle-here_
-lock_start_point <- readRDS(
-  here("Data", "Growers", ffy, "TrialDesign/lock_start.rds")
-)
-if (nrow(trial_data) == 1) {
-  lock_start_point <- lock_start_point[1]
-}
-```
 ## Read boundary and ab-line
 
 ```{r }
@@ -152,28 +140,53 @@ if (length(h_ab_line) > 0) {
 ## Option parameters
 
 ```{r }
+#/*----------------------------------*/
+#' ## Parameter
+#/*----------------------------------*/
+#=== head distance ===#
+head_dist <- _head-dist-here_
+
+if (is.na(head_dist)) {
+  head_dist <- 2 * max(trial_data$machine_width)
+} else {
+  head_dist <- conv_unit(head_dist, "ft", "m")
+}
+
+#=== side distance ===#
+side_dist <- _side-dist-here_ 
+
+if (is.na(side_dist)) {
+  side_dist <- max(trial_data$section_width)
+} else {
+  side_dist <- conv_unit(side_dist, "ft", "m")
+}
+
+#=== lock_start_point ===#
+lock_start_point <- readRDS(
+  here("Data", "Growers", ffy, "TrialDesign/lock_start.rds")
+)
+if (nrow(trial_data) == 1) {
+  lock_start_point <- lock_start_point[1]
+}
+
+#=== harvest angle ===#
+harvest_angle <- _harvest-angle-here_
+
+#/*----------------------------------*/
+#' ## Trial data 
+#/*----------------------------------*/
 trial_data_rh <- trial_data %>% 
   #=== headland length ===#
   # if only one number is supplied, it is applied for both inputs in a two-input case
-  mutate(headland_length = conv_unit(head_dist, "ft", "m")) %>% 
-  # #=== cell height ===#
-  # mutate(cell_height = conv_unit(cell_height, "ft", "m")) %>% 
+  mutate(headland_length = head_dist) %>% 
+  #=== side length ===#
+  mutate(side_length = side_dist) %>% 
   #=== harvester angler ===#
   mutate(harvest_angle = harvest_angle) %>% 
   #=== lock start ===#
   mutate(lock_start = lock_start_point) %>% 
   #=== first create plots for the input where the starting point is locked ===#
   arrange(desc(lock_start))
-
-#=== update side_plots_num ===#
-# avoid plots to close to the boundary for the input with a greater plot width
-if (nrow(trial_data_rh) > 1) {
-  plot_width_1 <- trial_data_rh[1, input_plot_width]
-  plot_width_2 <- trial_data_rh[2, input_plot_width]
-  if (plot_width_1 < plot_width_2) {
-    side_plots_num <- plot_width_2 / plot_width_1
-  }
-}
 
 ```
 
@@ -204,7 +217,7 @@ length()
 # cell_height = cell_height
 # headland_length = headland_length
 # harvest_angle = harvest_angle
-# side_plots_num = side_plots_num
+# side_dist = side_dist
 
 trial_data_first <- 
 trial_data_rh[1, ] %>% 
@@ -219,8 +232,8 @@ mutate(experiment_plots = list(
     machine_width = machine_width, 
     section_num = section_num, 
     headland_length = headland_length,
+    side_length = side_length,
     harvest_angle = harvest_angle,
-    side_plots_num = side_plots_num,
     lock_start = lock_start
   )
 ))
@@ -256,8 +269,8 @@ if (num_unique_plot_width == 1 & nrow(trial_data_rh) == 1) {
       plot_width = input_plot_width, 
       machine_width = machine_width,
       headland_length = headland_length,
+      side_length = side_length,
       harvest_angle = harvest_angle,
-      side_plots_num = side_plots_num,
       lock_start = FALSE,
       second_input = TRUE
     )   

@@ -10,8 +10,8 @@ function(
   machine_width,
   section_num,
   headland_length, 
+  side_length,
   harvest_angle,
-  side_plots_num = 1,
   second_input = FALSE,
   lock_start
 ) {
@@ -166,7 +166,7 @@ function(
   mean_length <- conv_unit(240, "ft", "m") # (240 feet)
   max_length <- conv_unit(300, "ft", "m") #  (300 feet) 
 
-  side_length <- 1.5 * side_plots_num * plot_width
+  side_length <- 1.5 * side_length
   # ggplot(final_exp_plots) +
   #   geom_sf(aes(fill = strip_id))
 

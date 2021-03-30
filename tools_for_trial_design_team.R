@@ -89,7 +89,7 @@ make_trial_design(
   # used in "ejca", ignored in "jcl"
   max_jumps = c(NA, NA),
   #=== force start point ===#
-  lock_start_point = c(TRUE, FALSE),
+  lock_start_point = c(FALSE, TRUE),
   locally_run = TRUE
 )
 

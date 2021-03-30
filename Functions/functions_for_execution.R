@@ -591,7 +591,7 @@ make_trial_design <- function(
     ffy, 
     json_file,
     head_dist = NA, 
-    side_plots_num = 1,
+    side_dist = NA,
     assign_rates = TRUE,
     harvest_angle = 0,
     design_type = c("jcl", "jcl"),
@@ -607,9 +607,6 @@ make_trial_design <- function(
 
   trial_data <- get_td_parameters(ffy, json_file)
 
-  if (is.na(head_dist)) {
-    head_dist <- 2 * max(trial_data$machine_width)
-  } 
 
   #/*=================================================*/
   #' # Header Rmd
@@ -632,7 +629,7 @@ make_trial_design <- function(
     "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
     locally_run = locally_run
   ) %>% 
-  gsub("_side-plots-num-here_", side_plots_num, .) %>% 
+  gsub("_side-dist-here_", side_dist, .) %>% 
   gsub("_head-dist-here_", head_dist, .) %>% 
   gsub("_harvest-angle-here_", harvest_angle, .)  
 

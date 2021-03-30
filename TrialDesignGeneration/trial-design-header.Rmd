@@ -97,6 +97,7 @@ tm_layout_to_add <- tm_layout(
 (
 trial_data <- get_td_parameters(ffy, json_file) %>% 
   mutate(input_plot_width = conv_unit(input_plot_width, "ft", "m")) %>% 
-  mutate(machine_width = conv_unit(machine_width, "ft", "m"))
+  mutate(machine_width = conv_unit(machine_width, "ft", "m")) %>% 
+  mutate(section_width = machine_width / section_num)  
 )
 ```   
