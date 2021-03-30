@@ -592,7 +592,6 @@ make_trial_design <- function(
     json_file,
     head_dist = NA, 
     side_plots_num = 1,
-    use_ab = TRUE, 
     assign_rates = TRUE,
     harvest_angle = 0,
     design_type = c("jcl", "jcl"),
@@ -634,7 +633,6 @@ make_trial_design <- function(
     locally_run = locally_run
   ) %>% 
   gsub("_side-plots-num-here_", side_plots_num, .) %>% 
-  gsub("_cell-height-here_", cell_height, .) %>% 
   gsub("_head-dist-here_", head_dist, .) %>% 
   gsub("_harvest-angle-here_", harvest_angle, .)  
 
@@ -642,6 +640,11 @@ make_trial_design <- function(
   if (length(lock_start_point) == 2 & all(lock_start_point)) {
     return("Error: both of lock_start_point cannot be TRUE.")
   }
+
+  saveRDS(
+    lock_start_point,
+    here("Data", "Growers", ffy, "TrialDesign/lock_start.rds")
+  )
 
   td_rmd <- c(td_rmd, create_plots_rmd)
 

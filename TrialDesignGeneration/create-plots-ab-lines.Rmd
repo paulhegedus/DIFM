@@ -4,13 +4,14 @@
 
 ```{r }
 side_plots_num <- _side-plots-num-here_ 
-cell_height <- _cell-height-here_ 
 head_dist <- _head-dist-here_
 harvest_angle <- _harvest-angle-here_
 lock_start_point <- readRDS(
   here("Data", "Growers", ffy, "TrialDesign/lock_start.rds")
 )
-
+if (nrow(trial_data) == 1) {
+  lock_start_point <- lock_start_point[1]
+}
 ```
 ## Read boundary and ab-line
 
