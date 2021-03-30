@@ -37,7 +37,7 @@ code.r{ /* Code block */
 ```{r setup, cache = F, echo = F}
 library(knitr)
 knitr::opts_chunk$set(
-  cache = TRUE,
+  cache = FALSE,
   echo = TRUE,
   error = TRUE,
   warning = FALSE,
@@ -100,11 +100,3 @@ trial_data <- get_td_parameters(ffy, json_file) %>%
   mutate(machine_width = conv_unit(machine_width, "ft", "m"))
 )
 ```   
-
-```{r eval = !start_from_scratch}
-exp_plots_exists <- _exp-plots-statement_
-
-if (exp_plots_exists) {
-  trial_data_eh <- readRDS(here("Data", "Growers", ffy, "TrialDesign/exp_plots.rds"))
-}
-```

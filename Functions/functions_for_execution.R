@@ -600,8 +600,6 @@ make_trial_design <- function(
     num_levels = c(5, 5), 
     max_jumps = NA,
     lock_start_point = c(FALSE, FALSE),
-    start_from_scratch = FALSE,
-    rerun = FALSE, 
     locally_run = FALSE
   ) 
   {
@@ -617,7 +615,6 @@ make_trial_design <- function(
   #/*=================================================*/
   #' # Header Rmd
   #/*=================================================*/
-  #=== header Rmd ===#
   td_rmd <- 
   read_rmd(
     "TrialDesignGeneration/trial-design-header.Rmd", 
@@ -630,82 +627,62 @@ make_trial_design <- function(
   #/*=================================================*/
   #' # Rmd for creating plots and ab-lines
   #/*=================================================*/
-  exp_plots_rds <- here("Data", "Growers", ffy, "TrialDesign/exp_plots.rds")
+  #=== append the Rmd to create plots and ab-lines ===#
+  create_plots_rmd <- 
+  read_rmd(
+    "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
+    locally_run = locally_run
+  ) %>% 
+  gsub("_side-plots-num-here_", side_plots_num, .) %>% 
+  gsub("_cell-height-here_", cell_height, .) %>% 
+  gsub("_head-dist-here_", head_dist, .) %>% 
+  gsub("_harvest-angle-here_", harvest_angle, .)  
 
-  exp_plots_exists <- file.exists(exp_plots_rds)
+  #=== whether to lock the ab-line as the starting point ===#
+  if (length(lock_start_point) == 2 & all(lock_start_point)) {
+    return("Error: both of lock_start_point cannot be TRUE.")
+  }
 
-  td_rmd <- gsub(
-    "_exp-plots-statement_",
-    exp_plots_exists,
-    td_rmd
-  )
-
-  #=== if plots and ab-liens have not been created yet ===#
-  if (!exp_plots_exists | start_from_scratch) {
- 
-    #=== append the Rmd to create plots and ab-lines ===#
-    create_plots_rmd <- 
-    read_rmd(
-      "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
-      locally_run = locally_run
-    ) %>% 
-    gsub("_side-plots-num-here_", side_plots_num, .) %>% 
-    gsub("_cell-height-here_", cell_height, .) %>% 
-    gsub("_head-dist-here_", paste0(head_dist), .) %>% 
-    gsub("_harvest-angle-here_", harvest_angle, .)  
-
-    #=== whether to lock the ab-line as the starting point ===#
-    if (length(lock_start_point) == 2 & all(lock_start_point)) {
-      return("Error: both of lock_start_point cannot be TRUE.")
-    }
-
-    saveRDS(lock_start_point, here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
-
-    td_rmd <- c(td_rmd, create_plots_rmd)
-
-  } 
+  td_rmd <- c(td_rmd, create_plots_rmd)
 
   #/*=================================================*/
   #' # Rmd for Assigning rates 
   #/*=================================================*/
-  if (assign_rates) {
-    assign_rates_rmd <- 
-    read_rmd(
-      "TrialDesignGeneration/assign-rates.Rmd", 
-      locally_run = locally_run
-    )
-    td_rmd <- c(td_rmd, assign_rates_rmd)
+  assign_rates_rmd <- 
+  read_rmd(
+    "TrialDesignGeneration/assign-rates.Rmd", 
+    locally_run = locally_run
+  )
+  td_rmd <- c(td_rmd, assign_rates_rmd)
 
-    td_rmd <- 
-    #=== number of levels ===#
-    gsub(
-      "_num-levels-here_",
-      paste0("c(", paste0(num_levels, collapse = ", "), ")"),
-      td_rmd
-    ) %>% 
-    #=== design type ===#
-    gsub(
-      "_design-type-here_",
-      paste0("c(\'", paste0(design_type, collapse = "\', \'"), "\')"),
-      .
-    ) %>% 
-    #=== max jumps ===#
-    gsub(
-      "_max-jumps-here_",
-      paste0("c(", paste0(max_jumps, collapse = ", "), ")"),
-      .
-    )
+  td_rmd <- 
+  #=== number of levels ===#
+  gsub(
+    "_num-levels-here_",
+    paste0("c(", paste0(num_levels, collapse = ", "), ")"),
+    td_rmd
+  ) %>% 
+  #=== design type ===#
+  gsub(
+    "_design-type-here_",
+    paste0("c(\'", paste0(design_type, collapse = "\', \'"), "\')"),
+    .
+  ) %>% 
+  #=== max jumps ===#
+  gsub(
+    "_max-jumps-here_",
+    paste0("c(", paste0(max_jumps, collapse = ", "), ")"),
+    .
+  )
 
-    saveRDS(rates, here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
+  saveRDS(rates, here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
 
-    if (length(num_levels) == 1 & nrow(trial_data) == 2) {
-      print("You provided only 1 num_level value even though there are two inputs.")
-      print("The num_level value you provided will be used for both the inputs.")
-    } else if ((length(num_levels) == 2 & nrow(trial_data) == 1)) {
-      print("You provided 2 num_level values even though there is only one input.")
-      print("Only the first value will be used.")
-    }
-
+  if (length(num_levels) == 1 & nrow(trial_data) == 2) {
+    print("You provided only 1 num_level value even though there are two inputs.")
+    print("The num_level value you provided will be used for both the inputs.")
+  } else if ((length(num_levels) == 2 & nrow(trial_data) == 1)) {
+    print("You provided 2 num_level values even though there is only one input.")
+    print("Only the first value will be used.")
   }
 
   #/*=================================================*/
@@ -716,17 +693,6 @@ make_trial_design <- function(
   )
 
   writeLines(td_rmd, con = td_file_name)
-
-  if (rerun) {
-    #--- remove cached files ---#
-    list.files(
-      file.path(here(), "Data", "Growers", ffy, "TrialDesign"),
-      full.names = TRUE
-    ) %>%
-      .[str_detect(., "make_trial_design")] %>%
-      .[str_detect(., c("cache|files"))] %>%
-      unlink(recursive = TRUE)
-  }
 
   td_r_file_name <- here(
     "Data/Growers", 
