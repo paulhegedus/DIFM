@@ -74,6 +74,10 @@ function(
   #=== get the sf of the intersecting group ===# 
   int_group <- filter(strips, group == ab_int_group)
 
+  # ggplot() +
+  #   geom_sf(data = int_group, fill = "blue", color = NA) +
+  #   geom_sf(data = ab_line_tilted, color = "red", size = 0.3)   
+
   #=== the distance between the ab-line and the line that connect the centroids of the intersecting sf ===#
   correction_dist <- st_distance(
     get_through_line(int_group, radius), 
@@ -87,13 +91,10 @@ function(
     correction_dist * ab_xy_nml_p90,
     merge = FALSE
   )
-
-  # ggplot() +
-  #   geom_sf(data = int_group, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line_tilted, color = "red")   
+  
   # ggplot() +
   #   geom_sf(data = int_group_corrected, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line_tilted, color = "red") 
+  #   geom_sf(data = ab_line_tilted, color = "red", size = 0.3) 
 
   new_dist <- 
   st_distance(
@@ -137,7 +138,7 @@ function(
   
   # ggplot() +
   #   geom_sf(data = strips_shifted, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line_tilted, col = "red")
+  #   geom_sf(data = ab_line_tilted, col = "red", size = 0.3)
 
   if (lock_start) {
     # Note: no matter where the ab-line is, the plots have been shifted so that
@@ -167,14 +168,23 @@ function(
   max_length <- conv_unit(300, "ft", "m") #  (300 feet) 
 
   side_length <- 1.5 * side_length
+
   # ggplot(final_exp_plots) +
   #   geom_sf(aes(fill = strip_id))
+
+  # ggplot() +
+  #   geom_sf(data = field) +
+  #   geom_sf(data = st_buffer(field, - side_length)) +
+  #   geom_sf(data = filter(final_exp_plots, group == 157) %>% pull(through_line) %>% .[[1]]) +
+  #   coord_sf(datum = st_crs(field))
+
+  # final_exp_plots$group %>% max
 
   final_exp_plots <- field %>% 
     #=== create an inner buffer ===#
     st_buffer(- side_length) %>% 
     #=== intersect strips and the field ===#
-    st_intersection(strips, .) %>% 
+    st_intersection(strips_shifted, .) %>% 
     dplyr::select(group) %>% 
     rowwise() %>% 
     #=== split multipolygons to individual polygons ===#
@@ -190,7 +200,7 @@ function(
     st_as_sf() %>% 
     rowwise() %>% 
     #=== get the original strip geometry by group ===#
-    left_join(., as.data.frame(strips[, c("group", "geometry")]), by = "group") %>% 
+    left_join(., as.data.frame(strips_shifted[, c("group", "geometry")]), by = "group") %>% 
     #=== draw a line that goes through the middle of the strips ===#
     mutate(through_line = list(
       get_through_line(geometry, radius)
@@ -236,15 +246,22 @@ function(
     mutate(strip_id = strip_id - min(strip_id) + 1) %>% 
     st_set_crs(st_crs(field))
 
+  # ggplot() + 
+  #   geom_sf(data = final_exp_plots, aes(fill = strip_id))
+
+  # filter(final_exp_plots, strip_id == 113) %>% 
+  #   plot()
+  # final_exp_plots$strip_id %>% max()
+
   #/*----------------------------------*/
   #' ## Get the ab-line
   #/*----------------------------------*/
   # plot_width
   # machine_width <- conv_unit(90, "ft","m")
 
-    # ggplot() + 
-    #   geom_sf(data = field) +
-    #   geom_sf(data = ab_lines_data$ab_line_for_direction_check[[2]])
+  # ggplot() + 
+  #   geom_sf(data = field) +
+  #   geom_sf(data = ab_lines_data$ab_line_for_direction_check[[2]])
 
   # ggplot() + 
   #     geom_sf(data = field) +
