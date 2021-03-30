@@ -599,8 +599,8 @@ make_trial_design <- function(
     rates = list(NA, NA),
     num_levels = c(5, 5), 
     max_jumps = NA,
+    lock_start_point = c(FALSE, FALSE),
     start_from_scratch = FALSE,
-    cell_height = 10,
     rerun = FALSE, 
     locally_run = FALSE
   ) 
@@ -653,7 +653,14 @@ make_trial_design <- function(
     gsub("_cell-height-here_", cell_height, .) %>% 
     gsub("_head-dist-here_", paste0(head_dist), .) %>% 
     gsub("_harvest-angle-here_", harvest_angle, .)  
-    
+
+    #=== whether to lock the ab-line as the starting point ===#
+    if (length(lock_start_point) == 2 & all(lock_start_point)) {
+      return("Error: both of lock_start_point cannot be TRUE.")
+    }
+
+    saveRDS(lock_start_point, here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
+
     td_rmd <- c(td_rmd, create_plots_rmd)
 
   } 

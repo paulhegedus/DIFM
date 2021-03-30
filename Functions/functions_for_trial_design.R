@@ -8,11 +8,12 @@ function(
   ab_line, 
   plot_width, 
   machine_width,
-  cell_height, 
+  section_num,
   headland_length, 
   harvest_angle,
   side_plots_num = 1,
-  second_input = FALSE
+  second_input = FALSE,
+  lock_start
 ) {
 
   #/*=================================================*/
@@ -54,7 +55,7 @@ function(
   sqrt(
     (f_bbox["xmax"] - f_bbox["xmin"])^2 +
     (f_bbox["ymax"] - f_bbox["ymin"])^2
-  ) / 2 + 50
+  ) / 2 + 100
 
   strips <- create_strips(field, ab_line_tilted, plot_width, radius)
 
@@ -113,6 +114,7 @@ function(
       #--- if get close ---#
       strips_shifted <- st_shift(strips, correction_dist * ab_xy_nml_p90)
     }
+
   } else {
     #=== if the second input ===#
     # Note: line_edge is used as the ab-line for the second input
@@ -136,6 +138,27 @@ function(
   # ggplot() +
   #   geom_sf(data = strips_shifted, fill = "blue", color = NA) +
   #   geom_sf(data = ab_line_tilted, col = "red")
+
+  if (lock_start) {
+    # Note: no matter where the ab-line is, the plots have been shifted so that
+    # the ab-line go through the middle of one of the strips. 
+    section_width <- machine_width / section_num
+
+    #=== round is for weird cases like harvester width = 62.5 ===#
+    # there is no hope for aligning things correctly in such a case
+    num_sections_in_plot <- round(plot_width / section_width)
+
+    if (num_sections_in_plot %% 2 == 0) {
+    # if odd, then no need to shift
+      strips_shifted <- 
+      st_shift(
+        strips_shifted, 
+        section_width * ab_xy_nml_p90 / 2
+      )
+    }
+
+  } 
+  
 
   #/*=================================================*/
   #' # Create experiment plots
@@ -168,7 +191,7 @@ function(
     st_as_sf() %>% 
     rowwise() %>% 
     #=== get the original strip geometry by group ===#
-    left_join(., strips[, c("group", "geometry")], by = "group") %>% 
+    left_join(., as.data.frame(strips[, c("group", "geometry")]), by = "group") %>% 
     #=== draw a line that goes through the middle of the strips ===#
     mutate(through_line = list(
       get_through_line(geometry, radius)
@@ -227,7 +250,6 @@ function(
   # ggplot() + 
   #     geom_sf(data = field) +
   #     geom_sf(data = ab_lines_data$geometry[[1]])
-
 
   if (harvest_angle == 0) {
 
@@ -315,7 +337,8 @@ function(
   }
 
   #=== ab-line re-centering when machine width > plot_width ===#
-  if (machine_width != plot_width & harvest_angle == 0) {
+  # No correction necessary if lock_start as that has been done earlier
+  if (machine_width != plot_width & harvest_angle == 0 & !lock_start) {
 
     ab_lines <- ab_lines_data %>% 
     #=== which direction to go ===#
@@ -335,8 +358,13 @@ function(
 
   } 
 
+  #/*----------------------------------*/
+  #' ## Get the edge of the experiment for the second input
+  #/*----------------------------------*/
   if (second_input == FALSE & harvest_angle == 0) {
-    # this is used to align the left (or) right edges of the first input experiment plot
+    # Note 1: this is used to align the left (or) right edges of the first input experiment plot
+    # Note 2: even if the starting point is locked, this still applies
+
     #=== which way to move for the first to go inward ===#
     # ab_lines_data$int_check 
 
@@ -366,11 +394,15 @@ function(
   #   geom_sf(data = final_exp_plots, fill = "blue", color = NA) +
   #   geom_sf(data = ab_line, size = 1)
 
+  if (lock_start) {
+    ab_lines <- ab_line %>% st_as_sf()    
+  }
+
   #/*----------------------------------*/
   #' ## Save
   #/*----------------------------------*/  
 
-  if (second_input == FALSE) {
+  if (second_input == FALSE & harvest_angle == 0) {
     return(list(
       exp_plots = final_exp_plots, 
       ab_lines = ab_lines,
@@ -944,8 +976,8 @@ get_td_parameters <- function(
   td_parameters <-  trial_info %>% 
     filter(strategy == "trial") %>% 
     dplyr::select(
-      form, sq_rate, unit, min_rate,
-      max_rate, input_plot_width, machine_width
+      form, sq_rate, unit, min_rate, max_rate, 
+      input_plot_width, machine_width, section_num
     ) %>% 
     rename(gc_rate = sq_rate) %>% 
     mutate(year = field_data$year) %>% 

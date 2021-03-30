@@ -62,6 +62,8 @@ make_trial_design(
   #=== maximum jump allowed  ===#
   # used in "ejca", ignored in "jcl"
   max_jumps = c(NA, NA),
+  #=== force start point ===#
+  lock_start_point = c(TRUE, FALSE),
   #=== if TRUE, create experiment plots again ===#
   # if TRUE, ignore the existence of exp_plots.rds
   start_from_scratch = TRUE,
