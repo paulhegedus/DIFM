@@ -394,7 +394,10 @@ function(
   #   geom_sf(data = ab_line, size = 1)
 
   if (lock_start) {
-    ab_lines <- ab_line %>% st_as_sf()    
+    ab_lines <- ab_line %>% 
+      st_as_sf() %>% 
+      #=== only for mapping later ===#
+      mutate(ab_id = 1)
   }
 
   #/*----------------------------------*/
