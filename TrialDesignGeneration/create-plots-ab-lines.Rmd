@@ -297,6 +297,7 @@ dplyr::select(- experiment_plots) %>%
 #=== dissolve the experimental plots as a single polygon ===#
 mutate(experiment_plots_dissolved = list(
   exp_plots %>% 
+    st_buffer(0.01) %>% # this avoids tiny tiny gaps between plots
     st_snap_to_grid(size = 0.0001) %>%
     st_make_valid() %>% 
     summarize(plot_id = min(plot_id)) 
