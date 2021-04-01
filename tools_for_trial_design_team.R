@@ -38,7 +38,7 @@ get_td_parameters(ffy, "fp_2021_TD.json")
 #--- force headland to be 100 feet ---#
 
 make_trial_design(
-  ffy = field_year_ls[14], 
+  ffy = field_year_ls[16], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_dist = 30, # default uses the max of the section width (minimum is 30)
@@ -51,7 +51,7 @@ make_trial_design(
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
-  design_type = c("jcl", "jcl"),
+  design_type = c("ejca", "ejca"),
   #=== user-specified rates ===#
   # rates = list(c(40, 50, 60, 70, 80)),
   #=== number of levels ===#

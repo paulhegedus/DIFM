@@ -593,7 +593,7 @@ make_trial_design <- function(
     head_dist = NA, 
     side_dist = NA,
     harvest_angle = 0,
-    design_type = c("jcl", "jcl"),
+    design_type = c("ejca", "ejca"),
     rates = list(NA, NA),
     num_levels = c(5, 5), 
     max_jumps = NA,
