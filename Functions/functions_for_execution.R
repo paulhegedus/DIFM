@@ -592,12 +592,12 @@ make_trial_design <- function(
     json_file,
     head_dist = NA, 
     side_dist = NA,
-    harvest_angle = 0,
-    design_type = c("ejca", "ejca"),
-    rates = list(NA, NA),
-    num_levels = c(5, 5), 
+    plot_heading = NA, # the name of the ab-line file
+    ab_line_type = "free", # one of "free", "lock", "non"
+    design_type = "ejca",
+    rates = NA,
+    num_levels = 5, 
     max_jumps = NA,
-    lock_start_point = c(FALSE, FALSE),
     file_name_append = NA,
     locally_run = FALSE
   ) 
@@ -605,8 +605,26 @@ make_trial_design <- function(
 
   print(paste0("Generating a trial-design for ", ffy))
 
-  trial_data <- get_td_parameters(ffy, json_file)
+  trial_data <- 
+  get_td_parameters(ffy, json_file) %>% 
+  mutate(
+    plot_heading = plot_heading, 
+    ab_line_type = ab_line_type, 
+    design_type = design_type,
+    rates = rates,
+    num_levels = num_levels, 
+    max_jumps = max_jumps,
+    file_name_append = file_name_append
+  )
 
+  num_inputs <- nrow(trial_data)
+trial_data$ab_file <- plot_heading
+    trial_data$ab_type <- ab_line_type
+
+  saveRDS(
+    trial_data,
+    here("Data", "Growers", ffy, "TrialDesign/trial_data.rds")
+  )
 
   #/*=================================================*/
   #' # Header Rmd
@@ -630,13 +648,9 @@ make_trial_design <- function(
     locally_run = locally_run
   ) %>% 
   gsub("_side-dist-here_", paste0(side_dist), .) %>% 
-  gsub("_head-dist-here_", paste0(head_dist), .) %>% 
-  gsub("_harvest-angle-here_", harvest_angle, .)  
+  gsub("_head-dist-here_", paste0(head_dist), .) 
 
-  saveRDS(
-    lock_start_point,
-    here("Data", "Growers", ffy, "TrialDesign/lock_start.rds")
-  )
+    
 
   td_rmd <- c(td_rmd, create_plots_rmd)
 

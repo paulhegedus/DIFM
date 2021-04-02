@@ -77,7 +77,7 @@ ffy <- field_year_ls[28]
 get_td_parameters(ffy, "fp_2021_TD.json")
 
 make_trial_design(
-  ffy = field_year_ls[16], 
+  ffy = field_year_ls[17], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_dist = 30, # default uses the max of the section width (minimum is 30)
@@ -86,7 +86,8 @@ make_trial_design(
   # TRUE: uses both harvester and planter/applicator ab-lines or paste data
   # numeric: uses only planter/applicator ab-line or past data and apply the angle
   # rotation is clockwise 
-  harvest_angle = 0, 
+  plot_heading = "ab-line-h-angled", 
+  ab_line_type = "non",
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
@@ -99,10 +100,9 @@ make_trial_design(
   #=== maximum jump allowed  ===#
   # used in "ejca", ignored in "jcl"
   max_jumps = c(NA, NA),
-  #=== force start point ===#
-  # lock_start_point = c(TRUE, FALSE),
   #=== file name ===#
-  file_name_append = "straight"
+  file_name_append = "straight",
+  locally_run = TRUE
 )
 
 

@@ -9,9 +9,9 @@
 # ffy <- "Bohnhoff_Adams_2018"
 # ffy <- "Holzwart_Holzwart_2021"
 
-#/*----------------------------------*/
-#' ## field boundary
-#/*----------------------------------*/
+#/*=================================================*/
+#' # Field boundary
+#/*=================================================*/
 field_sf <- get_shp_name(ffy, "TrialDesign", "boundary") %>% 
   st_read() %>% 
   make_sf_utm() %>% 
@@ -22,6 +22,10 @@ field_len_cross <- sqrt(
   (field_bbox["xmax"] - field_bbox["xmin"]) ^2 +
   (field_bbox["ymax"] - field_bbox["ymin"]) ^2 
 )
+
+#/*=================================================*/
+#' # Plot-heading
+#/*=================================================*/
 
 #/*----------------------------------*/
 #' ## Input ab-line
