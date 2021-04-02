@@ -31,7 +31,7 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[16]
+ffy <- field_year_ls[17]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
@@ -61,29 +61,37 @@ make_trial_design(
   # used in "ejca", ignored in "jcl"
   max_jumps = c(NA, NA),
   #=== force start point ===#
-  # lock_start_point = c(TRUE, FALSE)
+  # lock_start_point = c(TRUE, FALSE),
+  #=== file name ===#
+  file_name_append = "straight"
 )
 
+
+
+
+#/*=================================================*/
+#' # DevTeam
+#/*=================================================*/
 ffy <- field_year_ls[28]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
 make_trial_design(
-  ffy = field_year_ls[28], 
+  ffy = field_year_ls[16], 
   json_file = "fp_2021_TD.json", 
-  # head_dist = 120, # default uses 2 * the max of the machine widths
-  # side_dist = 40, # default uses the max of the section widths
+  # head_dist = 120, # default uses 2 * the max of the input plot widths
+  # side_dist = 30, # default uses the max of the section width (minimum is 30)
   #=== angled harvesting ===#
   # harvest angle relative to the planter/applicator
   # TRUE: uses both harvester and planter/applicator ab-lines or paste data
   # numeric: uses only planter/applicator ab-line or past data and apply the angle
   # rotation is clockwise 
   harvest_angle = 0, 
-  # harvest_angle = TRUE, 
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
-  design_type = c("jcl", "jcl"),
+  design_type = c("ejca", "ejca"),
+  #=== user-specified rates ===#
   # rates = list(c(40, 50, 60, 70, 80)),
   #=== number of levels ===#
   # used in "jcl", ignored in "ejca"
@@ -92,8 +100,9 @@ make_trial_design(
   # used in "ejca", ignored in "jcl"
   max_jumps = c(NA, NA),
   #=== force start point ===#
-  lock_start_point = c(FALSE, TRUE),
-  locally_run = TRUE
+  # lock_start_point = c(TRUE, FALSE),
+  #=== file name ===#
+  file_name_append = "straight"
 )
 
 

@@ -145,7 +145,7 @@ pluck("map_design")
 # Save the trial design
 
 ```{r }
-file_name_append <- _file-name-append_
+file_name_append <- "_file-name-append-here_"
 
 # time_user <- paste0(
 #   Sys.time(), 
@@ -173,7 +173,7 @@ summarise(list(
       "trial-design-", tolower(input_type), 
       "-", year,  
       ifelse(is.na(line_edge_id), "", paste0("-", line_edge_id)),
-      ifelse(is.na(file_name_append), "", paste0("-", file_name_append)) 
+      ifelse(file_name_append == "NA", "", paste0("-", file_name_append)) 
     ),
     driver = "ESRI Shapefile",
     append = FALSE
@@ -191,7 +191,7 @@ summarise(list(
       "ab-lines-farmer-", tolower(input_type), 
       "-", year,  
       ifelse(is.na(line_edge_id), "", paste0("-", line_edge_id)),
-      ifelse(is.na(file_name_append), "", paste0("-", file_name_append)) 
+      ifelse(file_name_append == "NA", "", paste0("-", file_name_append)) 
     ),
     driver = "ESRI Shapefile",
     append = FALSE

@@ -598,8 +598,8 @@ make_trial_design <- function(
     num_levels = c(5, 5), 
     max_jumps = NA,
     lock_start_point = c(FALSE, FALSE),
-    locally_run = FALSE,
-    file_name_append = NA
+    file_name_append = NA,
+    locally_run = FALSE
   ) 
   {
 
