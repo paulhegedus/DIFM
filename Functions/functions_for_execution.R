@@ -598,7 +598,8 @@ make_trial_design <- function(
     num_levels = c(5, 5), 
     max_jumps = NA,
     lock_start_point = c(FALSE, FALSE),
-    locally_run = FALSE
+    locally_run = FALSE,
+    file_name_append = NA
   ) 
   {
 
@@ -667,7 +668,14 @@ make_trial_design <- function(
     "_max-jumps-here_",
     paste0("c(", paste0(max_jumps, collapse = ", "), ")"),
     .
+  ) %>% 
+  #=== append to the file name ===#
+  gsub(
+    "_file-name-append-here_",
+    paste0(file_name_append),
+    .
   )
+  
 
   saveRDS(rates, here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
 
