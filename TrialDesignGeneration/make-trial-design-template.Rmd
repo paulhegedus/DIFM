@@ -596,7 +596,7 @@ summarise(list(
       "trial-design-", tolower(input_type), 
       "-", year,  
       ifelse(is.na(line_edge_id), "", paste0("-", line_edge_id)),
-      ifelse(file_name_append == "NA", "", paste0("-", file_name_append)) 
+      ifelse(is.na(file_name_append), "", paste0("-", file_name_append)) 
     ),
     driver = "ESRI Shapefile",
     append = FALSE
