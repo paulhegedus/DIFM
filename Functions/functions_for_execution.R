@@ -645,7 +645,7 @@ make_trial_design <- function(
     mutate(design_type = design_type)
   }
 
-  if (all(trial_data$design_type == "ejca")) {
+  if (nrow(trial_data) > 1 & all(trial_data$design_type == "ejca")) {
     return(print(
       "Error: you cannot use ejca for both inputs as it will create
       significant positive or negative correlations between the two inputs"
