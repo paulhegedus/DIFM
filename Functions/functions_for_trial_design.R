@@ -236,7 +236,7 @@ function(
 }
 
 make_ab_lines_data <- function(
-  exp_plot,
+  exp_plots,
   field
 ) {
 
@@ -253,7 +253,7 @@ make_ab_lines_data <- function(
   rbind(
     get_through_line(
       filter(
-        exp_plot, 
+        exp_plots, 
         strip_id == min(strip_id) & plot_id == 1
       ),
       radius,
@@ -261,7 +261,7 @@ make_ab_lines_data <- function(
     ),
     get_through_line(
       filter(
-        exp_plot, 
+        exp_plots, 
         strip_id == max(strip_id) & plot_id == 1
       ),
       radius,
@@ -280,7 +280,7 @@ make_ab_lines_data <- function(
     )
   )) %>% 
   mutate(intersection = list(
-    st_as_sf(ab_line_for_direction_check[exp_plot, ])
+    st_as_sf(ab_line_for_direction_check[exp_plots, ])
   )) %>% 
   mutate(int_check = nrow(intersection))
 
