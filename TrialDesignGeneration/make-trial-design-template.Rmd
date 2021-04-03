@@ -275,7 +275,10 @@ mutate(exp_plots = list(
 #=== make ab-lines data ===#
 # used for creating ab-lines and/or the edge of the plot
 mutate(ab_lines_data = list(
-  make_ab_lines_data(exp_plots)
+  make_ab_lines_data(
+    exp_plots = exp_plots, 
+    field = field_sf
+  )
 )) %>% 
 #=== make ab-lines ===#
 mutate(ab_lines = list(

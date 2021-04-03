@@ -236,8 +236,19 @@ function(
 }
 
 make_ab_lines_data <- function(
-  exp_plot
+  exp_plot,
+  field
 ) {
+
+  f_bbox <- st_bbox(field)
+
+  #--- maximum distance ---#
+  radius <- 
+  sqrt(
+    (f_bbox["xmax"] - f_bbox["xmin"])^2 +
+    (f_bbox["ymax"] - f_bbox["ymin"])^2
+  ) / 2 
+
   ab_lines_data <- 
   rbind(
     get_through_line(
