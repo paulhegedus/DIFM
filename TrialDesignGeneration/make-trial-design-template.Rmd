@@ -259,7 +259,7 @@ length()
 
 trial_data_first <- 
 trial_data_pa[1, ] %>% 
-mutate(exp_plots = list(
+mutate(exp_data = list(
   make_trial_plots(
     field = field_sf, 
     #--- by default uses the first one ---#
@@ -272,13 +272,11 @@ mutate(exp_plots = list(
     side_length = side_length
   )
 )) %>% 
-#=== make ab-lines data ===#
-# used for creating ab-lines and/or the edge of the plot
+mutate(exp_plots = list(
+  exp_data$exp_plots
+)) %>% 
 mutate(ab_lines_data = list(
-  make_ab_lines_data(
-    exp_plots = exp_plots, 
-    field = field_sf
-  )
+  exp_data$ab_lines_data
 )) %>% 
 #=== make ab-lines ===#
 mutate(ab_lines = list(

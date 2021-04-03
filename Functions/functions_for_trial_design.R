@@ -231,29 +231,15 @@ function(
     mutate(strip_id = strip_id - min(strip_id) + 1) %>% 
     st_set_crs(st_crs(field))
 
-  return(final_exp_plots)
-
-}
-
-make_ab_lines_data <- function(
-  exp_plots,
-  field
-) {
-
-  f_bbox <- st_bbox(field)
-
-  #--- maximum distance ---#
-  radius <- 
-  sqrt(
-    (f_bbox["xmax"] - f_bbox["xmin"])^2 +
-    (f_bbox["ymax"] - f_bbox["ymin"])^2
-  ) / 2 
+#/*----------------------------------*/
+#' ## ab-lines data
+#/*----------------------------------*/  
 
   ab_lines_data <- 
   rbind(
     get_through_line(
       filter(
-        exp_plots, 
+        final_exp_plots, 
         strip_id == min(strip_id) & plot_id == 1
       ),
       radius,
@@ -261,7 +247,7 @@ make_ab_lines_data <- function(
     ),
     get_through_line(
       filter(
-        exp_plots, 
+        final_exp_plots, 
         strip_id == max(strip_id) & plot_id == 1
       ),
       radius,
@@ -280,9 +266,14 @@ make_ab_lines_data <- function(
     )
   )) %>% 
   mutate(intersection = list(
-    st_as_sf(ab_line_for_direction_check[exp_plots, ])
+    st_as_sf(ab_line_for_direction_check[final_exp_plots, ])
   )) %>% 
   mutate(int_check = nrow(intersection))
+
+  return(list(
+    exp_plots = final_exp_plots,
+    ab_lines_data = ab_lines_data
+  ))
 
 }
 
