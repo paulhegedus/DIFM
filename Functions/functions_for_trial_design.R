@@ -1341,6 +1341,7 @@ create_plots_in_strip <- function(
 
 prepare_ablines <- function(ab_line, field, plot_width) {
 
+# ab_line <- ab_sf
   rotate_mat_p90 <- matrix(
     c(
       cos(pi / 2),
