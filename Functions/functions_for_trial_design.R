@@ -2,7 +2,7 @@
 #' # Make experiment grids (basic cell, plot, strip)
 # /*=================================================*/
 
-make_trial_grids <- 
+make_trial_plots <- 
 function(
   field, 
   ab_line, 
@@ -11,9 +11,7 @@ function(
   section_num,
   headland_length, 
   side_length,
-  harvest_angle,
-  second_input = FALSE,
-  lock_start
+  second_input = FALSE
 ) {
 
   #/*=================================================*/
@@ -36,10 +34,10 @@ function(
   # /*=================================================*/
   #' # Prepare ab-lines and vectors
   # /*=================================================*/
-  ab_line_data <- prepare_ablines(ab_line, harvest_angle, field, plot_width)
+  ab_line_data <- prepare_ablines(ab_line, field, plot_width)
 
   #=== ab-line tilted by harvester angle ===#
-  ab_line_tilted <- ab_line_data$ab_line_tilted
+  plot_heading <- ab_line_data$plot_heading
   #=== unit vector pointing in the direction the machine moves ===#
   ab_xy_nml <- ab_line_data$ab_xy_nml
   #=== unit vector pointing in the direction PERPENDICULAR to the direction the machine moves ===#
@@ -57,18 +55,18 @@ function(
     (f_bbox["ymax"] - f_bbox["ymin"])^2
   ) / 2 + 100
 
-  strips <- create_strips(field, ab_line_tilted, plot_width, radius)
+  strips <- create_strips(field, plot_heading, plot_width, radius)
 
   # ggplot() +
   #   geom_sf(data = strips, aes(fill = "group")) +
   #   geom_sf(data = field, col = "black", fill = NA) +
-  #   geom_sf(data = ab_line_tilted, col = "red")
+  #   geom_sf(data = plot_heading, col = "red")
   
   #/*=================================================*/
-  #' # Shift the polygons (the ab-line goes through the center of a strip)
+  #' # Shift the polygons
   #/*=================================================*/
   #=== find the group id for the cells that are intersecting with the ab-line  ===#
-  ab_int_group <- st_intersection(strips, ab_line_tilted) %>% 
+  ab_int_group <- st_intersection(strips, plot_heading) %>% 
     pull(group) %>% unique()
 
   #=== get the sf of the intersecting group ===# 
@@ -76,12 +74,12 @@ function(
 
   # ggplot() +
   #   geom_sf(data = int_group, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line_tilted, color = "red", size = 0.3)   
+  #   geom_sf(data = plot_heading, color = "red", size = 0.3)   
 
   #=== the distance between the ab-line and the line that connect the centroids of the intersecting sf ===#
   correction_dist <- st_distance(
     get_through_line(int_group, radius), 
-    ab_line_tilted
+    plot_heading
   ) %>% 
   as.numeric()
 
@@ -94,16 +92,40 @@ function(
   
   # ggplot() +
   #   geom_sf(data = int_group_corrected, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line_tilted, color = "red", size = 0.3) 
+  #   geom_sf(data = plot_heading, color = "red", size = 0.3) 
 
   new_dist <- 
   st_distance(
     get_through_line(int_group_corrected, radius), 
-    ab_line_tilted
+    plot_heading
   ) %>% 
   as.numeric()
 
-  if (second_input == FALSE) {
+  if (ab_line_type == "lock"){
+
+    # move the intersecting strip so the ab-line goes through the center
+    if (new_dist > correction_dist) {
+      #--- if moved further away ---#
+      strips_shifted <- st_shift(strips, - correction_dist * ab_xy_nml_p90)
+    } else {
+      #--- if get close ---#
+      strips_shifted <- st_shift(strips, correction_dist * ab_xy_nml_p90)
+    }
+
+    #=== round is for weird cases like harvester width = 62.5 ===#
+    # there is no hope for aligning things correctly in such a case
+    section_width <- machine_width / section_num
+    num_sections_in_plot <- round(plot_width / section_width)
+
+    if (num_sections_in_plot %% 2 == 0) {
+    # if odd, then no need to shift
+      strips_shifted <- 
+      st_shift(
+        strips_shifted, 
+        section_width * ab_xy_nml_p90 / 2
+      )
+    }
+  } else if (second_input == FALSE) {
     #=== if the first input ===# 
     # Note: for the first input, the cell center is aligned to the 
     # supplied ab-line (which is not the final ab-line)
@@ -116,7 +138,7 @@ function(
       strips_shifted <- st_shift(strips, correction_dist * ab_xy_nml_p90)
     }
 
-  } else {
+  } else if (second_input == TRUE) {
     #=== if the second input ===#
     # Note: line_edge is used as the ab-line for the second input
     # the left (right) edge of the cells is shifted so that it is
@@ -134,31 +156,11 @@ function(
       st_shift(., correction_dist * ab_xy_nml_p90) %>% 
       st_shift(., plot_width * ab_xy_nml_p90 / 2)
     }
-  }
+  } 
   
   # ggplot() +
   #   geom_sf(data = strips_shifted, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line_tilted, col = "red", size = 0.3)
-
-  if (lock_start) {
-    # Note: no matter where the ab-line is, the plots have been shifted so that
-    # the ab-line go through the middle of one of the strips. 
-    section_width <- machine_width / section_num
-
-    #=== round is for weird cases like harvester width = 62.5 ===#
-    # there is no hope for aligning things correctly in such a case
-    num_sections_in_plot <- round(plot_width / section_width)
-
-    if (num_sections_in_plot %% 2 == 0) {
-    # if odd, then no need to shift
-      strips_shifted <- 
-      st_shift(
-        strips_shifted, 
-        section_width * ab_xy_nml_p90 / 2
-      )
-    }
-
-  } 
+  #   geom_sf(data = plot_heading, col = "red", size = 0.3)
 
   #/*=================================================*/
   #' # Create experiment plots
@@ -246,195 +248,163 @@ function(
     mutate(strip_id = strip_id - min(strip_id) + 1) %>% 
     st_set_crs(st_crs(field))
 
-  # ggplot() + 
-  #   geom_sf(data = final_exp_plots, aes(fill = strip_id))
+  return(final_exp_plots)
 
-  # filter(final_exp_plots, strip_id == 113) %>% 
-  #   plot()
-  # final_exp_plots$strip_id %>% max()
+}
+
+make_ab_lines_data <- function(
+  exp_plot
+) {
+  ab_lines_data <- 
+  rbind(
+    get_through_line(
+      filter(
+        exp_plot, 
+        strip_id == min(strip_id) & plot_id == 1
+      ),
+      radius
+    ),
+    get_through_line(
+      filter(
+        exp_plot, 
+        strip_id == max(strip_id) & plot_id == 1
+      ),
+      radius
+    )
+  ) %>% 
+  mutate(ab_id = seq_len(nrow(.))) %>% 
+  expand_grid_df(tibble(dir_p = c(-1, 1)), .) %>% 
+  rowwise() %>% 
+  mutate(geometry = list(x)) %>% 
+  mutate(ab_line_for_direction_check = list(
+    st_shift(
+      geometry, 
+      dir_p * ab_xy_nml_p90 * (5 * plot_width), 
+      merge = FALSE
+    )
+  )) %>% 
+  mutate(intersection = list(
+    st_as_sf(ab_line_for_direction_check[exp_plot, ])
+  )) %>% 
+  mutate(int_check = nrow(intersection))
+
+}
+
+make_ab_lines <- function(
+  ab_lines_data,
+  plot_width, 
+  machine_width,
+  ab_line_type
+) {
 
   #/*----------------------------------*/
   #' ## Get the ab-line
   #/*----------------------------------*/
   # plot_width
   # machine_width <- conv_unit(90, "ft","m")
-
   # ggplot() + 
   #   geom_sf(data = field) +
   #   geom_sf(data = ab_lines_data$ab_line_for_direction_check[[2]])
-
   # ggplot() + 
   #     geom_sf(data = field) +
   #     geom_sf(data = ab_lines_data$geometry[[1]])
 
-  if (harvest_angle == 0) {
+  if (ab_line_type == "non") {
+    return(NULL)
+  } else if (ab_line_type == "lock") {
+    ab_lines <- 
+    ab_sf %>% 
+    st_as_sf() %>% 
+    mutate(ab_id = 1)
+    return(ab_lines)
+  }
+  else if (ab_line_type == "free"){
+    
+    if (machine_width == plot_width) {
 
-    ab_lines_data <- 
-    rbind(
-      get_through_line(
-        filter(
-          final_exp_plots, 
-          strip_id == min(strip_id) & plot_id == 1
-        ),
-        radius
-      ),
-      get_through_line(
-        filter(
-          final_exp_plots, 
-          strip_id == max(strip_id) & plot_id == 1
-        ),
-        radius
-      )
-    ) %>% 
-    mutate(ab_id = seq_len(nrow(.))) %>% 
-    expand_grid_df(tibble(dir_p = c(-1, 1)), .) %>% 
-    rowwise() %>% 
-    mutate(geometry = list(x)) %>% 
-    mutate(ab_line_for_direction_check = list(
-      st_shift(
-        geometry, 
-        dir_p * ab_xy_nml_p90 * (5 * plot_width), 
-        merge = FALSE
-      )
-    )) %>% 
-    mutate(intersection = list(
-      st_as_sf(ab_line_for_direction_check[final_exp_plots, ])
-    )) %>% 
-    mutate(int_check = nrow(intersection))
-
-    ab_lines <- ab_lines_data %>% 
+      ab_lines <- ab_lines_data %>% 
       dplyr::select(ab_id, x) %>% 
       unique(by = "ab_id") %>% 
       st_as_sf() %>% 
       ungroup()
 
-  } else { # if harvest angle is non-zero
-
-    ab_line <- 
-    get_through_line(
-      filter(
-        final_exp_plots, 
-        strip_id == min(strip_id) & plot_id == 1
-      ),
-      radius
-    ) %>% 
-    #=== normalize ===#
-    st_extend_line(., as.numeric(1 / st_length(.))) %>%
-    st_tilt(., - harvest_angle, merge = FALSE)  
-
-    # Create ab-lines at bunch of places
-    cell_coordinates <- st_coordinates(st_centroid(final_exp_plots)) %>% 
-      data.table() %>% 
-      .[, cell_index := 1:.N]
-
-    cells_to_use <- c(
-      cell_coordinates[X == min(X), cell_index],
-      cell_coordinates[X == max(X), cell_index],
-      cell_coordinates[Y == min(Y), cell_index],
-      cell_coordinates[Y == max(Y), cell_index]
-    )
-
-    ab_lines <- cell_coordinates[cells_to_use, ] %>% 
-      rowwise() %>% 
-      mutate(shift_X = X - ab_line[[1]][1, 1]) %>% 
-      mutate(shift_Y = Y - ab_line[[1]][1, 2]) %>% 
-      mutate(ab_lines_shifted = list(
-        st_shift(ab_line, c(shift_X, shift_Y), merge = FALSE)
+    } else {
+      #=== ab-line re-centering when machine width > plot_width ===#
+      ab_lines <- ab_lines_data %>% 
+      #=== which direction to go ===#
+      # Notes: go inward (intersecting) if machine_width > plot_width, otherwise outward
+      filter(int_check == ifelse(machine_width > plot_width, 1, 0)) %>% 
+      mutate(ab_recentered = list(
+        st_shift(
+          geometry, 
+          dir_p * ab_xy_nml_p90 * abs(machine_width - plot_width) / 2,
+          merge = FALSE
+        )
       )) %>% 
-      mutate(ab_lines_shifted_extended = list(
-        #=== 50 meter ===#
-        st_extend_line(ab_lines_shifted, 200)
-      )) %>% 
-      pluck("ab_lines_shifted_extended") %>% 
+      pluck("ab_recentered") %>% 
       reduce(c) %>% 
       st_as_sf() %>% 
       mutate(ab_id = seq_len(nrow(.)))
 
-  }
+    } 
 
-  #=== ab-line re-centering when machine width > plot_width ===#
-  # No correction necessary if lock_start as that has been done earlier
-  if (machine_width != plot_width & harvest_angle == 0 & !lock_start) {
+    # ggplot() +
+    #   geom_sf(data = field, fill = NA) +
+    #   geom_sf(data = exp_plot, aes(fill = type), color = NA) +
+    #   geom_sf(data = line_edge_f, col = "red", size = 1) +
+    #   geom_sf(data = line_edge_s, col = "darkgreen", size = 1)
 
-    ab_lines <- ab_lines_data %>% 
-    #=== which direction to go ===#
-    # Notes: go inward (intersecting) if machine_width > plot_width, otherwise outward
-    filter(int_check == ifelse(machine_width > plot_width, 1, 0)) %>% 
-    mutate(ab_recentered = list(
-      st_shift(
-        geometry, 
-        dir_p * ab_xy_nml_p90 * abs(machine_width - plot_width) / 2,
-        merge = FALSE
-      )
-    )) %>% 
-    pluck("ab_recentered") %>% 
-    reduce(c) %>% 
-    st_as_sf() %>% 
-    mutate(ab_id = seq_len(nrow(.)))
+    # ggplot() +
+    #   geom_sf(data = field, fill = NA) +
+    #   geom_sf(data = exp_plot, fill = "blue", color = NA) +
+    #   geom_sf(data = ab_lines, aes(col = factor(ab_id)), size = 1)
+
+    # ggplot() +
+    #   geom_sf(data = field, fill = NA) +
+    #   geom_sf(data = exp_plot, fill = "blue", color = NA) +
+    #   geom_sf(data = ab_line, size = 1)
+    
+    return(ab_lines)
 
   } 
+
+}
+
+make_plot_edge_line <- function(
+  ab_lines_data,
+  create_plot_edge_line
+) {
 
   #/*----------------------------------*/
   #' ## Get the edge of the experiment for the second input
   #/*----------------------------------*/
-  if (second_input == FALSE & harvest_angle == 0) {
-    # Note 1: this is used to align the left (or) right edges of the first input experiment plot
-    # Note 2: even if the starting point is locked, this still applies
+  # Note 1: this is used to align the left (or) right edges of the first input experiment plot
+  # Note 2: even if the starting point is locked, this still applies
 
-    #=== which way to move for the first to go inward ===#
-    # ab_lines_data$int_check 
+  #=== which way to move for the first to go inward ===#
+  # ab_lines_data$int_check 
 
-    dir_p <- filter(ab_lines_data, ab_id == 1 & int_check == 1) %>% 
-      pull(dir_p)
+  if (create_plot_edge_line) {
 
-    line_edges <- 
-    rbind(
-      line_edge_f = st_shift(ab_lines[1, ], - dir_p * ab_xy_nml_p90 * plot_width / 2),
-      line_edge_s = st_shift(ab_lines[2, ], dir_p * ab_xy_nml_p90 * plot_width / 2)
-    )
-  }
+    line_edge <- 
+    ab_lines_data %>% 
+    #=== the direction that goes off of the field ===#
+    filter(int_check == 0) %>% 
+    #=== use only the first one ===#
+    .[1, ] %>% 
+    mutate(line_edge = list(
+      st_shift(geometry, dir_p * ab_xy_nml_p90 * plot_width / 2, merge = FALSE)
+    )) %>% 
+    pluck("line_edge") %>% 
+    .[[1]]
+    
+    return(line_edge)
 
-  # ggplot() +
-  #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = final_exp_plots, aes(fill = type), color = NA) +
-  #   geom_sf(data = line_edge_f, col = "red", size = 1) +
-  #   geom_sf(data = line_edge_s, col = "darkgreen", size = 1)
-
-  # ggplot() +
-  #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = final_exp_plots, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_lines, aes(col = factor(ab_id)), size = 1)
-
-  # ggplot() +
-  #   geom_sf(data = field, fill = NA) +
-  #   geom_sf(data = final_exp_plots, fill = "blue", color = NA) +
-  #   geom_sf(data = ab_line, size = 1)
-
-  if (lock_start) {
-    ab_lines <- ab_line %>% 
-      st_as_sf() %>% 
-      #=== only for mapping later ===#
-      mutate(ab_id = 1)
-  }
-
-  #/*----------------------------------*/
-  #' ## Save
-  #/*----------------------------------*/  
-
-  if (second_input == FALSE & harvest_angle == 0) {
-    return(list(
-      exp_plots = final_exp_plots, 
-      ab_lines = ab_lines,
-      line_edges = line_edges
-    ))
   } else {
-    return(list(
-      exp_plots = final_exp_plots, 
-      ab_lines = ab_lines
-    ))
+    return(NULL)
   }
-
 }
+
 
 #/*=================================================*/
 #' # Assign rates (latin and jump-rate-conscious)
@@ -1138,6 +1108,9 @@ st_extend_line <- function(line, multiplier) {
 
 get_shp_name <- function(ffy, folder, key) {
 
+  #=== remove .shp if it is included in the file name ===#
+  key <- gsub(".shp", "", key)
+
   file_name <- here("Data", "Growers", ffy, folder) %>% 
     list.files(recursive = TRUE, full.names = TRUE) %>%
     #--- search for as-applied-s file ---#
@@ -1169,7 +1142,7 @@ make_sf_utm <- function(data_sf) {
 #/*=================================================*/
 #' # Get harvester angle relative to input ab-line
 #/*=================================================*/
-# line_1 <- ab_line_tilted
+# line_1 <- plot_heading
 # line_2 <- through_line
 
 get_angle_lines <- function(line_1, line_2) {
@@ -1366,7 +1339,7 @@ create_plots_in_strip <- function(
 
 }
 
-prepare_ablines <- function(ab_line, harvest_angle, field, plot_width) {
+prepare_ablines <- function(ab_line, field, plot_width) {
 
   rotate_mat_p90 <- matrix(
     c(
@@ -1378,10 +1351,8 @@ prepare_ablines <- function(ab_line, harvest_angle, field, plot_width) {
     nrow = 2
   )
 
-  #=== tilt based on harvest angle ===#
-  ab_line_tilted <- st_tilt(ab_line, harvest_angle, merge = FALSE)
   #--- get the vector (direction machines run)  ---#
-  ab_xy <- st_geometry(ab_line_tilted)[[1]][2, ] - st_geometry(ab_line_tilted)[[1]][1, ]  
+  ab_xy <- st_geometry(ab_line)[[1]][2, ] - st_geometry(ab_line)[[1]][1, ]  
   #--- distance of the vector ---#
   ab_length <- sqrt(sum(ab_xy^2))
   #--- normalize (distance == 1) ---#
@@ -1390,11 +1361,11 @@ prepare_ablines <- function(ab_line, harvest_angle, field, plot_width) {
   ab_xy_nml_p90 <- ab_xy_nml %*% rotate_mat_p90
 
   #=== if ab-line is outside of the field boundary ===#
-  if (nrow(st_as_sf(st_intersection(field, ab_line_tilted))) == 0) {
+  if (nrow(st_as_sf(st_intersection(field, ab_line))) == 0) {
 
     b <- t(
       st_coordinates(st_centroid(field)) - 
-      st_geometry(ab_line_tilted)[[1]][1, ] 
+      st_geometry(ab_line)[[1]][1, ] 
     )
     a <- cbind(
       t(ab_xy_nml_p90),
@@ -1403,9 +1374,9 @@ prepare_ablines <- function(ab_line, harvest_angle, field, plot_width) {
 
     multiplier <- solve(a, b)
 
-    ab_line_tilted <- 
+    ab_line <- 
     st_shift(
-      ab_line_tilted, 
+      ab_line, 
       round(multiplier[[1]] / plot_width) * plot_width * ab_xy_nml_p90 + 
       multiplier[[2]] * ab_xy_nml, 
       merge = FALSE
@@ -1414,7 +1385,7 @@ prepare_ablines <- function(ab_line, harvest_angle, field, plot_width) {
   }
 
   return(list(
-    ab_line_tilted = ab_line_tilted,
+    plot_heading = ab_line,
     ab_xy_nml = ab_xy_nml,
     ab_xy_nml_p90 = ab_xy_nml_p90
   ))
@@ -1595,7 +1566,7 @@ create_plots <- function(
 #   geom_sf(data = field) +
 #   geom_sf(data = strips, aes(fill = group), color = NA, alpha = 0.4) 
 
-create_strips <- function(field, ab_line_tilted, plot_width, radius) {
+create_strips <- function(field, plot_heading, plot_width, radius) {
 
   circle <- st_buffer(st_centroid(field), radius)
 
@@ -1621,7 +1592,7 @@ create_strips <- function(field, ab_line_tilted, plot_width, radius) {
   strips <- 
   st_tilt(
     data_sf = strips, 
-    angle = get_angle_lines(ab_line_tilted, vertical_line),
+    angle = get_angle_lines(plot_heading, vertical_line),
     base_sf = circle,
     merge = TRUE
   )

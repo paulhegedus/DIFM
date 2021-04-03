@@ -594,9 +594,9 @@ make_trial_design <- function(
     side_dist = NA,
     plot_heading = NA, # the name of the ab-line file
     ab_line_type = "free", # one of "free", "lock", "non"
-    design_type = "ejca",
+    design_type = NA,
     rates = NA,
-    num_levels = 5, 
+    num_levels = 6, 
     max_jumps = NA,
     file_name_append = NA,
     locally_run = FALSE
@@ -605,21 +605,60 @@ make_trial_design <- function(
 
   print(paste0("Generating a trial-design for ", ffy))
 
+  # plot_heading = "ab-line"
+
+  #/*----------------------------------*/
+  #' ## Create trial data
+  #/*----------------------------------*/
   trial_data <- 
   get_td_parameters(ffy, json_file) %>% 
   mutate(
+    input_plot_width = conv_unit(input_plot_width, "ft", "m"),
+    machine_width = conv_unit(machine_width, "ft", "m"),
+    section_width = machine_width / section_num,
     plot_heading = plot_heading, 
     ab_line_type = ab_line_type, 
-    design_type = design_type,
     rates = rates,
     num_levels = num_levels, 
-    max_jumps = max_jumps,
+    max_jump = max_jumps,
     file_name_append = file_name_append
+  ) 
+
+  #=== trial design type ===#
+  if (nrow(trial_data) == 1) {
+    trial_data$design_type <- "ejca"
+  } else if (is.na(design_type)) {
+    #=== if two inputs and no design_type is specified ===#
+    trial_data <- trial_data %>% 
+    mutate(design_type = ifelse(form == "seed", "jcl", "ejca")) 
+  } else if (all(design_type == "ejca")) {
+    return(print(
+      "Error: you cannot use ejca for both inputs as it will create
+      significant positive or negative correlations between the two inputs"
+    ))
+  } else if (
+    trial_data <- trial_data %>% 
+    mutate(design_type = design_type) 
   )
 
-  num_inputs <- nrow(trial_data)
-trial_data$ab_file <- plot_heading
-    trial_data$ab_type <- ab_line_type
+  #=== head distance ===#
+  if (is.na(head_dist)) {
+    head_dist <- 2 * max(trial_data$machine_width) %>% 
+      conv_unit("ft", "m")
+  } else {
+    head_dist <- conv_unit(head_dist, "ft", "m")
+  }
+
+  #=== side distance ===#
+  if (is.na(side_dist)) {
+    side_dist <- max(max(trial_data$section_width), 30) %>% 
+      conv_unit("ft", "m")
+  } else {
+    side_dist <- conv_unit(side_dist, "ft", "m")
+  }
+
+  trial_data$headland_length <- head_dist
+  trial_data$side_length <- side_dist
 
   saveRDS(
     trial_data,
@@ -627,79 +666,15 @@ trial_data$ab_file <- plot_heading
   )
 
   #/*=================================================*/
-  #' # Header Rmd
+  #' # Rmd
   #/*=================================================*/
   td_rmd <- 
   read_rmd(
-    "TrialDesignGeneration/trial-design-header.Rmd", 
+    "TrialDesignGeneration/make-trial-design-template.Rmd", 
     locally_run = locally_run
   ) %>% 
   gsub("_field-year-here_", ffy, .) %>% 
-  gsub("_json-file-here_", json_file, .) %>% 
-  gsub("title-here", "Trial Design Generation Report", .)
-
-  #/*=================================================*/
-  #' # Rmd for creating plots and ab-lines
-  #/*=================================================*/
-  #=== append the Rmd to create plots and ab-lines ===#
-  create_plots_rmd <- 
-  read_rmd(
-    "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
-    locally_run = locally_run
-  ) %>% 
-  gsub("_side-dist-here_", paste0(side_dist), .) %>% 
-  gsub("_head-dist-here_", paste0(head_dist), .) 
-
-    
-
-  td_rmd <- c(td_rmd, create_plots_rmd)
-
-  #/*=================================================*/
-  #' # Rmd for Assigning rates 
-  #/*=================================================*/
-  assign_rates_rmd <- 
-  read_rmd(
-    "TrialDesignGeneration/assign-rates.Rmd", 
-    locally_run = locally_run
-  )
-  td_rmd <- c(td_rmd, assign_rates_rmd)
-
-  td_rmd <- 
-  #=== number of levels ===#
-  gsub(
-    "_num-levels-here_",
-    paste0("c(", paste0(num_levels, collapse = ", "), ")"),
-    td_rmd
-  ) %>% 
-  #=== design type ===#
-  gsub(
-    "_design-type-here_",
-    paste0("c(\'", paste0(design_type, collapse = "\', \'"), "\')"),
-    .
-  ) %>% 
-  #=== max jumps ===#
-  gsub(
-    "_max-jumps-here_",
-    paste0("c(", paste0(max_jumps, collapse = ", "), ")"),
-    .
-  ) %>% 
-  #=== append to the file name ===#
-  gsub(
-    "_file-name-append-here_",
-    paste0(file_name_append),
-    .
-  )
-  
-
-  saveRDS(rates, here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
-
-  if (length(num_levels) == 1 & nrow(trial_data) == 2) {
-    print("You provided only 1 num_level value even though there are two inputs.")
-    print("The num_level value you provided will be used for both the inputs.")
-  } else if ((length(num_levels) == 2 & nrow(trial_data) == 1)) {
-    print("You provided 2 num_level values even though there is only one input.")
-    print("Only the first value will be used.")
-  }
+  gsub("_json-file-here_", json_file, .) 
 
   #/*=================================================*/
   #' # Wrapping up
