@@ -259,11 +259,18 @@ length()
 
 trial_data_first <- 
 trial_data_pa[1, ] %>% 
+mutate(base_ab_lines_data = list(
+  prepare_ablines(
+    ab_line = ab_sf, 
+    field = field_sf, 
+    plot_width = input_plot_width
+  ) 
+)) %>% 
 mutate(exp_data = list(
   make_trial_plots(
     field = field_sf, 
     #--- by default uses the first one ---#
-    ab_line = ab_sf, 
+    ab_lines_data = base_ab_lines_data, 
     ab_line_type = ab_line_type,
     plot_width = input_plot_width, 
     machine_width = machine_width, 
@@ -281,17 +288,26 @@ mutate(ab_lines_data = list(
 #=== make ab-lines ===#
 mutate(ab_lines = list(
   ab_lines <- make_ab_lines(
+    ab_lines = ab_sf,
     ab_lines_data = ab_lines_data,
+    base_ab_lines_data = base_ab_lines_data,
     plot_width = input_plot_width, 
     machine_width = machine_width,
     ab_line_type = ab_line_type
   )
-))  
+)) %>% 
+mutate(line_edge = list(
+  make_plot_edge_line(
+    ab_lines_data = ab_lines_data,
+    create_plot_edge_line = create_plot_edge_line,
+    base_ab_lines_data = base_ab_lines_data,
+    plot_width = input_plot_width
+  ) 
+))
 
-line_edge <- make_plot_edge_line(
-  ab_lines_data = trial_data_first$ab_lines_data[[1]],
-  create_plot_edge_line = create_plot_edge_line
-)
+line_edge <- trial_data_first$line_edge[[1]]
+
+trial_data_first <- dplyr::select(trial_data_first, - line_edge)
 
 #/*=================================================*/
 #' # Second input two-input case
@@ -304,17 +320,32 @@ if (num_unique_plot_width == 1 & nrow(trial_data_pa) == 1) {
   #=== two-input case, but the same plot width for both inputs ===#
   trial_data_second <- 
   trial_data_pa[2, ] %>% 
+  mutate(base_ab_lines_data = list(
+    prepare_ablines(
+      ab_line = ifelse(
+        ab_line_type == "lock",
+        st_as_sf(ab_sf), # ab-sf provided 
+        st_as_sf(line_edge) # the edge of the experiment plots of the first input 
+      ) %>% .[[1]], 
+      field = field_sf, 
+      plot_width = input_plot_width
+    ) 
+  )) %>% 
+  mutate(exp_data = NA) %>% 
+  #=== use the same experiment plots as the first one ===#
   mutate(exp_plots = list(
     trial_data_first$exp_plots[[1]]
   )) %>% 
+  #=== use the ab-lines data as the first one ===#
   mutate(ab_lines_data = list(
     trial_data_first$ab_lines_data[[1]]
   )) %>% 
   #=== make ab-lines ===#
-  # Note: ab-line can be different because of machine width
   mutate(ab_lines = list(
     ab_lines <- make_ab_lines(
+      ab_lines = ab_sf,
       ab_lines_data = ab_lines_data,
+      base_ab_lines_data = base_ab_lines_data,
       plot_width = input_plot_width, 
       machine_width = machine_width,
       ab_line_type = ab_line_type
@@ -328,37 +359,47 @@ if (num_unique_plot_width == 1 & nrow(trial_data_pa) == 1) {
 
   trial_data_second <- 
   trial_data_pa[2, ] %>% 
-  mutate(exp_plots = list(
+  mutate(base_ab_lines_data = list(
+    prepare_ablines(
+      ab_line = ifelse(
+        ab_line_type == "lock",
+        st_as_sf(ab_sf), # ab-sf provided 
+        st_as_sf(line_edge) # the edge of the experiment plots of the first input 
+      ) %>% .[[1]], 
+      field = field_sf, 
+      plot_width = input_plot_width
+    ) 
+  )) %>% 
+  mutate(exp_data = list(
     make_trial_plots(
       field = field_sf, 
       #--- by default uses the first one ---#
-      ab_line = ifelse(
-        ab_line_type == "lock",
-        ab_sf, # ab-sf provided 
-        line_edge # the edge of the experiment plots of the first input 
-      ),
+      ab_lines_data = base_ab_lines_data, 
+      ab_line_type = ab_line_type,
       plot_width = input_plot_width, 
-      machine_width = machine_width,
+      machine_width = machine_width, 
       section_num = section_num, 
       headland_length = headland_length,
-      side_length = side_length,
-      second_input = TRUE
-    )   
+      side_length = side_length
+    )
   )) %>% 
-  #=== make ab-lines data ===#
-  # used for creating ab-lines and/or the edge of the plot
+  mutate(exp_plots = list(
+    exp_data$exp_plots
+  )) %>% 
   mutate(ab_lines_data = list(
-    make_ab_lines_data(exp_plots)
+    exp_data$ab_lines_data
   )) %>% 
   #=== make ab-lines ===#
   mutate(ab_lines = list(
     ab_lines <- make_ab_lines(
+      ab_lines = ab_sf,
       ab_lines_data = ab_lines_data,
+      base_ab_lines_data = base_ab_lines_data,
       plot_width = input_plot_width, 
       machine_width = machine_width,
       ab_line_type = ab_line_type
     )
-  ))  
+  ))
 
   trial_data_e <- rbind(trial_data_first, trial_data_second)
 

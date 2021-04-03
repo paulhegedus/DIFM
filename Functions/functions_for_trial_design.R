@@ -5,7 +5,7 @@
 make_trial_plots <- 
 function(
   field, 
-  ab_line, 
+  ab_lines_data, 
   ab_line_type, 
   plot_width, 
   machine_width,
@@ -15,18 +15,12 @@ function(
   second_input = FALSE
 ) {
 
-  
-  # /*=================================================*/
-  #' # Prepare ab-lines and vectors
-  # /*=================================================*/
-  ab_line_data <- prepare_ablines(ab_line, field, plot_width)
-
   #=== ab-line tilted by harvester angle ===#
-  plot_heading <- ab_line_data$plot_heading
+  plot_heading <- ab_lines_data$plot_heading
   #=== unit vector pointing in the direction the machine moves ===#
-  ab_xy_nml <- ab_line_data$ab_xy_nml
+  ab_xy_nml <- ab_lines_data$ab_xy_nml
   #=== unit vector pointing in the direction PERPENDICULAR to the direction the machine moves ===#
-  ab_xy_nml_p90 <- ab_line_data$ab_xy_nml_p90
+  ab_xy_nml_p90 <- ab_lines_data$ab_xy_nml_p90
 
   #/*=================================================*/
   #' # Create strips
@@ -278,7 +272,9 @@ function(
 }
 
 make_ab_lines <- function(
+  ab_lines,
   ab_lines_data,
+  base_ab_lines_data,
   plot_width, 
   machine_width,
   ab_line_type
@@ -295,6 +291,8 @@ make_ab_lines <- function(
   # ggplot() + 
   #     geom_sf(data = field) +
   #     geom_sf(data = ab_lines_data$geometry[[1]])
+
+  ab_xy_nml_p90 <- base_ab_lines_data$ab_xy_nml_p90
 
   if (ab_line_type == "non") {
     return(NULL)
@@ -359,7 +357,9 @@ make_ab_lines <- function(
 
 make_plot_edge_line <- function(
   ab_lines_data,
-  create_plot_edge_line
+  create_plot_edge_line,
+  base_ab_lines_data,
+  plot_width
 ) {
 
   #/*----------------------------------*/
@@ -370,6 +370,8 @@ make_plot_edge_line <- function(
 
   #=== which way to move for the first to go inward ===#
   # ab_lines_data$int_check 
+
+  ab_xy_nml_p90 <- base_ab_lines_data$ab_xy_nml_p90
 
   if (create_plot_edge_line) {
 
