@@ -15,23 +15,7 @@ function(
   second_input = FALSE
 ) {
 
-  #/*=================================================*/
-  #' # Define functions
-  #/*=================================================*/
-  get_through_line <- function(geometry, radius) {
-
-    centroid <- st_coordinates(st_centroid(geometry))
-    end_point <- centroid + radius * ab_xy_nml
-    start_point <- centroid - radius * ab_xy_nml
-    return_line <- st_linestring(rbind(start_point, end_point)) %>% 
-      st_sfc() %>% 
-      st_set_crs(st_crs(geometry)) %>% 
-      st_as_sf()
-
-    return(return_line)
-
-  }
-
+  
   # /*=================================================*/
   #' # Prepare ab-lines and vectors
   # /*=================================================*/
@@ -79,7 +63,7 @@ function(
 
   #=== the distance between the ab-line and the line that connect the centroids of the intersecting sf ===#
   correction_dist <- st_distance(
-    get_through_line(int_group, radius), 
+    get_through_line(int_group, radius, ab_xy_nml), 
     plot_heading
   ) %>% 
   as.numeric()
@@ -97,7 +81,7 @@ function(
 
   new_dist <- 
   st_distance(
-    get_through_line(int_group_corrected, radius), 
+    get_through_line(int_group_corrected, radius, ab_xy_nml), 
     plot_heading
   ) %>% 
   as.numeric()
@@ -204,7 +188,7 @@ function(
     left_join(., as.data.frame(strips_shifted[, c("group", "geometry")]), by = "group") %>% 
     #=== draw a line that goes through the middle of the strips ===#
     mutate(through_line = list(
-      get_through_line(geometry, radius)
+      get_through_line(geometry, radius, ab_xy_nml)
     )) %>% 
     mutate(int_line  = list(
       st_intersection(x, through_line)
@@ -261,14 +245,16 @@ make_ab_lines_data <- function(
         exp_plot, 
         strip_id == min(strip_id) & plot_id == 1
       ),
-      radius
+      radius,
+      ab_xy_nml
     ),
     get_through_line(
       filter(
         exp_plot, 
         strip_id == max(strip_id) & plot_id == 1
       ),
-      radius
+      radius,
+      ab_xy_nml
     )
   ) %>% 
   mutate(ab_id = seq_len(nrow(.))) %>% 
@@ -1600,3 +1586,17 @@ create_strips <- function(field, plot_heading, plot_width, radius) {
   return(strips)
 
 }
+
+get_through_line <- function(geometry, radius, ab_xy_nml) {
+
+    centroid <- st_coordinates(st_centroid(geometry))
+    end_point <- centroid + radius * ab_xy_nml
+    start_point <- centroid - radius * ab_xy_nml
+    return_line <- st_linestring(rbind(start_point, end_point)) %>% 
+      st_sfc() %>% 
+      st_set_crs(st_crs(geometry)) %>% 
+      st_as_sf()
+
+    return(return_line)
+
+  }

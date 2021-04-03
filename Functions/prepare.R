@@ -11,6 +11,7 @@ library(parallel)
 library(tmap)
 library(stringr)
 library(jsonlite)
+library(measurements)
 library(tidyverse)
 
 #--- source functions from github accounts ---#
