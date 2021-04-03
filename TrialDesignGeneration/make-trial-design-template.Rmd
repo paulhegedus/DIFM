@@ -189,7 +189,7 @@ mutate(line_edge_id = NA) %>%
 #=== heading sf ===#
 mutate(ab_sf = list(
   plot_heading %>% 
-  get_shp_name(ffy, "TrialDesign", .) %>% 
+  here(ffy, "TrialDesign", .) %>% 
   st_read() %>% 
   make_sf_utm() 
 )) %>% 
@@ -240,6 +240,7 @@ pluck("gg_ab_line")
 #=== get the first one of the two if more than one ===#
 # plot_width <- trial_data_first$input_plot_width[[1]]
 # ab_line <- trial_data_first$ab_sf[[1]]
+# ab_line_type <- trial_data_first$ab_line_type[[1]]
 # machine_width <- trial_data_first$machine_width[[1]]
 # section_num <- trial_data_first$section_num[[1]]
 # headland_length <- trial_data_first$headland_length[[1]]

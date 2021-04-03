@@ -77,7 +77,7 @@ make_trial_design(
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_dist = 30, # default uses the max of the section width (minimum is 30)
   #=== angled harvesting ===#
-  plot_heading = "ab-line-straight-h",
+  plot_heading = "ab-line",
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
@@ -91,7 +91,7 @@ make_trial_design(
   # used in "ejca", ignored in "jcl"
   # max_jumps = c(NA, NA),
   #=== file name ===#
-  file_name_append = "straight",
+  file_name_append = NA,
   locally_run = TRUE
 )
 
