@@ -682,7 +682,12 @@ make_trial_design <- function(
   #' # Wrapping up
   #/*=================================================*/
   td_file_name <- file.path(
-    here(), "Data/Growers", ffy, "TrialDesign/make_trial_design.Rmd"
+    here(), "Data/Growers", ffy, 
+    paste0(
+      "TrialDesign/make_trial_design", 
+      ifelse(is.na(file_name_append), "", paste0("_", file_name_append)),
+      ".Rmd"
+    )
   )
 
   writeLines(td_rmd, con = td_file_name)
