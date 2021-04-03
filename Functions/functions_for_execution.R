@@ -640,25 +640,23 @@ make_trial_design <- function(
       "Error: you cannot use ejca for both inputs as it will create
       significant positive or negative correlations between the two inputs"
     ))
-  } else if (
+  } else {
     trial_data <- trial_data %>% 
-    mutate(design_type = design_type) 
-  )
+    mutate(design_type = design_type)
+  }
 
   #=== head distance ===#
   if (is.na(head_dist)) {
-    head_dist <- 2 * max(trial_data$machine_width) %>% 
-      conv_unit("ft", "m")
+    head_dist <- 2 * max(trial_data$machine_width)
   } else {
-    head_dist <- conv_unit(head_dist, "ft", "m")
+    head_dist <- head_dist
   }
 
   #=== side distance ===#
   if (is.na(side_dist)) {
-    side_dist <- max(max(trial_data$section_width), 30) %>% 
-      conv_unit("ft", "m")
+    side_dist <- max(max(trial_data$section_width), 30)
   } else {
-    side_dist <- conv_unit(side_dist, "ft", "m")
+    side_dist <- side_dist
   }
 
   trial_data$headland_length <- head_dist

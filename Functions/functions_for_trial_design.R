@@ -6,6 +6,7 @@ make_trial_plots <-
 function(
   field, 
   ab_line, 
+  ab_line_type, 
   plot_width, 
   machine_width,
   section_num,
@@ -180,7 +181,6 @@ function(
   #   geom_sf(data = filter(final_exp_plots, group == 157) %>% pull(through_line) %>% .[[1]]) +
   #   coord_sf(datum = st_crs(field))
 
-  # final_exp_plots$group %>% max
 
   final_exp_plots <- field %>% 
     #=== create an inner buffer ===#
@@ -212,6 +212,9 @@ function(
     )) %>% 
     filter(length(int_line) != 0) %>% 
     #=== move int_points inward by (head_dist - side_distance) ===#
+
+    int_line <- final_exp_plots$int_line
+    
     mutate(new_center_line = list(
       move_points_inward(
         int_line, 
