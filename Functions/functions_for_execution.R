@@ -635,14 +635,21 @@ make_trial_design <- function(
     #=== if two inputs and no design_type is specified ===#
     trial_data <- trial_data %>% 
     mutate(design_type = ifelse(form == "seed", "jcl", "ejca")) 
-  } else if (all(design_type == "ejca")) {
+  } else if (length(design_type) == 1) {
     return(print(
-      "Error: you cannot use ejca for both inputs as it will create
-      significant positive or negative correlations between the two inputs"
-    ))
+      "Error: you did not provide two design type values even though this is a two
+      input-case."
+    )
   } else {
     trial_data <- trial_data %>% 
     mutate(design_type = design_type)
+  }
+
+  if (all(trial_data$design_type == "ejca")) {
+    return(print(
+      "Error: you cannot use ejca for both inputs as it will create
+      significant positive or negative correlations between the two inputs"
+    )
   }
 
   #=== head distance ===#
