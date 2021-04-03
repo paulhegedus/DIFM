@@ -188,8 +188,7 @@ rowwise() %>%
 mutate(line_edge_id = NA) %>% 
 #=== heading sf ===#
 mutate(ab_sf = list(
-  plot_heading %>% 
-  here(ffy, "TrialDesign", .) %>% 
+  get_shp_name(ffy, "TrialDesign", paste0(plot_heading, ".shp")) %>% 
   st_read() %>% 
   make_sf_utm() 
 )) %>% 

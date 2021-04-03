@@ -1108,7 +1108,7 @@ st_extend_line <- function(line, multiplier) {
 get_shp_name <- function(ffy, folder, key) {
 
   #=== remove .shp if it is included in the file name ===#
-  key <- gsub(".shp", "", key)
+  # key <- gsub(".shp", "", key)
 
   file_name <- here("Data", "Growers", ffy, folder) %>% 
     list.files(recursive = TRUE, full.names = TRUE) %>%
