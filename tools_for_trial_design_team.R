@@ -38,16 +38,12 @@ get_td_parameters(ffy, "fp_2021_TD.json")
 #--- force headland to be 100 feet ---#
 
 make_trial_design(
-  ffy = field_year_ls[16], 
+  ffy = field_year_ls[17], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_dist = 30, # default uses the max of the section width (minimum is 30)
   #=== angled harvesting ===#
-  # harvest angle relative to the planter/applicator
-  # TRUE: uses both harvester and planter/applicator ab-lines or paste data
-  # numeric: uses only planter/applicator ab-line or past data and apply the angle
-  # rotation is clockwise 
-  harvest_angle = 0, 
+  plot_heading = "ab-line-angled-h",
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
@@ -56,14 +52,12 @@ make_trial_design(
   # rates = list(c(40, 50, 60, 70, 80)),
   #=== number of levels ===#
   # used in "jcl", ignored in "ejca"
-  num_levels = c(5, 5), 
+  # num_levels = c(6, 6), 
   #=== maximum jump allowed  ===#
   # used in "ejca", ignored in "jcl"
-  max_jumps = c(NA, NA),
-  #=== force start point ===#
-  # lock_start_point = c(TRUE, FALSE),
+  # max_jumps = c(NA, NA),
   #=== file name ===#
-  file_name_append = "straight"
+  file_name_append = "angled"
 )
 
 

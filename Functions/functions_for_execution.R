@@ -626,7 +626,11 @@ make_trial_design <- function(
 
   #=== trial design type ===#
   if (nrow(trial_data) == 1) {
-    trial_data$design_type <- "ejca"
+    if (is.na(design_type)) {
+      trial_data$design_type <- "ejca"
+    } else {
+      trial_data$design_type <- design_type[1]
+    }
   } else if (is.na(design_type)) {
     #=== if two inputs and no design_type is specified ===#
     trial_data <- trial_data %>% 
