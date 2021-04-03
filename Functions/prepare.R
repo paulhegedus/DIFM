@@ -21,7 +21,8 @@ source("https://github.com/tmieno2/DIFM/blob/master/Functions/functions_for_anal
 source("https://github.com/tmieno2/DIFM/blob/master/Functions/functions_for_execution.R?raw=TRUE")
 source("https://github.com/tmieno2/DIFM/blob/master/Functions/functions_for_organization.R?raw=TRUE")
 source("https://github.com/tmieno2/DIFM/blob/master/Functions/functions_for_processing.R?raw=TRUE")
-source("https://github.com/tmieno2/DIFM/blob/master/Functions/functions_for_trial_design.R?raw=TRUE")
+# source("https://github.com/tmieno2/DIFM/blob/master/Functions/functions_for_trial_design.R?raw=TRUE")
+source("https://github.com/tmieno2/DIFM/blob/h_angle/Functions/functions_for_trial_design.R?raw=TRUE")
 
 #/*=================================================*/
 #' # Figure theme
