@@ -639,7 +639,7 @@ make_trial_design <- function(
     return(print(
       "Error: you did not provide two design type values even though this is a two
       input-case."
-    )
+    ))
   } else {
     trial_data <- trial_data %>% 
     mutate(design_type = design_type)
@@ -649,7 +649,7 @@ make_trial_design <- function(
     return(print(
       "Error: you cannot use ejca for both inputs as it will create
       significant positive or negative correlations between the two inputs"
-    )
+    ))
   }
 
   #=== head distance ===#
