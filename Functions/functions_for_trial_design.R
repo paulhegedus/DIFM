@@ -272,7 +272,7 @@ function(
 }
 
 make_ab_lines <- function(
-  ab_lines,
+  ab_sf,
   ab_lines_data,
   base_ab_lines_data,
   plot_width, 
@@ -832,7 +832,7 @@ st_shift <- function(data_sf, shift, merge = TRUE) {
 #' # Get an ab-line
 #/*=================================================*/
 
-make_ab_line <- function(past_aa_input, field) {
+make_heading <- function(past_aa_input, field) {
 
   temp_sf <- dplyr::select(past_aa_input, geometry)
 

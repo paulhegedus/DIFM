@@ -194,7 +194,7 @@ mutate(ab_sf = list(
 )) %>% 
 mutate(ab_sf = list(
   if ("POINT" %in% st_geometry(ab_sf)) {
-    make_ab_line(ab_sf)
+    make_heading(ab_sf)
   } else {
     #=== pick only the first one ===#
     ab_sf[1, ]
@@ -392,7 +392,7 @@ if (num_unique_plot_width == 1 & nrow(trial_data_pa) == 1) {
   #=== make ab-lines ===#
   mutate(ab_lines = list(
     ab_lines <- make_ab_lines(
-      ab_lines = ab_sf,
+      ab_sf = ab_sf,
       ab_lines_data = ab_lines_data,
       base_ab_lines_data = base_ab_lines_data,
       plot_width = input_plot_width, 
