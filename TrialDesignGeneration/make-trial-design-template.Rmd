@@ -412,7 +412,9 @@ if (num_unique_plot_width == 1 & nrow(trial_data_pa) == 1) {
 trial_data_eh <-
 trial_data_e %>% 
 mutate(ab_lines = list(
-  st_transform(ab_lines, 4326)
+  if (!is.null(ab_lines)) {
+    st_transform(ab_lines, 4326)
+  }
 )) %>% 
 #=== dissolve the experimental plots as a single polygon ===#
 mutate(experiment_plots_dissolved = list(
