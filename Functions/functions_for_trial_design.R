@@ -726,6 +726,7 @@ assign_rates <- function(
       mutate(strip_plot_data = list(
         strip_plot_data[, group_in_strip := .GRP, by = strip_id]
       )) %>% 
+      #=== reverse the order of plots alternately ===#
       mutate(strip_plot_data = list(
         lapply(
           unique(strip_plot_data$strip_id),

@@ -692,7 +692,7 @@ make_trial_design <- function(
     here(), "Data/Growers", ffy, 
     paste0(
       "TrialDesign/make_trial_design", 
-      ifelse(is.na(file_name_append), "", paste0("_", file_name_append)),
+      ifelse(is.na(file_name_append) | file_name_append == "", "", paste0("_", file_name_append)),
       ".Rmd"
     )
   )
