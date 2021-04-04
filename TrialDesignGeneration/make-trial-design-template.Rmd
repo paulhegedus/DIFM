@@ -288,7 +288,7 @@ mutate(ab_lines_data = list(
 #=== make ab-lines ===#
 mutate(ab_lines = list(
   ab_lines <- make_ab_lines(
-    ab_lines = ab_sf,
+    ab_sf = ab_sf,
     ab_lines_data = ab_lines_data,
     base_ab_lines_data = base_ab_lines_data,
     plot_width = input_plot_width, 
@@ -343,7 +343,7 @@ if (num_unique_plot_width == 1 & nrow(trial_data_pa) == 1) {
   #=== make ab-lines ===#
   mutate(ab_lines = list(
     ab_lines <- make_ab_lines(
-      ab_lines = ab_sf,
+      ab_sf = ab_sf,
       ab_lines_data = ab_lines_data,
       base_ab_lines_data = base_ab_lines_data,
       plot_width = input_plot_width, 
