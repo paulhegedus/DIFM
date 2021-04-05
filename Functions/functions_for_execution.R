@@ -687,7 +687,7 @@ make_trial_design <- function(
   gsub("_json-file-here_", json_file, .) %>% 
   gsub(
     "_boundary-file-here_", 
-    , ifelse (is.na(boundary), "boundary", boundary)
+    ifelse (is.na(boundary), "boundary", boundary),
     .
   )  
   
