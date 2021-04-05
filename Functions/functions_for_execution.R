@@ -592,6 +592,7 @@ make_trial_design <- function(
     json_file,
     head_dist = NA, 
     side_dist = NA,
+    boundary = NA,
     plot_heading = NA, # the name of the ab-line file
     ab_line_type = "free", # one of "free", "lock", "non"
     design_type = NA,
@@ -683,7 +684,13 @@ make_trial_design <- function(
     locally_run = locally_run
   ) %>% 
   gsub("_field-year-here_", ffy, .) %>% 
-  gsub("_json-file-here_", json_file, .) 
+  gsub("_json-file-here_", json_file, .) %>% 
+  gsub(
+    "_boundary-file-here_", 
+    , ifelse (is.na(boundary), "boundary", boundary)
+    .
+  )  
+  
 
   #/*=================================================*/
   #' # Wrapping up

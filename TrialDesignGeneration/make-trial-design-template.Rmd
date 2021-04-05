@@ -159,7 +159,9 @@ kable()
 #/*=================================================*/
 #' # Field boundary
 #/*=================================================*/
-field_sf <- get_shp_name(ffy, "TrialDesign", "boundary") %>% 
+boundary_file <- "_boundary-file-here_"
+
+field_sf <- get_shp_name(ffy, "TrialDesign", boundary_file) %>% 
   st_read() %>% 
   make_sf_utm() %>% 
   st_combine()
