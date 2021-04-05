@@ -63,17 +63,18 @@ make_trial_design(
 #/*=================================================*/
 #' # DevTeam
 #/*=================================================*/
-ffy <- field_year_ls[28]
+ffy <- field_year_ls[38]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
 make_trial_design(
-  ffy = field_year_ls[20], 
+  ffy = field_year_ls[36], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_dist = 30, # default uses the max of the section width (minimum is 30)
+  boundary = "boundary-west",
   #=== angled harvesting ===#
-  plot_heading = "ab-line-angled-h",
+  plot_heading = "ab-line-s-west",
   ab_line_type = "non", # pick from "non", "free", "lock"
   #=== design type ===#
   # jcl: jump-conscious latin
@@ -88,7 +89,7 @@ make_trial_design(
   # used in "ejca", ignored in "jcl"
   # max_jumps = c(NA, NA),
   #=== file name ===#
-  file_name_append = "angled",
+  file_name_append = "",
   locally_run = TRUE
 )
 

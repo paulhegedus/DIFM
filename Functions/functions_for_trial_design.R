@@ -151,7 +151,7 @@ function(
   side_length <- 1.5 * side_length
 
   # ggplot(final_exp_plots) +
-  #   geom_sf(aes(fill = strip_id))
+  #   geom_sf(aes(fill = factor(strip_id)))
 
   # ggplot() +
   #   geom_sf(data = field) +
@@ -159,7 +159,7 @@ function(
   #   geom_sf(data = filter(final_exp_plots, group == 157) %>% pull(through_line) %>% .[[1]]) +
   #   coord_sf(datum = st_crs(field))
 
-  final_exp_plots <- field %>% 
+  int_lines <- field %>% 
     #=== create an inner buffer ===#
     st_buffer(- side_length) %>% 
     #=== intersect strips and the field ===#
@@ -175,7 +175,7 @@ function(
     )) %>% 
     pluck("indiv_polygon") %>% 
     reduce(rbind) %>% 
-    .[, id_in_group := 1:.N, by = group] %>%
+    .[, poly_id_in_group := 1:.N, by = group] %>%
     st_as_sf() %>% 
     rowwise() %>% 
     #=== get the original strip geometry by group ===#
@@ -185,13 +185,26 @@ function(
       get_through_line(geometry, radius, ab_xy_nml)
     )) %>% 
     mutate(int_line  = list(
-      st_intersection(x, through_line)
+      #=== multistring can be created here ===#
+      # Note: when there is a hole in the field, we can have
+      # a multilinestring. 
+      st_intersection(x, through_line) %>% 
+        #=== separate multiline string into to individual linestring ===#
+        st_cast("LINESTRING") %>% 
+        st_as_sf() %>% 
+        mutate(group = group) %>% 
+        mutate(poly_id_in_group = poly_id_in_group)  
     )) %>% 
     filter(length(int_line) != 0) %>% 
+    pluck("int_line") %>% 
+    reduce(rbind)
+
+  final_exp_plots <- int_lines %>% 
+    rowwise() %>% 
     #=== move int_points inward by (head_dist - side_distance) ===#
     mutate(new_center_line = list(
       move_points_inward(
-        int_line, 
+        x, 
         max(headland_length - side_length, 0),
         ab_xy_nml
       )  
@@ -201,7 +214,7 @@ function(
       as.numeric(st_length(new_center_line))
     )) %>% 
     mutate(plot_data = list(
-      get_plot_length(
+      get_plot_data(
         tot_plot_length, 
         min_length,
         mean_length
@@ -216,12 +229,11 @@ function(
         ab_xy_nml,
         ab_xy_nml_p90
       ) %>% 
-      mutate(group = group) %>% 
-      mutate(id_in_group = id_in_group)  
+      mutate(group = group)  
     )) %>% 
     pluck("plots") %>% 
     reduce(rbind) %>% 
-    rename(strip_id = group, group_in_strip = id_in_group) %>%
+    rename(strip_id = group) %>%
     mutate(strip_id = strip_id - min(strip_id) + 1) %>% 
     st_set_crs(st_crs(field))
 
@@ -235,7 +247,7 @@ function(
       filter(
         final_exp_plots, 
         strip_id == min(strip_id) & plot_id == 1
-      ),
+      ) %>% slice(1),
       radius,
       ab_xy_nml
     ),
@@ -243,7 +255,7 @@ function(
       filter(
         final_exp_plots, 
         strip_id == max(strip_id) & plot_id == 1
-      ),
+      ) %>% slice(1),
       radius,
       ab_xy_nml
     )
@@ -1204,7 +1216,7 @@ move_points_inward <- function(line, dist, ab_xy_nml) {
 
 }
 
-get_plot_length <- function(tot_plot_length, min_length, mean_length) {
+get_plot_data <- function(tot_plot_length, min_length, mean_length) {
 
   num_comp_plots <-  tot_plot_length %/% mean_length
   remainder <- tot_plot_length %% mean_length
