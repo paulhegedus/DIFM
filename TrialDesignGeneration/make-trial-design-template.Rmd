@@ -196,7 +196,7 @@ mutate(ab_sf = list(
 )) %>% 
 mutate(ab_sf = list(
   if ("POINT" %in% st_geometry_type(ab_sf)) {
-    make_heading(ab_sf)
+    make_heading(ab_sf, field_sf)
   } else {
     #=== pick only the first one ===#
     ab_sf[1, ]
