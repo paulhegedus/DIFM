@@ -662,7 +662,7 @@ make_trial_design <- function(
 
   #=== side distance ===#
   if (is.na(side_dist)) {
-    side_dist <- max(max(trial_data$section_width), 30)
+    side_dist <- max(max(trial_data$section_width), conv_unit(30, "ft", "m"))
   } else {
     side_dist <- side_dist
   }
