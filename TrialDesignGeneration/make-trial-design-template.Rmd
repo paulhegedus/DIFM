@@ -195,7 +195,7 @@ mutate(ab_sf = list(
   make_sf_utm() 
 )) %>% 
 mutate(ab_sf = list(
-  if ("POINT" %in% st_geometry(ab_sf)) {
+  if ("POINT" %in% st_geometry_type(ab_sf)) {
     make_heading(ab_sf)
   } else {
     #=== pick only the first one ===#
