@@ -382,7 +382,8 @@ if (num_unique_plot_width == 1 & nrow(trial_data_pa) == 1) {
       machine_width = machine_width, 
       section_num = section_num, 
       headland_length = headland_length,
-      side_length = side_length
+      side_length = side_length,
+      second_input = TRUE
     )
   )) %>% 
   mutate(exp_plots = list(
