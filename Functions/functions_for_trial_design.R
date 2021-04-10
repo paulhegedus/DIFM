@@ -80,7 +80,7 @@ function(
   ) %>% 
   as.numeric()
 
-  if (ab_line_type == "lock"){
+  if (second_input == FALSE & ab_line_type == "lock"){
 
     # move the intersecting strip so the ab-line goes through the center
     if (new_dist > correction_dist) {
@@ -114,7 +114,7 @@ function(
         section_width * ab_xy_nml_p90 / 2
       )
     }
-  } else if (second_input == FALSE) {
+  } else if (second_input == FALSE & ab_line_type != "lock") {
     #=== if the first input ===# 
     # Note: for the first input, the cell center is aligned to the 
     # supplied ab-line (which is not the final ab-line)
