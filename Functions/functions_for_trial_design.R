@@ -101,7 +101,12 @@ function(
     section_width <- machine_width / section_num
     num_sections_in_plot <- round(plot_width / section_width)
 
-    if (num_sections_in_plot %% 2 == 1) {
+    # Note: if odd, the center of the machine is in the middle of the section
+    is_sec_in_machine_odd <- section_num %% 2 == 1 
+    # Note: if odd, the center of the plot is in the middle of the section
+    is_sec_in_plot_odd <- num_sections_in_plot %% 2 == 1 # odd
+
+    if ((!is_sec_in_machine_odd & is_sec_in_plot_odd) | (is_sec_in_machine_odd & !is_sec_in_plot_odd)) {
     # if odd, then no need to shift
       strips_shifted <- 
       st_shift(
