@@ -91,12 +91,17 @@ function(
       strips_shifted <- st_shift(strips, correction_dist * ab_xy_nml_p90)
     }
 
+  # ggplot() +
+  #   geom_sf(data = strips_shifted, aes(fill = "group")) +
+  #   geom_sf(data = field, col = "black", fill = NA) +
+  #   geom_sf(data = plot_heading, col = "red")
+
     #=== round is for weird cases like harvester width = 62.5 ===#
     # there is no hope for aligning things correctly in such a case
     section_width <- machine_width / section_num
     num_sections_in_plot <- round(plot_width / section_width)
 
-    if (num_sections_in_plot %% 2 == 0) {
+    if (num_sections_in_plot %% 2 == 1) {
     # if odd, then no need to shift
       strips_shifted <- 
       st_shift(
