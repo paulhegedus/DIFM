@@ -414,6 +414,7 @@ if (num_unique_plot_width == 1 & nrow(trial_data_pa) == 1) {
 
 trial_data_eh <-
 trial_data_e %>% 
+rowwise() %>% 
 mutate(ab_lines = list(
   if (!is.null(ab_lines)) {
     st_transform(ab_lines, 4326)
