@@ -662,13 +662,13 @@ make_trial_design <- function(
 
   #=== side distance ===#
   if (is.na(side_dist)) {
-    side_dist <- max(max(trial_data$section_width), conv_unit(30, "ft", "m"))
+    side_dist <- max(max(trial_data$section_width), 30)
   } else {
     side_dist <- side_dist
   }
 
-  trial_data$headland_length <- head_dist
-  trial_data$side_length <- side_dist
+  trial_data$headland_length <- conv_unit(head_dist, "ft", "m")
+  trial_data$side_length <- conv_unit(side_dist, "ft", "m")
 
   saveRDS(
     trial_data,
