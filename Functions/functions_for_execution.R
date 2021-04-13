@@ -594,6 +594,8 @@ make_trial_design <- function(
     side_dist = NA,
     boundary = NA,
     plot_heading = NA, # the name of the ab-line file
+    min_plot_width = 200,
+    max_plot_width = 300,
     ab_line_type = "free", # one of "free", "lock", "non"
     design_type = NA,
     rates = NA,
@@ -618,6 +620,8 @@ make_trial_design <- function(
     machine_width = conv_unit(machine_width, "ft", "m"),
     section_width = machine_width / section_num,
     plot_heading = plot_heading, 
+    min_plot_width = min_plot_width,
+    max_plot_width = max_plot_width,
     ab_line_type = ab_line_type, 
     rates = rates,
     num_levels = num_levels, 

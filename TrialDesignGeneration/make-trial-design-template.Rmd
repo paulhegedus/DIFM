@@ -278,7 +278,9 @@ mutate(exp_data = list(
     machine_width = machine_width, 
     section_num = section_num, 
     headland_length = headland_length,
-    side_length = side_length
+    side_length = side_length,
+    min_plot_width  = min_plot_width, 
+    max_plot_width = max_plot_width 
   )
 )) %>% 
 mutate(exp_plots = list(
@@ -383,6 +385,8 @@ if (num_unique_plot_width == 1 & nrow(trial_data_pa) == 1) {
       section_num = section_num, 
       headland_length = headland_length,
       side_length = side_length,
+      min_plot_width  = min_plot_width, 
+      max_plot_width = max_plot_widt,
       second_input = TRUE
     )
   )) %>% 
