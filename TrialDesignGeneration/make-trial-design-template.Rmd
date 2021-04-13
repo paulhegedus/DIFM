@@ -533,7 +533,8 @@ trial_data_r <- trial_data_eh %>%
       form == "seed" ~ "S",
       form %in% c("uan28", "uan32", "urea", "NH3") ~ "N",
       #=== needs to change this ===#
-      form == c("potash") ~ "K"
+      form == c("potash") ~ "K",
+      form == "chlorine" ~ "C"
     )
   )) %>% 
   mutate(trial_design = list(
@@ -549,7 +550,8 @@ trial_data_r <- trial_data_eh %>%
         form == "seed" ~ "tgts_K",
         form %in% c("uan28", "uan32", "urea", "NH3") ~ "tgtn",
         #=== needs to change this ===#
-        form == c("potash") ~ "tgtk"
+        form == c("potash") ~ "tgtk",
+        form == "chlorine" ~ "C"
       )
     ) %>% 
     st_transform(4326) 

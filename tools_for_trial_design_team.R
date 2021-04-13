@@ -31,19 +31,19 @@ field_year_ls <- field_data$field_year
 #' # Make trial designs
 #/*=================================================*/
 
-ffy <- field_year_ls[17]
+ffy <- field_year_ls[53]
 
 get_td_parameters(ffy, "fp_2021_TD.json")
 
 #--- force headland to be 100 feet ---#
 make_trial_design(
-  ffy = field_year_ls[48], 
+  ffy = field_year_ls[53], 
   json_file = "fp_2021_TD.json", 
   # head_dist = 120, # default uses 2 * the max of the input plot widths
   # side_dist = 30, # default uses the max of the section width (minimum is 30)
   #=== angled harvesting ===#
-  plot_heading = "ab-lines-s",
-  ab_line_type = "free", # pick from "non", "free", "lock"
+  plot_heading = "ab-lines-cl",
+  ab_line_type = "lock", # pick from "non", "free", "lock"
   #=== design type ===#
   # jcl: jump-conscious latin
   # ejca: extra jump-conscious alternate strip
