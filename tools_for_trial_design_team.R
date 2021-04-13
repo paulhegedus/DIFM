@@ -43,6 +43,8 @@ make_trial_design(
   side_dist = 60, # default uses the max of the section width (minimum is 30)
   #=== angled harvesting ===#
   plot_heading = "ab-lines-cl",
+  min_plot_length = 200,
+  max_plot_length = 200,
   ab_line_type = "lock", # pick from "non", "free", "lock"
   #=== design type ===#
   # jcl: jump-conscious latin

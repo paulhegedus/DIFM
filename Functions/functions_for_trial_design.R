@@ -12,8 +12,8 @@ function(
   section_num,
   headland_length, 
   side_length,
-  min_plot_width, 
-  max_plot_width, 
+  min_plot_length, 
+  max_plot_length, 
   second_input = FALSE
 ) {
 
@@ -156,10 +156,10 @@ function(
   #/*=================================================*/
   #' # Create experiment plots
   #/*=================================================*/
-  min_length <- conv_unit(min_plot_width, "ft", "m") # (200 feet)
-  max_length <- conv_unit(max_plot_width, "ft", "m") #  (300 feet) 
+  min_length <- conv_unit(min_plot_length, "ft", "m") # (200 feet)
+  max_length <- conv_unit(max_plot_length, "ft", "m") #  (300 feet) 
   mean_length <- round((min_length + max_length)/2, digits = 0) %>% 
-    conv_unit(, "ft", "m") # (240 feet)
+    conv_unit("ft", "m") # (240 feet)
 
   side_length <- 1.5 * side_length
 
