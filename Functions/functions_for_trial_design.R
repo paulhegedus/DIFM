@@ -9,6 +9,7 @@ function(
   ab_line_type, 
   plot_width, 
   machine_width,
+  harvester_width,
   section_num,
   headland_length, 
   side_length,
@@ -283,7 +284,7 @@ function(
       as.numeric()
     )) %>% 
     mutate(remainder = list(
-      dist_to_base %% section_width 
+      dist_to_base %% harvester_width 
     )) %>% 
     mutate(shifted_first_plot = list(
       st_shift(first_plot, remainder * ab_xy_nml) 
@@ -292,7 +293,7 @@ function(
       get_through_line(shifted_first_plot$geometry, radius, ab_xy_nml_p90) 
     )) %>% 
     mutate(new_remainder  = list(
-      as.numeric(st_distance(base_line, shifted_line)) %% section_width 
+      as.numeric(st_distance(base_line, shifted_line)) %% harvester_width 
     )) %>% 
     mutate(is_close_enough = list(
       # if the distance is close enough moving in the wrong
