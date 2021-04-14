@@ -1241,6 +1241,10 @@ get_plot_data <- function(tot_plot_length, min_length, mean_length) {
     } else {
       return_data[, plot_length := remainder]
     }
+  } else if (min_length == mean_length) { # no flexibility in plot length allowed
+    return_data <- return_data %>% 
+      .[seq_len(num_comp_plots), ] %>% 
+      .[, plot_length := mean_length]
   } else if (remainder >= (2 * min_length - mean_length)) {
     # make the last two short
     return_data[, plot_length := c(
