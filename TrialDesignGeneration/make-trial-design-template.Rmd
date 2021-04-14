@@ -280,7 +280,9 @@ mutate(exp_data = list(
     headland_length = headland_length,
     side_length = side_length,
     min_plot_length  = min_plot_length, 
-    max_plot_length = max_plot_length 
+    max_plot_length = max_plot_length,
+    perpendicular = perpendicular,
+    second_input = FALSE 
   )
 )) %>% 
 mutate(exp_plots = list(
@@ -387,6 +389,7 @@ if (num_unique_plot_width == 1 & nrow(trial_data_pa) == 1) {
       side_length = side_length,
       min_plot_length  = min_plot_length, 
       max_plot_length = max_plot_length,
+      perpendicular = perpendicular,
       second_input = TRUE
     )
   )) %>% 

@@ -14,6 +14,7 @@ function(
   side_length,
   min_plot_length, 
   max_plot_length, 
+  perpendicular,
   second_input = FALSE
 ) {
 

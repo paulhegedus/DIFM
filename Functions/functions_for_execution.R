@@ -594,6 +594,7 @@ make_trial_design <- function(
     side_dist = NA,
     boundary = NA,
     plot_heading = NA, # the name of the ab-line file
+    perpendicular = FALSE,
     min_plot_length = 200,
     max_plot_length = 300,
     ab_line_type = "free", # one of "free", "lock", "non"
@@ -620,6 +621,7 @@ make_trial_design <- function(
     machine_width = conv_unit(machine_width, "ft", "m"),
     section_width = machine_width / section_num,
     plot_heading = plot_heading, 
+    perpendicular = perpendicular, 
     min_plot_length = min_plot_length,
     max_plot_length = max_plot_length,
     ab_line_type = ab_line_type, 
