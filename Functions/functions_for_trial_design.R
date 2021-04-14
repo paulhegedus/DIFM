@@ -1097,6 +1097,7 @@ get_td_parameters <- function(
   }
   
   input_data <- arrange(input_data, desc(input_plot_width))
+  input_data$harvester_width <- field_data$h_width[[1]]
 
   return(input_data)
 
