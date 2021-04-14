@@ -251,10 +251,14 @@ function(
 
   if (perpendicular) {
 
-  final_exp_plots_hadjsuted$shifted_plots
-  final_exp_plots_hadjsuted$remainder
-  final_exp_plots_hadjsuted$new_remainder
-  final_exp_plots_hadjsuted$is_close_enough
+  # final_exp_plots_hadjsuted$shifted_plots
+  # final_exp_plots_hadjsuted$remainder
+  # final_exp_plots_hadjsuted$new_remainder
+  # final_exp_plots_hadjsuted$is_close_enough
+
+  # ggplot() +
+  #   geom_sf(data = final_exp_plots_hadjsuted, col = "red", fill = NA) +
+  #   geom_sf(data = final_exp_plots, col = "blue", fill = NA)
 
   # ggplot() +
   #   geom_sf(data = final_exp_plots_hadjsuted$shifted_first_plot[[13]], col = "red", fill = NA) +
@@ -262,7 +266,7 @@ function(
   #   geom_sf(data = final_exp_plots_hadjsuted$perpendicular_line[[13]], col = "red", fill = NA) +
   #   geom_sf(data = final_exp_plots_hadjsuted$shifted_line[[13]], col = "blue", fill = NA) 
   
-    final_exp_plots_hadjsuted <- final_exp_plots %>% 
+    final_exp_plots <- final_exp_plots %>% 
     nest_by(strip_id) %>% 
     mutate(first_plot = list(
       filter(data, plot_id == 1)
@@ -299,11 +303,10 @@ function(
     )) %>% 
     mutate(shifted_plots = list(
       st_shift(data, shift_direction * remainder * ab_xy_nml)
-    ))
-
-
+    )) %>% 
+    pluck("shifted_plots") %>% 
+    reduce(rbind)
     
-
   }
 
 #/*----------------------------------*/
