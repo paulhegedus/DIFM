@@ -620,6 +620,7 @@ make_trial_design <- function(
     input_plot_width = conv_unit(input_plot_width, "ft", "m"),
     machine_width = conv_unit(machine_width, "ft", "m"),
     section_width = machine_width / section_num,
+    harvester_width = conv_unit(harvester_width, "ft", "m"),
     plot_heading = plot_heading, 
     perpendicular = perpendicular, 
     min_plot_length = min_plot_length,
@@ -661,20 +662,24 @@ make_trial_design <- function(
 
   #=== head distance ===#
   if (is.na(head_dist)) {
+    #=== machine width converted above ===#
     head_dist <- 2 * max(trial_data$machine_width)
   } else {
-    head_dist <- head_dist
+    #=== conversion necessary ===#
+    head_dist <- conv_unit(head_dist, "ft", "m")
   }
 
   #=== side distance ===#
   if (is.na(side_dist)) {
+    #=== section width converted above ===#
     side_dist <- max(max(trial_data$section_width), 30)
   } else {
-    side_dist <- side_dist
+    #=== conversion necessary ===#
+    side_dist <- conv_unit(side_dist, "ft", "m")
   }
 
-  trial_data$headland_length <- conv_unit(head_dist, "ft", "m")
-  trial_data$side_length <- conv_unit(side_dist, "ft", "m")
+  trial_data$headland_length <- head_dist
+  trial_data$side_length <- side_dist
 
   saveRDS(
     trial_data,
