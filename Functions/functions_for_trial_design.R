@@ -159,7 +159,7 @@ function(
   #/*=================================================*/
   min_length <- conv_unit(min_plot_length, "ft", "m") # (200 feet)
   max_length <- conv_unit(max_plot_length, "ft", "m") #  (300 feet) 
-  mean_length <- round((min_length + max_length)/2, digits = 0)
+  mean_length <- (min_length + max_length) / 2
 
   side_length <- 1.5 * side_length
 
