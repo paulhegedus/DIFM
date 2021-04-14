@@ -1011,7 +1011,7 @@ get_td_parameters <- function(
 
   #--- convert min_rate and max_rate into n_form units ---#
   # min_rate, max_rate, and base_rate are all in N-equivalent (lbs)
-  n_parameters <- td_parameters[form != "seed" & form != "chlorine"] 
+  n_parameters <- td_parameters[form %in% c("uan28", "uan32", "urea", "NH3")] 
 
   if (nrow(n_parameters) > 0) {
     n_parameters <- n_parameters %>%
