@@ -249,6 +249,63 @@ function(
     mutate(strip_id = strip_id - min(strip_id) + 1) %>% 
     st_set_crs(st_crs(field))
 
+  if (perpendicular) {
+
+  final_exp_plots_hadjsuted$shifted_plots
+  final_exp_plots_hadjsuted$remainder
+  final_exp_plots_hadjsuted$new_remainder
+  final_exp_plots_hadjsuted$is_close_enough
+
+  # ggplot() +
+  #   geom_sf(data = final_exp_plots_hadjsuted$shifted_first_plot[[13]], col = "red", fill = NA) +
+  #   geom_sf(data = final_exp_plots_hadjsuted$first_plot[[13]], col = "blue", fill = NA) +
+  #   geom_sf(data = final_exp_plots_hadjsuted$perpendicular_line[[13]], col = "red", fill = NA) +
+  #   geom_sf(data = final_exp_plots_hadjsuted$shifted_line[[13]], col = "blue", fill = NA) 
+  
+    final_exp_plots_hadjsuted <- final_exp_plots %>% 
+    nest_by(strip_id) %>% 
+    mutate(first_plot = list(
+      filter(data, plot_id == 1)
+    )) %>% 
+    mutate(perpendicular_line = list(
+      get_through_line(first_plot$geometry, radius, ab_xy_nml_p90)  
+    )) %>% 
+    ungroup() %>% 
+    mutate(base_line = .[1,]$perpendicular_line) %>% 
+    rowwise() %>% 
+    mutate(dist_to_base = list(
+      st_distance(perpendicular_line, base_line) %>% 
+      as.numeric()
+    )) %>% 
+    mutate(remainder = list(
+      dist_to_base %% section_width 
+    )) %>% 
+    mutate(shifted_first_plot = list(
+      st_shift(first_plot, remainder * ab_xy_nml) 
+    )) %>% 
+    mutate(shifted_line = list(
+      get_through_line(shifted_first_plot$geometry, radius, ab_xy_nml_p90) 
+    )) %>% 
+    mutate(new_remainder  = list(
+      as.numeric(st_distance(base_line, shifted_line)) %% section_width 
+    )) %>% 
+    mutate(is_close_enough = list(
+      # if the distance is close enough moving in the wrong
+      # direction does not hurt
+      new_remainder < 1e-6
+    )) %>% 
+    mutate(shift_direction = list(
+      ifelse(is_close_enough, 1, -1)
+    )) %>% 
+    mutate(shifted_plots = list(
+      st_shift(data, shift_direction * remainder * ab_xy_nml)
+    ))
+
+
+    
+
+  }
+
 #/*----------------------------------*/
 #' ## ab-lines data
 #/*----------------------------------*/  
