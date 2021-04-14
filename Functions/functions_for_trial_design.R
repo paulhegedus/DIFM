@@ -303,7 +303,8 @@ function(
       ifelse(is_close_enough, 1, -1)
     )) %>% 
     mutate(shifted_plots = list(
-      st_shift(data, shift_direction * remainder * ab_xy_nml)
+      st_shift(data, shift_direction * remainder * ab_xy_nml) %>% 
+        mutate(strip_id = strip_id)
     )) %>% 
     pluck("shifted_plots") %>% 
     reduce(rbind)
