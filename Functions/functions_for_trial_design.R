@@ -261,12 +261,14 @@ function(
   # ggplot() +
   #   geom_sf(data = final_exp_plots_hadjsuted, col = "red", fill = NA) +
   #   geom_sf(data = final_exp_plots, col = "blue", fill = NA)
+  # ggplot() +
+  #   geom_sf(data = final_exp_plots, aes(fill = strip_id))
 
   # ggplot() +
-  #   geom_sf(data = final_exp_plots_hadjsuted$shifted_first_plot[[13]], col = "red", fill = NA) +
-  #   geom_sf(data = final_exp_plots_hadjsuted$first_plot[[13]], col = "blue", fill = NA) +
-  #   geom_sf(data = final_exp_plots_hadjsuted$perpendicular_line[[13]], col = "red", fill = NA) +
-  #   geom_sf(data = final_exp_plots_hadjsuted$shifted_line[[13]], col = "blue", fill = NA) 
+  #   geom_sf(data = reduce(final_exp_plots$shifted_plots, rbind), col = "red", fill = NA) +
+  #   geom_sf(data = reduce(final_exp_plots$shifted_line, rbind), col = "red", fill = NA) +
+  #   geom_sf(data = reduce(final_exp_plots$data, rbind), col = "blue", fill = NA) +
+  #   geom_sf(data = final_exp_plots$shifted_line[[13]], col = "blue", fill = NA) 
   
     final_exp_plots <- final_exp_plots %>% 
     nest_by(strip_id) %>% 
