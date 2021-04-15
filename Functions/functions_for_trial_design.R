@@ -189,7 +189,7 @@ function(
     )) %>% 
     pluck("indiv_polygon") %>% 
     reduce(rbind) %>% 
-    .[, poly_id_in_group := 1:.N, by = group] %>%
+    .[, poly_id := 1:.N, by = group] %>%
     st_as_sf() %>% 
     rowwise() %>% 
     #=== get the original strip geometry by group ===#
@@ -207,7 +207,8 @@ function(
         st_cast("LINESTRING") %>% 
         st_as_sf() %>% 
         mutate(group = group) %>% 
-        mutate(poly_id_in_group = poly_id_in_group)  
+        mutate(poly_id = poly_id) %>% 
+        mutate(line_id = seq_len(nrow(.)))
     )) %>% 
     filter(length(int_line) != 0) %>% 
     pluck("int_line") %>% 
@@ -243,7 +244,8 @@ function(
         ab_xy_nml,
         ab_xy_nml_p90
       ) %>% 
-      mutate(group = group)  
+      mutate(group = group) %>% 
+      mutate(poly_line = paste0(poly_id, "_", line_id))  
     )) %>% 
     pluck("plots") %>% 
     reduce(rbind) %>% 
@@ -271,7 +273,7 @@ function(
   #   geom_sf(data = final_exp_plots$shifted_line[[13]], col = "blue", fill = NA) 
   
     final_exp_plots <- final_exp_plots %>% 
-    nest_by(strip_id) %>% 
+    nest_by(strip_id, poly_line) %>% 
     mutate(first_plot = list(
       filter(data, plot_id == 1)
     )) %>% 
