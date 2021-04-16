@@ -1125,34 +1125,42 @@ function(
 
   num_levels_temp <- num_levels + 1
 
-  if (dif_max > dif_min) {
-    if (num_levels_temp %% 2 == 1) {
-      num_high <- num_levels_temp %/% 2 + 1
-      num_low <- num_levels_temp %/% 2
-    } else if ((dif_max / dif_min) > 1.5){ 
-      num_high <- num_levels_temp %/% 2 + 1
-      num_low <- num_levels_temp %/% 2 - 1
-    } else { 
-      num_high <- num_levels_temp %/% 2
-      num_low <- num_levels_temp %/% 2
-    }
+  if (max_rate == gc_rate) {
+    # if max_rate equals sq_rate
+
+    rates <- seq(min_rate, max_rate, length = num_levels)
+
   } else {
-    if (num_levels_temp %% 2 == 1) {
-      num_high <- num_levels_temp %/% 2 
-      num_low <- num_levels_temp %/% 2 + 1
-    } else if ((dif_min / dif_max) > 1.5){ 
-      num_high <- num_levels_temp %/% 2 - 1
-      num_low <- num_levels_temp %/% 2 + 1
+    if (dif_max > dif_min) {
+      if (num_levels_temp %% 2 == 1) {
+        num_high <- num_levels_temp %/% 2 + 1
+        num_low <- num_levels_temp %/% 2
+      } else if ((dif_max / dif_min) > 1.5){ 
+        num_high <- num_levels_temp %/% 2 + 1
+        num_low <- num_levels_temp %/% 2 - 1
+      } else { 
+        num_high <- num_levels_temp %/% 2
+        num_low <- num_levels_temp %/% 2
+      }
     } else {
-      num_high <- num_levels_temp %/% 2
-      num_low <- num_levels_temp %/% 2
+      if (num_levels_temp %% 2 == 1) {
+        num_high <- num_levels_temp %/% 2 
+        num_low <- num_levels_temp %/% 2 + 1
+      } else if ((dif_min / dif_max) > 1.5){ 
+        num_high <- num_levels_temp %/% 2 - 1
+        num_low <- num_levels_temp %/% 2 + 1
+      } else {
+        num_high <- num_levels_temp %/% 2
+        num_low <- num_levels_temp %/% 2
+      }
     }
+
+    rates_low <- seq(min_rate, gc_rate, length = num_low) %>% round()
+    rates_high <- seq(gc_rate, max_rate, length = num_high) %>% round()
+
+    rates <- c(rates_low, rates_high) %>% unique()
   }
-
-  rates_low <- seq(min_rate, gc_rate, length = num_low) %>% round()
-  rates_high <- seq(gc_rate, max_rate, length = num_high) %>% round()
-
-  rates <- c(rates_low, rates_high) %>% unique()
+  
 
   return(rates)
 }
