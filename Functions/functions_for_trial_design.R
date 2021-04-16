@@ -254,11 +254,10 @@ function(
     st_set_crs(st_crs(field))
 
   if (perpendicular) {
-
-  # final_exp_plots_hadjsuted$shifted_plots
-  # final_exp_plots_hadjsuted$remainder
-  # final_exp_plots_hadjsuted$new_remainder
-  # final_exp_plots_hadjsuted$is_close_enough
+  # Notes:
+  # This is for the case of harvesting and application being perpendicular.
+  # All the plots must have the same length (specified by min_plot_length and max_plot_length)
+  # Plots are "misaligned" by the exact multiple of harvester width to avoid harvester having to straddle
 
   # ggplot() +
   #   geom_sf(data = final_exp_plots_hadjsuted, col = "red", fill = NA) +
@@ -283,27 +282,23 @@ function(
     ungroup() %>% 
     mutate(base_line = .[1,]$perpendicular_line) %>% 
     rowwise() %>% 
-    mutate(dist_to_base = list(
-      st_distance(perpendicular_line, base_line) %>% 
+    mutate(dist_to_base = st_distance(perpendicular_line, base_line) %>% 
       as.numeric()
-    )) %>% 
-    mutate(remainder = list(
-      dist_to_base %% harvester_width 
-    )) %>% 
+    ) %>% 
+    mutate(remainder = dist_to_base %% harvester_width) %>% 
+    mutate(correction_dist = min(remainder, harvester_width - remainder)) %>% 
     mutate(shifted_first_plot = list(
-      st_shift(first_plot, remainder * ab_xy_nml) 
+      st_shift(first_plot, correction_dist * ab_xy_nml) 
     )) %>% 
     mutate(shifted_line = list(
       get_through_line(shifted_first_plot$geometry, radius, ab_xy_nml_p90) 
     )) %>% 
-    mutate(new_remainder  = list(
+    mutate(new_remainder  = 
       as.numeric(st_distance(base_line, shifted_line)) %% harvester_width 
-    )) %>% 
-    mutate(is_close_enough = list(
-      # if the distance is close enough moving in the wrong
-      # direction does not hurt
-      new_remainder < 1e-6
-    )) %>% 
+    ) %>% 
+    # if the distance is close enough moving in the wrong
+    # direction does not hurt
+    mutate(is_close_enough = min(new_remainder, harvester_width - new_remainder) < 1e-6) %>%
     mutate(shift_direction = list(
       ifelse(is_close_enough, 1, -1)
     )) %>% 
