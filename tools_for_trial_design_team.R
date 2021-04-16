@@ -43,6 +43,7 @@ make_trial_design(
   side_dist = 60, # default uses the max of the section width (minimum is 30)
   #=== angled harvesting ===#
   plot_heading = "ab-lines-cl",
+  #=== this option is for designs where application and harvesting are perpendicular to each other ===#
   perpendicular = TRUE,
   min_plot_length = 200,
   max_plot_length = 200,
