@@ -1073,6 +1073,7 @@ get_td_parameters <- function(
 
   #--- convert min_rate and max_rate into n_form units ---#
   # min_rate, max_rate, and base_rate are all in N-equivalent (lbs)
+  `%notin%` <- Negate(`%in%`)
   n_parameters <- td_parameters[form %in% c("uan28", "uan32", "urea", "NH3")] 
 
   if (nrow(n_parameters) > 0) {
@@ -1088,7 +1089,7 @@ get_td_parameters <- function(
         max_rate = convert_N_unit(form, unit,  max_rate, "Imperial", conversion_type = "to_n_form")
       )
 
-    input_data <- rbind(td_parameters[form == "seed"], n_parameters)
+    input_data <- rbind(td_parameters[form %notin% c("uan28", "uan32", "urea", "NH3")], n_parameters)
 
   } else {
 
