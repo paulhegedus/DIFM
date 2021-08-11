@@ -110,6 +110,8 @@ if (units == "imperial") {
       width = conv_unit(width, "ft", "m"),
       distance = conv_unit(distance, "ft", "m")
     )
+}else{
+aa_input <- aa_input
 }
 ```
 
