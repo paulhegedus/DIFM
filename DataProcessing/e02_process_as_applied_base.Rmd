@@ -336,13 +336,8 @@ if (section_num != 1) {
   aa_input_grouped <- mutate(aa_input_grouped, width = med_distance_h)
 
 } else {
-  # if only one observation 
-  aa_input_grouped <- mutate(aa_input_grouped, 
-    width = trial_info %>% 
-      filter(input_type == "input_type_here") %>% 
-      .$machine_width %>% 
-      conv_unit("ft", "m")
-  )
+  # if only one observation at a timestamp, use the reported width from the machine 
+  aa_input_grouped <- aa_input_grouped
 } 
 ```
 
