@@ -154,7 +154,7 @@ analysis_res_g <- trial_info %>%
   ) %>% 
   mutate(
     data = list(
-      run_gwr(data, "input_rate") 
+      run_gwr(subset(data, input_rate != 0), "input_rate")  
     )
   ) 
 
