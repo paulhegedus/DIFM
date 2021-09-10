@@ -156,7 +156,8 @@ if (is_base_N) {
 #' ### Nitrogen
 #/*~~~~~~~~~~~~~~~~~~~~~~*/
 #--- should we process N data? ---#
-n_var_ls <- c("NH3", "urea", "uan32", "uan28")
+n_var_ls <- c("NH3", "urea", "uan32", "uan28", "1_2_1(36)", "LAN(26)", "MAP", "1_0_0", "1_0_1", "2_3_2(22)",
+              "15_10_6", "3_0_1", "2_3_4(32)", "4_3_4(33)", "5_1_5", "Sp")
 process_n_idv <- n_var_ls %in% input_data[strategy == "trial", form]
 process_n <- any(process_n_idv) 
 
