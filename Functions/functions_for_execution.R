@@ -591,135 +591,139 @@ make_trial_design <- function(
     ffy, 
     json_file,
     head_dist = NA, 
-    side_plots_num = 1,
-    use_ab = TRUE, 
-    assign_rates = TRUE,
-    harvest_angle = 0,
-    design_type = c("jcl", "jcl"),
-    rates = list(NA, NA),
-    num_levels = c(5, 5), 
+    side_dist = NA,
+    boundary = NA,
+    plot_heading = NA, # the name of the ab-line file
+    perpendicular = FALSE,
+    min_plot_length = 200,
+    max_plot_length = 300,
+    ab_line_type = "free", # one of "free", "lock", "non"
+    design_type = NA,
+    rates = NA,
+    num_levels = 6, 
     max_jumps = NA,
-    start_from_scratch = FALSE,
-    cell_height = 10,
-    rerun = FALSE, 
+    file_name_append = NA,
     locally_run = FALSE
   ) 
   {
 
   print(paste0("Generating a trial-design for ", ffy))
 
-  trial_data <- get_td_parameters(ffy, json_file)
+  # plot_heading = "ab-line"
 
+  #/*----------------------------------*/
+  #' ## Create trial data
+  #/*----------------------------------*/
+  trial_data <- 
+  get_td_parameters(ffy, json_file) %>% 
+  mutate(
+    input_plot_width = conv_unit(input_plot_width, "ft", "m"),
+    machine_width = conv_unit(machine_width, "ft", "m"),
+    section_width = machine_width / section_num,
+    harvester_width = conv_unit(harvester_width, "ft", "m"),
+    plot_heading = plot_heading, 
+    perpendicular = perpendicular, 
+    min_plot_length = min_plot_length,
+    max_plot_length = max_plot_length,
+    ab_line_type = ab_line_type, 
+    rates = rates,
+    num_levels = num_levels, 
+    max_jump = max_jumps,
+    file_name_append = file_name_append
+  ) 
+
+  #=== trial design type ===#
+  if (nrow(trial_data) == 1) {
+    if (is.na(design_type)) {
+      trial_data$design_type <- "ejca"
+    } else {
+      trial_data$design_type <- design_type[1]
+    }
+  } else if (is.na(design_type)) {
+    #=== if two inputs and no design_type is specified ===#
+    trial_data <- trial_data %>% 
+    mutate(design_type = ifelse(form == "seed", "jcl", "ejca")) 
+  } else if (length(design_type) == 1) {
+    return(print(
+      "Error: you did not provide two design type values even though this is a two
+      input-case."
+    ))
+  } else {
+    trial_data <- trial_data %>% 
+    mutate(design_type = design_type)
+  }
+
+  if (nrow(trial_data) > 1 & all(trial_data$design_type == "ejca")) {
+    return(print(
+      "Error: you cannot use ejca for both inputs as it will create
+      significant positive or negative correlations between the two inputs"
+    ))
+  }
+
+  #=== head distance ===#
   if (is.na(head_dist)) {
+    #=== machine width converted above ===#
     head_dist <- 2 * max(trial_data$machine_width)
-  } 
+  } else {
+    #=== conversion necessary ===#
+    head_dist <- conv_unit(head_dist, "ft", "m")
+  }
+
+  #=== side distance ===#
+  if (is.na(side_dist)) {
+    #=== section width converted above ===#
+    side_dist <- max(max(trial_data$section_width), 30)
+  } else {
+    #=== conversion necessary ===#
+    side_dist <- conv_unit(side_dist, "ft", "m")
+  }
+
+  trial_data$headland_length <- head_dist
+  trial_data$side_length <- side_dist
+
+  saveRDS(
+    trial_data,
+    here("Data", "Growers", ffy, "TrialDesign/trial_data.rds")
+  )
 
   #/*=================================================*/
-  #' # Header Rmd
+  #' # Rmd
   #/*=================================================*/
-  #=== header Rmd ===#
   td_rmd <- 
   read_rmd(
-    "TrialDesignGeneration/trial-design-header.Rmd", 
+    "TrialDesignGeneration/make-trial-design-template.Rmd", 
     locally_run = locally_run
   ) %>% 
   gsub("_field-year-here_", ffy, .) %>% 
   gsub("_json-file-here_", json_file, .) %>% 
-  gsub("title-here", "Trial Design Generation Report", .)
-
-  #/*=================================================*/
-  #' # Rmd for creating plots and ab-lines
-  #/*=================================================*/
-  exp_plots_rds <- here("Data", "Growers", ffy, "TrialDesign/exp_plots.rds")
-
-  exp_plots_exists <- file.exists(exp_plots_rds)
-
-  td_rmd <- gsub(
-    "_exp-plots-statement_",
-    exp_plots_exists,
-    td_rmd
-  )
-
-  #=== if plots and ab-liens have not been created yet ===#
-  if (!exp_plots_exists | start_from_scratch) {
- 
-    #=== append the Rmd to create plots and ab-lines ===#
-    create_plots_rmd <- 
-    read_rmd(
-      "TrialDesignGeneration/create-plots-ab-lines.Rmd", 
-      locally_run = locally_run
-    ) %>% 
-    gsub("_side-plots-num-here_", side_plots_num, .) %>% 
-    gsub("_cell-height-here_", cell_height, .) %>% 
-    gsub("_head-dist-here_", paste0(head_dist), .) %>% 
-    gsub("_harvest-angle-here_", harvest_angle, .)  
-    
-    td_rmd <- c(td_rmd, create_plots_rmd)
-
-  } 
-
-  #/*=================================================*/
-  #' # Rmd for Assigning rates 
-  #/*=================================================*/
-  if (assign_rates) {
-    assign_rates_rmd <- 
-    read_rmd(
-      "TrialDesignGeneration/assign-rates.Rmd", 
-      locally_run = locally_run
-    )
-    td_rmd <- c(td_rmd, assign_rates_rmd)
-
-    td_rmd <- 
-    #=== number of levels ===#
-    gsub(
-      "_num-levels-here_",
-      paste0("c(", paste0(num_levels, collapse = ", "), ")"),
-      td_rmd
-    ) %>% 
-    #=== design type ===#
-    gsub(
-      "_design-type-here_",
-      paste0("c(\'", paste0(design_type, collapse = "\', \'"), "\')"),
-      .
-    ) %>% 
-    #=== max jumps ===#
-    gsub(
-      "_max-jumps-here_",
-      paste0("c(", paste0(max_jumps, collapse = ", "), ")"),
-      .
-    )
-
-    saveRDS(rates, here("Data", "Growers", ffy, "TrialDesign/user_specified_rates.rds"))
-
-    if (length(num_levels) == 1 & nrow(trial_data) == 2) {
-      print("You provided only 1 num_level value even though there are two inputs.")
-      print("The num_level value you provided will be used for both the inputs.")
-    } else if ((length(num_levels) == 2 & nrow(trial_data) == 1)) {
-      print("You provided 2 num_level values even though there is only one input.")
-      print("Only the first value will be used.")
-    }
-
-  }
+  gsub(
+    "_boundary-file-here_", 
+    ifelse (is.na(boundary), "boundary", boundary),
+    .
+  )  
+  
 
   #/*=================================================*/
   #' # Wrapping up
   #/*=================================================*/
   td_file_name <- file.path(
-    here(), "Data/Growers", ffy, "TrialDesign/make_trial_design.Rmd"
+    here(), "Data/Growers", ffy, 
+    paste0(
+      "TrialDesign/make_trial_design", 
+      ifelse(is.na(file_name_append) | file_name_append == "", "", paste0("_", file_name_append)),
+      ".Rmd"
+    )
   )
 
   writeLines(td_rmd, con = td_file_name)
 
-  if (rerun) {
-    #--- remove cached files ---#
-    list.files(
-      file.path(here(), "Data", "Growers", ffy, "TrialDesign"),
-      full.names = TRUE
-    ) %>%
-      .[str_detect(., "make_trial_design")] %>%
-      .[str_detect(., c("cache|files"))] %>%
-      unlink(recursive = TRUE)
-  }
+  td_r_file_name <- here(
+    "Data/Growers", 
+    ffy, 
+    "TrialDesign/for_debug.R"
+  )
+
+  purl(td_file_name, output = td_r_file_name)
 
   #--- render ---#
   render(td_file_name)

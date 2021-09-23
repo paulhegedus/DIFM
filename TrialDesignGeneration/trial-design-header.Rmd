@@ -1,5 +1,5 @@
 ---
-title: "title-here for _field-year-here_"
+title: "Trial Design Generation Report for _field-year-here_"
 output:
   html_document:
     toc: true
@@ -37,7 +37,7 @@ code.r{ /* Code block */
 ```{r setup, cache = F, echo = F}
 library(knitr)
 knitr::opts_chunk$set(
-  cache = TRUE,
+  cache = FALSE,
   echo = TRUE,
   error = TRUE,
   warning = FALSE,
@@ -94,17 +94,14 @@ tm_layout_to_add <- tm_layout(
 # Get Experiment Parameters
 
 ```{r }
-(
-trial_data <- get_td_parameters(ffy, json_file) %>% 
-  mutate(input_plot_width = conv_unit(input_plot_width, "ft", "m")) %>% 
-  mutate(machine_width = conv_unit(machine_width, "ft", "m"))
-)
+trial_data <- 
+readRDS(
+  here("Data", "Growers", ffy, "TrialDesign/trial_data.rds")
+) 
 ```   
 
-```{r eval = !start_from_scratch}
-exp_plots_exists <- _exp-plots-statement_
+## Rates specifications
 
-if (exp_plots_exists) {
-  trial_data_eh <- readRDS(here("Data", "Growers", ffy, "TrialDesign/exp_plots.rds"))
-}
+```{r }
+dplyr::select(trial_data, gc_rate, min_rate, max_rate)
 ```

@@ -140,6 +140,11 @@ input_pct$gg_dev
 ### Filter out unreliable observations
 
 ```{r }
+#=== convert max_dev_table if in ha instead of ac ===#
+if(units == "metric"){
+  max_dev_table %>%
+    mutate(max_dev_allowed = max_dev_allowed*2.47105)
+}
 #=== yield data after removing unreliable inputs ===#
 yield_input_data <- input_pct %>% 
   dplyr::select(crop, input_type, input_pct_data) %>% 

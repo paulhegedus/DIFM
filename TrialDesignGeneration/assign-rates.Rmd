@@ -32,6 +32,16 @@ if (nrow(trial_data) > 1) {
 }
 
 #=== user-specified number of levels ===#
+# data_sf <- trial_data_r$exp_plots[[1]]
+# design_type <- trial_data_r$design_type[[1]]
+# max_jump <- trial_data_r$max_jump[[1]]
+# gc_rate <- round(trial_data_r$gc_rate[[1]])
+# min_rate <- trial_data_r$min_rate[[1]]
+# max_rate <- trial_data_r$max_rate[[1]]
+# num_levels <- trial_data_r$num_levels [[1]]# ignored
+# rates <- trial_data_r$rates[[1]]
+# push <- trial_data_r$push[[1]]
+
 trial_data_r <- trial_data_eh %>% 
   left_join(., design_parameter_data, by = "form") %>% 
   mutate(experiment_design = list(
@@ -55,7 +65,7 @@ trial_data_r <- trial_data_eh %>%
   mutate(input_type = list(
     case_when(
       form == "seed" ~ "S",
-      form %in% c("uan28", "uan32", "urea", "NH3") ~ "N",
+      form %in% c("uan28", "uan32", "urea", "NH3", "1_2_1(36)", "LAN(26)", "MAP", "1_0_0", "1_0_1", "2_3_2(22)", "15_10_6", "3_0_1", "2_3_4(32)", "4_3_4(33)", "5_1_5", "Sp") ~ "N",
       #=== needs to change this ===#
       form == c("potash") ~ "K"
     )
@@ -71,7 +81,7 @@ trial_data_r <- trial_data_eh %>%
       "rate",
       case_when(
         form == "seed" ~ "tgts_K",
-        form %in% c("uan28", "uan32", "urea", "NH3") ~ "tgtn",
+        form %in% c("uan28", "uan32", "urea", "NH3", , "1_2_1(36)", "LAN(26)", "MAP", "1_0_0", "1_0_1", "2_3_2(22)", "15_10_6", "3_0_1", "2_3_4(32)", "4_3_4(33)", "5_1_5", "Sp") ~ "tgtn",
         #=== needs to change this ===#
         form == c("potash") ~ "tgtk"
       )
@@ -112,7 +122,7 @@ mutate(map_design = list(
     tm_polygons(
       col = "rate_tm",
       title = form,
-      palette = "Greens"
+      palette = ifelse(form == "seed", "Greens", "Reds")
     ) +
   tm_layout_to_add +
   tm_shape(ab_lines) +
@@ -135,6 +145,8 @@ pluck("map_design")
 # Save the trial design
 
 ```{r }
+file_name_append <- "_file-name-append-here_"
+
 # time_user <- paste0(
 #   Sys.time(), 
 #   "-",
@@ -160,7 +172,8 @@ summarise(list(
     layer = paste0(
       "trial-design-", tolower(input_type), 
       "-", year,  
-      ifelse(is.na(line_edge_id), "", line_edge_id)
+      ifelse(is.na(line_edge_id), "", paste0("-", line_edge_id)),
+      ifelse(file_name_append == "NA", "", paste0("-", file_name_append)) 
     ),
     driver = "ESRI Shapefile",
     append = FALSE
@@ -175,9 +188,10 @@ summarise(list(
     ab_lines, 
     dsn = dsn_name,
     layer = paste0(
-      "ab-lines-trial-", tolower(input_type), 
+      "ab-lines-farmer-", tolower(input_type), 
       "-", year,  
-      ifelse(is.na(line_edge_id), "", line_edge_id)
+      ifelse(is.na(line_edge_id), "", paste0("-", line_edge_id)),
+      ifelse(file_name_append == "NA", "", paste0("-", file_name_append)) 
     ),
     driver = "ESRI Shapefile",
     append = FALSE

@@ -1,14 +1,6 @@
 # Preparation for Creating Plots and ab-lines
 
-## Set parameters
 
-```{r }
-side_plots_num <- _side-plots-num-here_ 
-cell_height <- _cell-height-here_ 
-head_dist <- _head-dist-here_
-harvest_angle <- _harvest-angle-here_
-
-```
 ## Read boundary and ab-line
 
 ```{r }
@@ -17,9 +9,9 @@ harvest_angle <- _harvest-angle-here_
 # ffy <- "Bohnhoff_Adams_2018"
 # ffy <- "Holzwart_Holzwart_2021"
 
-#/*----------------------------------*/
-#' ## field boundary
-#/*----------------------------------*/
+#/*=================================================*/
+#' # Field boundary
+#/*=================================================*/
 field_sf <- get_shp_name(ffy, "TrialDesign", "boundary") %>% 
   st_read() %>% 
   make_sf_utm() %>% 
@@ -30,6 +22,10 @@ field_len_cross <- sqrt(
   (field_bbox["xmax"] - field_bbox["xmin"]) ^2 +
   (field_bbox["ymax"] - field_bbox["ymin"]) ^2 
 )
+
+#/*=================================================*/
+#' # Plot-heading
+#/*=================================================*/
 
 #/*----------------------------------*/
 #' ## Input ab-line
@@ -72,6 +68,9 @@ st_extend_line(
 #/*=================================================*/
 #' # Harvester ab-line
 #/*=================================================*/
+#=== harvest angle ===#
+harvest_angle <- _harvest-angle-here_
+
 if (harvest_angle == TRUE) {
 
   harvester_ab_line_files <- get_shp_name(ffy, "TrialDesign", "ab-line-h") 
@@ -148,14 +147,51 @@ if (length(h_ab_line) > 0) {
 ## Option parameters
 
 ```{r }
+#/*----------------------------------*/
+#' ## Parameter
+#/*----------------------------------*/
+#=== head distance ===#
+head_dist <- _head-dist-here_
+
+if (is.na(head_dist)) {
+  head_dist <- 2 * max(trial_data$machine_width)
+} else {
+  head_dist <- conv_unit(head_dist, "ft", "m")
+}
+
+#=== side distance ===#
+side_dist <- _side-dist-here_ 
+
+if (is.na(side_dist)) {
+  side_dist <- max(max(trial_data$section_width), 30)
+} else {
+  side_dist <- conv_unit(side_dist, "ft", "m")
+}
+
+#=== lock_start_point ===#
+lock_start_point <- readRDS(
+  here("Data", "Growers", ffy, "TrialDesign/lock_start.rds")
+)
+if (nrow(trial_data) == 1) {
+  lock_start_point <- lock_start_point[1]
+}
+
+
+#/*----------------------------------*/
+#' ## Trial data 
+#/*----------------------------------*/
 trial_data_rh <- trial_data %>% 
   #=== headland length ===#
   # if only one number is supplied, it is applied for both inputs in a two-input case
-  mutate(headland_length = conv_unit(head_dist, "ft", "m")) %>% 
-  #=== cell height ===#
-  mutate(cell_height = conv_unit(cell_height, "ft", "m")) %>% 
+  mutate(headland_length = head_dist) %>% 
+  #=== side length ===#
+  mutate(side_length = side_dist) %>% 
   #=== harvester angler ===#
-  mutate(harvest_angle = harvest_angle) 
+  mutate(harvest_angle = harvest_angle) %>% 
+  #=== lock start ===#
+  mutate(lock_start = lock_start_point) %>% 
+  #=== first create plots for the input where the starting point is locked ===#
+  arrange(desc(lock_start))
 
 ```
 
@@ -176,17 +212,15 @@ length()
 #=== get the first one of the two if more than one ===#
 # input_plot_width <- trial_data_first$input_plot_width[[1]]
 # machine_width <- trial_data_first$machine_width[[1]]
+# section_num <- trial_data_first$section_num[[1]]
 # headland_length <- trial_data_first$headland_length[[1]]
+# side_length <- trial_data_first$side_length[[1]]
 # harvest_angle <- trial_data_first$harvest_angle[[1]]
+# lock_start <- trial_data_first$lock_start[[1]]
 # field = field_sf
 # #--- by default uses the first one ---#
 # ab_line = i_ab_line[1, ]
 # plot_width = input_plot_width
-# machine_width = machine_width
-# cell_height = cell_height
-# headland_length = headland_length
-# harvest_angle = harvest_angle
-# side_plots_num = side_plots_num
 
 trial_data_first <- 
 trial_data_rh[1, ] %>% 
@@ -199,10 +233,11 @@ mutate(experiment_plots = list(
     ab_line = i_ab_line[1, ], 
     plot_width = input_plot_width, 
     machine_width = machine_width, 
-    cell_height = cell_height,
+    section_num = section_num, 
     headland_length = headland_length,
+    side_length = side_length,
     harvest_angle = harvest_angle,
-    side_plots_num = side_plots_num
+    lock_start = lock_start
   )
 ))
 
@@ -236,10 +271,10 @@ if (num_unique_plot_width == 1 & nrow(trial_data_rh) == 1) {
       ab_line = trial_data_first$experiment_plots[[1]]$line_edges[line_edge_id, ], 
       plot_width = input_plot_width, 
       machine_width = machine_width,
-      cell_height = cell_height,
       headland_length = headland_length,
+      side_length = side_length,
       harvest_angle = harvest_angle,
-      side_plots_num = side_plots_num,
+      lock_start = FALSE,
       second_input = TRUE
     )   
   )) 
@@ -266,6 +301,7 @@ dplyr::select(- experiment_plots) %>%
 #=== dissolve the experimental plots as a single polygon ===#
 mutate(experiment_plots_dissolved = list(
   exp_plots %>% 
+    st_buffer(0.01) %>% # this avoids tiny tiny gaps between plots
     st_snap_to_grid(size = 0.0001) %>%
     st_make_valid() %>% 
     summarize(plot_id = min(plot_id)) 

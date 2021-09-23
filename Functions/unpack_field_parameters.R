@@ -29,8 +29,8 @@ input_data <- dplyr::select(w_field_data, starts_with(
 #/*----------------------------------*/
 crop <- w_field_data[, crop] 
 crop_unit <- w_field_data[, crop_unit] 
-crop_price <- w_field_data[, crop_price] 
-if(!is.numeric(crop_price)) {
+crop_price <- as.numeric(w_field_data[, crop_price]) 
+if(is.na(crop_price) == TRUE) {
   crop_price <- case_when(
     crop == "soy" ~ 14, # $/bu
     crop == "corn" ~ 5.5, # $/bu
@@ -94,9 +94,9 @@ if (process_s) {
   #++++++++++++++++
   # seed price
   #++++++++++++++++
-  s_price <- input_data_s[, price]
+  s_price <- as.numeric(input_data_s[, price])
 
-  if(!is.numeric(s_price)) {
+  if(is.na(s_price) == TRUE) {
     #=== default price ===#
     if (crop == "corn") {
       s_price <- 0.00381 * 1000 # (thousand seed)
@@ -156,7 +156,8 @@ if (is_base_N) {
 #' ### Nitrogen
 #/*~~~~~~~~~~~~~~~~~~~~~~*/
 #--- should we process N data? ---#
-n_var_ls <- c("NH3", "urea", "uan32", "uan28")
+n_var_ls <- c("NH3", "urea", "uan32", "uan28", "1_2_1(36)", "LAN(26)", "MAP", "1_0_0", "1_0_1", "2_3_2(22)",
+              "15_10_6", "3_0_1", "2_3_4(32)", "4_3_4(33)", "5_1_5", "Sp")
 process_n_idv <- n_var_ls %in% input_data[strategy == "trial", form]
 process_n <- any(process_n_idv) 
 
@@ -206,12 +207,12 @@ if (process_n) {
   # N price
   #++++++++++++++++
   if ("price" %in% names(input_data_n)) {
-    n_price <- input_data_n[, price]
+    n_price <- as.numeric(input_data_n[, price])
   } else {
     n_price <- NA
   }
 
-  if(!is.numeric(n_price)) {
+  if(is.na(n_price) == TRUE) {
     n_price <- 0.4
   }
 
@@ -274,12 +275,12 @@ if (process_k) {
   # k price
   #++++++++++++++++
   if ("price" %in% names(input_data_k)) {
-    k_price <- input_data_k[, price]
+    k_price <- as.numeric(input_data_k[, price])
   } else {
     k_price <- NA
   }
 
-  if(!is.numeric(k_price)) {
+  if(is.na(k_price) == TRUE) {
     k_price <- 0.4
   }
 
