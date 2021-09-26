@@ -58,7 +58,8 @@ non_exp_process_make_report <- function(ffy, rerun = FALSE, locally_run = FALSE)
    if (!file.exists(weather_file)) {
     ne03 <- read_rmd("DataProcessing/ne03_weather.Rmd", locally_run = locally_run)
   } else {
-    ne03 <- read_rmd("DataProcessing/ne03_weather_show.Rmd", locally_run = locally_run)
+    # ne03 <- read_rmd("DataProcessing/ne03_weather_show.Rmd", locally_run = locally_run)
+    ne03 <- NULL
   }
 
   nep_rmd_tsw <- c(nep_rmd_ts, ne03)
