@@ -80,7 +80,7 @@ aa_input <- dplyr::select(aa_input, matches(c(col_list, "sectionid", "id")))
 
 This code assumes that if `distance` is in meter, then other variables (e.g., `width`) are also measured in meter.
 
-```{r eval = F}
+```{r}
 dist_test <- aa_input %>% 
   cbind(., st_coordinates(.)) %>% 
   data.table() %>% 
@@ -103,7 +103,7 @@ if (mean(dist_test$dif_distance_conv, na.rm = TRUE) < mean(dist_test$dif_distanc
 
 ### Transform measurement unit
 
-```{r eval = F}
+```{r }
 if (units == "imperial") {
   aa_input <- aa_input %>%
     mutate(
