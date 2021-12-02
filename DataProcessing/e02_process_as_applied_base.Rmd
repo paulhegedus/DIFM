@@ -78,14 +78,15 @@ aa_input <- dplyr::select(aa_input, matches(c(col_list, "sectionid", "id")))
 
 ### Check units 
 
-This code assumes that if `distance` is in meter, then other variables (e.g., `width`) are also measured in meter.
+This code does not assume that `distance` and `width` have the same units, but test the units of both variables.
 
 ```{r}
-dist_test <- aa_input %>% 
-  cbind(., st_coordinates(.)) %>% 
-  data.table() %>% 
-  .[, dif_X := c(0, diff(X))] %>% 
-  .[, dif_Y := c(0, diff(Y))] %>%  
+if(sum(ifelse(is.na(aa_input$distance) == FALSE, 1, 0)) > 1){
+  dist_test <- aa_input %>%
+  cbind(., st_coordinates(.)) %>%
+  data.table() %>%
+  .[, dif_X := c(0, diff(X))] %>%
+  .[, dif_Y := c(0, diff(Y))] %>%
   #--- distance in meter ---#
   .[, distance_r := sqrt(dif_X ^ 2 + dif_Y ^ 2)] %>%
   #--- dif in difference in meter and recorded distance ---#
@@ -94,24 +95,56 @@ dist_test <- aa_input %>%
 
 # we want to see if the converted units from ft to meter are closer to the distance measured in r
 if (mean(dist_test$dif_distance_conv, na.rm = TRUE) < mean(dist_test$dif_distance, na.rm = TRUE)){
-  units <- "imperial"
-}  else {
-  units <- "metric"
+  units_distance <- "ft"
+}else{
+  units_distance <- "m"
+}
+}else{
+  units_distance <- NA
 }
 
+# we are checking the units of the width column and then replacing with width in field_parameter if missing
+# we are assuming that the units in the field parameter are feet
+input_data <- eval(parse(text = paste0("input_data_", tolower(input_type))))
+
+if(sum(ifelse(is.na(aa_input$width) == FALSE, 1, 0)) > 1){
+if(median(aa_input$width, na.rm = TRUE) >= input_data$machine_width*.9 & median(yield$width, na.rm = TRUE) <= input_data$machine_width*1.1){
+  units_width <- "ft"
+}else{
+  units_width <- "m"
+}
+}else{
+  units_width <- NA
+}
 ```
 
 ### Transform measurement unit
 
 ```{r }
-if (units == "imperial") {
+if(is.na(units_distance) == TRUE & is.na(units_width) == TRUE){
   aa_input <- aa_input %>%
     mutate(
-      width = conv_unit(width, "ft", "m"),
-      distance = conv_unit(distance, "ft", "m")
-    )
+      width = conv_unit(input_data$machine_width, "ft", "m"),
+      offset = conv_unit(offset, "ft", "m"))
+}else if(is.na(units_distance) == FALSE & is.na(units_width) == FALSE){
+  aa_input <- aa_input %>%
+    mutate(
+      width = conv_unit(width, units_width, "m"),
+      distance = conv_unit(distance, units_distance, "m"),
+      offset = conv_unit(offset, "ft", "m"))
+}else if((is.na(units_distance) == FALSE & is.na(units_width) == TRUE)){
+    aa_input <- aa_input %>%
+    mutate(
+      distance = conv_unit(distance, units_distance, "m"),
+      width = conv_unit(input_data$machine_width, "ft", "m"),
+      offset = conv_unit(offset, "ft", "m"))
+}else if((is.na(units_distance) == TRUE & is.na(units_width) == FALSE)){
+    aa_input <- aa_input %>%
+    mutate(
+      width = conv_unit(width, units_width, "m"),
+      offset = conv_unit(offset, "ft", "m"))
 }else{
-aa_input <- aa_input
+  aa_input <- aa_input
 }
 ```
 
