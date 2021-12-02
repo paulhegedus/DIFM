@@ -141,7 +141,7 @@ input_pct$gg_dev
 
 ```{r }
 #=== convert max_dev_table if in ha instead of ac ===#
-if(units == "metric"){
+if(w_field_data$land_unit == "ha"){
   max_dev_table %>%
     mutate(max_dev_allowed = max_dev_allowed*2.47105)
 }
