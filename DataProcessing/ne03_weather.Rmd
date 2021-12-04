@@ -19,7 +19,8 @@ centroid <- boundary_sf %>%
   st_coordinates()
 
 year <- field_data %>% 
-  .[field_year == ffy, year]
+  .[field_year == ffy, year] %>%
+  as.numeric(.)
   
 #--- download Daymet ---#
 # goes 20 years back from the current year
